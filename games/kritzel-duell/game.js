@@ -2,6 +2,7 @@
 // Einer zeichnet, alle raten. Multiplayer über ../../shared/net.js (PeerJS/WebRTC).
 // Der Browser, der die Lobby erstellt, ist der Host und rechnet das ganze Spiel.
 import { Room } from '../../shared/net.js';
+import { playerOptions, normalizeMax, capacityHint } from '../../shared/capacity.js';
 import { AVATARS, getProfile, setName, setAvatar, randomName, NAME_MAX } from '../../shared/profile.js';
 import { WORDS } from './words.js';
 import { sfx } from './sound.js';
@@ -645,7 +646,7 @@ function hostHandle(from, msg) {
     case 'settings': {
       if (!isHostMsg || H.phase !== 'lobby') return;
       const s = H.settings;
-      if (+msg.max >= 2 && +msg.max <= 30) s.max = Math.max(Math.round(+msg.max), count());
+      const nm = normalizeMax(msg.max); if (nm) s.max = Math.max(nm, count());
       if (DRAW_TIMES.includes(+msg.time)) s.time = +msg.time;
       if (+msg.rounds >= 2 && +msg.rounds <= 10) s.rounds = Math.round(+msg.rounds);
       if (+msg.count >= 1 && +msg.count <= 5) s.count = Math.round(+msg.count);
@@ -892,7 +893,8 @@ function fillSelect(sel, opts, val) {
 }
 function renderLobby() {
   const s = S.settings, host = isHost();
-  fillSelect($('setMax'), Array.from({ length: 29 }, (_, i) => [i + 2, `${i + 2}`]), s.max);
+  fillSelect($('setMax'), playerOptions('kritzel-duell', s.max), s.max);
+  $('setMax').title = capacityHint('kritzel-duell');
   fillSelect($('setTime'), DRAW_TIMES.map((v) => [v, `${v} s`]), s.time);
   fillSelect($('setRounds'), Array.from({ length: 9 }, (_, i) => [i + 2, `${i + 2}`]), s.rounds);
   fillSelect($('setCount'), [1, 2, 3, 4, 5].map((v) => [v, `${v}`]), s.count);

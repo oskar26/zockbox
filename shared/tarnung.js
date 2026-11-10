@@ -1,4 +1,4 @@
-// Zockbox – Tarnmodus (optional, standardmäßig AUS). made by Oskar
+// Zockbox – Tarnmodus (erweitert, optional, standardmäßig AUS). made by Oskar
 //
 // Wichtig: keine echten Logos/Markennamen nachbauen (sonst Phishing-Warnungen für das ganze Repo).
 //
@@ -6,25 +6,41 @@
 // als Vollbild-Overlay über die App legen. Das Spiel läuft darunter weiter, die
 // Verbindung bleibt bestehen. Kein Fenster-Öffnen, keine Proxies, kein Netzwerk-Kram.
 //
+// Enthalten: 8 Tarnseiten (Suche, Lexikon, Dokument, Taschenrechner, Kalender,
+// Notizen, Editor, Tabelle), 11 Tab-Vorlagen, Kombinationen als Panik-Taste,
+// einstellbare Doppeldruckzeit, Einzeldruck, Auto-Tarnung bei Tab-/Fokusverlust,
+// Zeitfenster, Schnellwechsel per Alt+1…8, Druckansicht, lokale Speicherung für
+// Dokument/Notizen/Kalender/Editor/Tabelle, Statistik sowie Import/Export.
+//
 // Einbinden (eine Zeile, eigenständig – bringt sein CSS selbst mit):
 //   Startseite:      <script type="module" src="shared/tarnung.js"></script>
 //   Spiele:          <script type="module" src="../../shared/tarnung.js"></script>
 //
 // Einstellungen (localStorage):
-//   zb_tarn_on    '1' = Tarnmodus an (sonst aus)
-//   zb_tarn_tab   'passend' (Standard: Titel/Symbol passend zur Tarnseite) | 'aus' | 'notizen' | 'dokument'
-//                 | 'suche' | 'wiki' | 'rechner'                                  (Tab-Tarnung)
-//   zb_tarn_page  'suche' | 'lexikon' | 'dokument'                               (Tarnseite)
-//   zb_tarn_key   KeyboardEvent.key der Panik-Taste (Standard 'Escape', zweimal schnell drücken)
-//   zb_tarn_fab   '0' = schwebenden Panik-Knopf auf Touch-Geräten ausblenden
+//   zb_tarn_on       '1' = Tarnmodus an
+//   zb_tarn_tab      'passend' | 'aus' | eine der Tab-Vorlagen
+//   zb_tarn_page     id der Tarnseite
+//   zb_tarn_key      Taste oder Kombination, z. B. 'Escape' oder 'Ctrl+Shift+P'
+//   zb_tarn_fab      '0' = Panik-Knopf auf Touch aus
+//   zb_tarn_delay    ms für Doppeldruck (Standard 550)
+//   zb_tarn_single   '1' = ein Druck genügt
+//   zb_tarn_auto     '1' = automatisch tarnen bei Tab-Wechsel/Fokusverlust
+//   zb_tarn_auto_ms  Verzögerung der Auto-Tarnung
+//   zb_tarn_schedule '1' = Auto-Tarnung nur im Zeitfenster zb_tarn_from…zb_tarn_to
+//   zb_tarn_term     Standard-Suchbegriff
+//   zb_tarn_doc_name Name des Dokuments
+//   zb_tarn_media    '0' = Audio/Video nicht stummschalten
+//   zb_tarn_count / zb_tarn_last   Statistik
 //
-// Für Spiele: window.addEventListener('zb-tarnung', e => e.detail.active) – z. B. um Sounds stummzuschalten.
-// Die Einstellungs-Oberfläche erscheint automatisch in einem Element mit id="zbTarnSettings" (nur Startseite).
+// Für Spiele: window.addEventListener('zb-tarnung', e => e.detail.active).
+// API: window.zbTarnung = { show, hide, preview, get, set, isPanic, switchTo, pages, settings, reset, count }.
+// Die Einstellungs-Oberfläche erscheint automatisch in #zbTarnSettings (nur Startseite).
 
 const KEYS = { on: 'zb_tarn_on', tab: 'zb_tarn_tab', page: 'zb_tarn_page', key: 'zb_tarn_key', fab: 'zb_tarn_fab' };
 const DOUBLE_MS = 550;
 
 const get = (k, d = '') => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
+const clamp = (n, lo, hi, d) => { const v = Number(n); return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d; };
 const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
 // ---------------------------------------------------------------------------
@@ -73,6 +89,16 @@ function readState() {
     page: PAGES.some((p) => p.id === page) ? page : 'suche',
     key: get(KEYS.key, 'Escape') || 'Escape',
     fab: get(KEYS.fab, '1') !== '0',
+    delay: clamp(Number(get(KEYS.delay, 550)), 150, 2000, 550),
+    single: get(KEYS.single, '0') === '1',
+    auto: get(KEYS.auto, '0') === '1',
+    autoMs: clamp(Number(get(KEYS.autoMs, 400)), 0, 5000, 400),
+    schedule: get(KEYS.schedule, '0') === '1',
+    from: clamp(Number(get(KEYS.from, 8)), 0, 23, 8),
+    to: clamp(Number(get(KEYS.to, 17)), 0, 23, 17),
+    term: (get(KEYS.term, 'photosynthese') || 'photosynthese').slice(0, 60),
+    docName: (get(KEYS.docName, 'Biologie-Notizen') || 'Biologie-Notizen').slice(0, 40),
+    media: get(KEYS.media, '1') !== '0',
   };
 }
 let S = readState();
@@ -405,10 +431,16 @@ html.zbt-lock,html.zbt-lock body{overflow:hidden!important}
 `;
 
 function injectCSS() {
-  if (document.getElementById('zbt-css')) return;
-  const st = document.createElement('style');
-  st.id = 'zbt-css'; st.textContent = CSS;
-  (document.head || document.documentElement).appendChild(st);
+  if (!document.getElementById('zbt-css')) {
+    const st = document.createElement('style');
+    st.id = 'zbt-css'; st.textContent = CSS;
+    (document.head || document.documentElement).appendChild(st);
+  }
+  if (!document.getElementById('zbt-css2')) {
+    const st2 = document.createElement('style');
+    st2.id = 'zbt-css2'; st2.textContent = extraCSS();
+    (document.head || document.documentElement).appendChild(st2);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -441,6 +473,7 @@ function searchHome() {
   <div class="zbt-s-top"><a class="lnk">Mail</a><a class="lnk">Bilder</a><span class="zbt-s-apps" aria-hidden="true">${APPS}</span><span class="zbt-s-av" aria-hidden="true">L</span></div>
   <div class="zbt-s-home">${S_LOGO}${searchBox('', true)}
     <div class="zbt-s-lang">Suche gibt es auch auf: <a>English</a><a>Français</a><a>Türkçe</a><a>Русский</a></div>
+    ${(() => { const h = ajson(AKEYS.history, []); return h.length ? `<div class="zbt-s-hist">Zuletzt gesucht: ${h.map((x) => `<a data-zbt2="history" data-q="${esc(x)}">${esc(x)}</a>`).join(' · ')}</div>` : ''; })()}
   </div>
   <footer class="zbt-s-foot"><div class="c">Deutschland</div><nav><div><a>Über uns</a><a>Werbung</a><a>Unternehmen</a><a>Wie funktioniert die Suche?</a></div><div><a>Datenschutzerklärung</a><a>Nutzungsbedingungen</a><a>Einstellungen</a></div></nav></footer>
 </div>`;
@@ -484,20 +517,36 @@ function resultHtml(r) {
 
 const KP_PIC = '<svg class="pic" viewBox="0 0 340 150" aria-hidden="true"><rect width="340" height="150" fill="#e7f3e2"/><circle cx="296" cy="34" r="20" fill="#f6c945"/><path d="M276 46 236 70M284 54 252 86" stroke="#e8b730" stroke-width="3"/><path d="M90 150c0-50 14-84 52-110" stroke="#3f7d3a" stroke-width="5" fill="none"/><ellipse cx="160" cy="62" rx="54" ry="22" transform="rotate(-25 160 62)" fill="#5aa64f"/><ellipse cx="94" cy="96" rx="42" ry="18" transform="rotate(30 94 96)" fill="#6dbb5f"/></svg>';
 
-function searchResults(q) {
+function searchResults(q, opt = {}) {
+  const pg = Math.max(1, Math.min(10, Number(opt.page) || 1));
+  const tab = opt.tab || 'Alle';
+  const onlyLex = !!opt.onlyLex;
   const photo = /photo|foto|synth/i.test(q);
-  const res = photo ? PHOTO_RESULTS : genericResults(q);
-  const n = photo ? '4.130.000' : (100000 + (q.length * 7919) % 900000).toLocaleString('de-DE');
+  let res = photo ? PHOTO_RESULTS.slice() : genericResults(q);
+  if (tab === 'Bilder' || tab === 'Videos') res = res.slice(0, 3);
+  else if (tab === 'News' || tab === 'Web') res = res.slice(1, 4);
+  else if (tab === 'Bücher' || tab === 'Mehr') res = res.slice(-2);
+  if (onlyLex) res = res.filter((r) => r.ic === 'lex');
+  if (!res.length) res = genericResults(q).slice(0, 1);
+  if (pg > 1) res = res.map((r, i) => ({ ...r, t: i === 0 ? `${r.t} · Seite ${pg}` : r.t, p: `<span class="d">Seite ${pg} · </span>${r.p}` }));
+  const n = photo ? '4.130.000' : (100000 + (q.length * 7919 + pg * 104729) % 900000).toLocaleString('de-DE');
   const list = res.map(resultHtml);
-  if (photo) {
+  if (photo && tab === 'Alle' && !onlyLex && pg === 1) {
     list.splice(1, 0, `<div class="zbt-r-paa"><h2>Ähnliche Fragen</h2>${PHOTO_QA.map(([f, a]) => `<div class="zbt-r-q"><button type="button" data-zbt="qa">${f}${CHEV}</button><div class="a">${a}</div></div>`).join('')}</div>`);
   }
+  const TABS = ['Alle', 'Bilder', 'Videos', 'News', 'Bücher', 'Web', 'Mehr'];
+  const hist = ajson(AKEYS.history, []);
   return `<div class="zbt-s zbt-r">
   <div class="zbt-r-head" style="position:relative">${S_LOGO}${searchBox(q, false)}<div class="zbt-r-right"><span class="zbt-s-apps" aria-hidden="true">${APPS}</span><span class="zbt-s-av" aria-hidden="true">L</span></div></div>
-  <div class="zbt-r-tabs"><span class="on">Alle</span><span>Bilder</span><span>Videos</span><span>News</span><span>Bücher</span><span>Web</span><span>Mehr</span><span class="sp">Suchfilter</span></div>
+  <div class="zbt-r-tabs">${TABS.map((t) => `<span class="${t === tab ? 'on' : ''}" data-zbt2="tab" data-tab="${t}">${t}</span>`).join('')}<span class="sp" data-zbt2="home2" style="cursor:pointer">Startseite</span></div>
+  <div class="zbt-r-tools">
+    <button type="button" class="zbt-fbtn${onlyLex ? ' on' : ''}" data-zbt2="filter">Nur Lexikon</button>
+    <span>${esc(tab)} · Seite ${pg}</span>
+    ${hist.length ? `<span class="zbt-h">Verlauf: ${hist.slice(0, 4).map((x) => `<a data-zbt2="history" data-q="${esc(x)}">${esc(x)}</a>`).join(' · ')}</span>` : ''}
+  </div>
   <div class="zbt-r-body">
-    <div class="zbt-r-main"><div class="zbt-r-stats">Ungefähr ${n} Ergebnisse (0,${photo ? '38' : '41'} Sekunden)</div>${list.join('')}
-      <div class="zbt-r-pages"><span class="on">1</span><a>2</a><a>3</a><a>4</a><a>5</a><a>6</a><a>7</a><a>8</a><a>9</a><a>10</a><a>Weiter</a></div>
+    <div class="zbt-r-main"><div class="zbt-r-stats">Ungefähr ${n} Ergebnisse (0,${photo ? '38' : '41'} Sekunden) · ${esc(q)}</div>${list.join('')}
+      <div class="zbt-r-pages">${Array.from({ length: 10 }, (_, i) => i + 1).map((i) => i === pg ? `<span class="on">${i}</span>` : `<a data-zbt2="page" data-page="${i}">${i}</a>`).join('')}<a data-zbt2="page" data-page="${Math.min(10, pg + 1)}">Weiter</a></div>
     </div>
     ${photo ? `<aside class="zbt-r-kp"><h2>Photosynthese</h2><div class="t">Biologischer Prozess</div>${KP_PIC}<p>Photosynthese ist der Vorgang, bei dem grüne Pflanzen, Algen und einige Bakterien Lichtenergie in chemische Energie umwandeln. <a data-zbt-open="lexikon">Lexikon</a></p><dl><dt>Ort: </dt><dd>Chloroplasten</dd><dt>Ausgangsstoffe: </dt><dd>Kohlenstoffdioxid, Wasser</dd><dt>Produkte: </dt><dd>Glucose, Sauerstoff</dd><dt>Teilschritte: </dt><dd>Lichtreaktion, Calvin-Zyklus</dd></dl></aside>` : ''}
   </div>
@@ -505,16 +554,20 @@ function searchResults(q) {
 </div>`;
 }
 
-// Standardansicht der Tarnseite „Suche“: Ergebnisse zu einem Schulthema – sieht nach Recherche aus.
-const SEARCH_DEFAULT_Q = 'photosynthese';
-function pageSuche() { return searchResults(SEARCH_DEFAULT_Q); }
+// Standardansicht der Tarnseite „Suche“: Ergebnisse zu einem einstellbaren Schulthema.
+function pageSuche() {
+  searchState.q = S.term || 'photosynthese';
+  return searchResults(searchState.q, searchState);
+}
 
 const MENU_IC = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M1 3h18v2H1zm0 6h18v2H1zm0 6h18v2H1z"/></svg>';
 const LANG_IC = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M20 18h-1.4l-1.2-3h-4.9l-1.2 3H9.9l4.4-11h1.3zm-3.2-4.5-1.9-4.9-1.9 4.9zM9 6H6V4H4v2H0v2h6.4C5.9 9.5 5 10.9 3.9 12 3.1 11.2 2.5 10.4 2 9.5H.2c.6 1.3 1.4 2.5 2.4 3.6L0 15.6 1.4 17 4 14.4l1.6 1.6.6-1.6-1-1C6.6 12 7.7 10 8.4 8H9z"/></svg>';
 const LEX_MARK = '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#f8f9fa" stroke="#c8ccd1" stroke-width="1.5"/><path d="M10 15c4.6-2.2 9.2-2.2 13.8.9V36c-4.6-3-9.2-3-13.8-.9z" fill="#54595d"/><path d="M38 15c-4.6-2.2-9.2-2.2-13.8.9V36c4.6-3 9.2-3 13.8-.9z" fill="#a2a9b1"/></svg>';
 
-function pageLexikon() {
-  return `<div class="zbt-v">
+function pageLexikon(topic = 'photosynthese') {
+  if (topic !== 'photosynthese') return lexArticle(LEX_DATA[topic] || LEX_DATA.zellatmung);
+  lexTopic = 'photosynthese';
+  const html = `<div class="zbt-v">
   <header class="zbt-v-head">
     <span class="zbt-v-menu" aria-hidden="true">${MENU_IC}</span>
     <a class="zbt-v-brand">${LEX_MARK}<span class="zbt-v-word"><b>Lexikon</b><small>Die freie Enzyklopädie</small></span></a>
@@ -563,6 +616,7 @@ function pageLexikon() {
     </main>
   </div>
 </div>`;
+  return lexEnhance(html);
 }
 
 const DOC_ICON = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 2h13l6 6v20a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#3a6fd8"/><path d="M20 2v6h6" fill="#8fb0f0"/><path d="M9 14h14M9 18h14M9 22h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -570,21 +624,11 @@ const DOC_ICON = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 2h13l6
 function pageDokument() {
   const d = new Date();
   const dt = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  return `<div class="zbt-d">
-  <div class="zbt-d-head">
-    <div class="zbt-d-row1">${DOC_ICON}<span class="zbt-d-name" contenteditable="true" spellcheck="false">Biologie-Notizen</span><span class="zbt-d-saved">Alle Änderungen gespeichert</span></div>
-    <div class="zbt-d-menu"><span>Datei</span><span>Bearbeiten</span><span>Ansicht</span><span>Einfügen</span><span>Format</span><span>Extras</span><span>Hilfe</span></div>
-    <div class="zbt-d-tools" aria-hidden="true">
-      <button type="button">↶</button><button type="button">↷</button><span class="sep"></span>
-      <span class="dd">Normaler Text</span><span class="sep"></span>
-      <span class="dd">Arial</span><span class="dd">11</span><span class="sep"></span>
-      <button type="button"><b>F</b></button><button type="button"><i>K</i></button><button type="button"><u>U</u></button><span class="sep"></span>
-      <button type="button">≡</button><button type="button">•</button><button type="button">1.</button>
-    </div>
-  </div>
-  <div class="zbt-d-page" contenteditable="true" spellcheck="false">
-    <h1>Biologie – Photosynthese</h1>
-    <div class="dt">Notizen vom ${dt}</div>
+  const name = S.docName || 'Biologie-Notizen';
+  let saved = '';
+  try { saved = localStorage.getItem(AKEYS.doc) || ''; } catch (e) {}
+  const body = saved || `<h1>${esc(name)}</h1>
+    <div class="dt">Notizen vom ${esc(dt)}</div>
     <h2>1. Grundlagen</h2>
     <ul><li>Ort: Chloroplasten (vor allem in den Blättern)</li><li>Farbstoff: Chlorophyll → nimmt rotes und blaues Licht auf, grünes wird reflektiert</li><li>Ausgangsstoffe: Kohlenstoffdioxid (aus der Luft) + Wasser (aus dem Boden)</li><li>Produkte: Glucose + Sauerstoff</li></ul>
     <p><b>Wortgleichung:</b> Kohlenstoffdioxid + Wasser → (Licht) → Glucose + Sauerstoff</p>
@@ -595,8 +639,32 @@ function pageDokument() {
     <ul><li>Lichtstärke</li><li>CO₂-Gehalt der Luft</li><li>Temperatur (Optimum ca. 25–30 °C)</li><li>Wasserversorgung</li></ul>
     <p>→ Prinzip des begrenzenden Faktors: der knappste Faktor bestimmt die Geschwindigkeit.</p>
     <h2>4. Für den Test wiederholen</h2>
-    <ul><li>Versuch mit der Wasserpest (Sauerstoffbläschen zählen)</li><li>Unterschied Fotosynthese ↔ Zellatmung</li><li>Aufbau eines Laubblatts (Skizze!)</li></ul>
+    <ul><li>Versuch mit der Wasserpest (Sauerstoffbläschen zählen)</li><li>Unterschied Fotosynthese ↔ Zellatmung</li><li>Aufbau eines Laubblatts (Skizze!)</li></ul>`;
+  const tools = [
+    ['Undo', 'undo'], ['Redo', 'redo'],
+  ];
+  return `<div class="zbt-d">
+  <div class="zbt-d-head">
+    <div class="zbt-d-row1">${DOC_ICON}<span class="zbt-d-name" contenteditable="true" spellcheck="false" data-zbt2="doc-name">${esc(name)}</span>
+      <span class="zbt-d-saved" data-doc-status>Alle Änderungen gespeichert</span>
+      <button type="button" class="zbt-btn" data-zbt2="print" style="margin-left:8px">Drucken</button>
+      <button type="button" class="zbt-btn" data-zbt2="doc-clear" style="margin-left:6px">Leeren</button></div>
+    <div class="zbt-d-menu"><span>Datei</span><span>Bearbeiten</span><span>Ansicht</span><span>Einfügen</span><span>Format</span><span>Extras</span><span>Hilfe</span></div>
+    <div class="zbt-d-tools">
+      ${tools.map(([l, c]) => `<button type="button" data-zbt2="doc-cmd" data-cmd="${c}" title="${c}">${l}</button>`).join('')}<span class="sep"></span>
+      <span class="dd">Normaler Text</span><span class="sep"></span>
+      <button type="button" data-zbt2="doc-cmd" data-cmd="bold" title="Fett"><b>F</b></button>
+      <button type="button" data-zbt2="doc-cmd" data-cmd="italic" title="Kursiv"><i>K</i></button>
+      <button type="button" data-zbt2="doc-cmd" data-cmd="underline" title="Unterstrichen"><u>U</u></button>
+      <span class="sep"></span>
+      <button type="button" data-zbt2="doc-cmd" data-cmd="insertUnorderedList" title="Liste">•</button>
+      <button type="button" data-zbt2="doc-cmd" data-cmd="insertOrderedList" title="Nummerierte Liste">1.</button>
+      <button type="button" data-zbt2="doc-cmd" data-cmd="formatBlock" data-val="h2" title="Überschrift">H2</button>
+      <span class="sep"></span><span class="dd">Arial</span><span class="dd">11</span>
+    </div>
+    <div class="zbt-d-status"><span data-doc-words>0 Wörter</span><span>Automatisch gespeichert · nur in diesem Browser</span><span>Ctrl + P druckt nur dieses Dokument</span></div>
   </div>
+  <div class="zbt-d-page" contenteditable="true" spellcheck="false" data-zbt2="doc-page">${body}</div>
 </div>`;
 }
 
@@ -626,15 +694,17 @@ function onOverlayClick(e) {
   const form = t.closest('form');
   const q = form && form.q ? form.q.value.trim() : '';
   if (t.dataset.zbtOpen === 'lexikon') { e.preventDefault(); setOverlayContent('lexikon', pageLexikon(), PAGES[1].title); return; }
-  if (act === 'home') { setOverlayContent('suche', searchHome(), 'Suche'); return; }
+  if (act === 'home') { searchState = { q: S.term || 'photosynthese', page: 1, tab: 'Alle', onlyLex: false }; setOverlayContent('suche', searchHome(), 'Suche'); return; }
   if (act === 'lucky') { e.preventDefault(); if (q) runSearch(q); else setOverlayContent('lexikon', pageLexikon(), PAGES[1].title); return; }
   if (act === 'go') { if (q) runSearch(q); return; }
   if (act === 'clear') { form.q.value = ''; form.q.focus(); return; }
   if (act === 'qa') { t.parentElement.classList.toggle('open'); }
 }
 
-function runSearch(q) {
-  setOverlayContent('suche', searchResults(q.slice(0, 200)), `${q.slice(0, 60)} – Suche`);
+function runSearch(q, keepState = false) {
+  const query = String(q || '').slice(0, 200);
+  if (!keepState) { addHistory(query); searchState = { q: query, page: 1, tab: 'Alle', onlyLex: false }; }
+  setOverlayContent('suche', searchResults(query, searchState), `${query.slice(0, 60)} – Suche`);
 }
 
 function buildOverlay(pageId) {
@@ -650,7 +720,7 @@ function buildOverlay(pageId) {
   backBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const now = Date.now();
-    if (now - lastBackTap < DOUBLE_MS) { lastBackTap = 0; hide(); } else lastBackTap = now;
+    if (now - lastBackTap < (S.delay || DOUBLE_MS)) { lastBackTap = 0; hide(); } else lastBackTap = now;
   });
   const p = PAGES.find((x) => x.id === pageId) || PAGES[0];
   setOverlayContent(pageId, RENDER[pageId](), p.title);
@@ -661,6 +731,15 @@ function buildOverlay(pageId) {
     const f = e.target;
     if (f.dataset.zbt === 'search') { const q = f.q.value.trim(); if (q) runSearch(q); }
   });
+  // Erweiterte Tarnseiten: eigene, delegierte Bedienung
+  ov.addEventListener('click', onOverlayExtraClick);
+  ov.addEventListener('submit', onOverlayExtraSubmit);
+  ov.addEventListener('input', onOverlayExtraInput);
+  ov.addEventListener('change', onOverlayExtraChange);
+  ov.addEventListener('scroll', () => {
+    const ta = ov.querySelector('[data-zbt2="code-text"]');
+    if (ta) syncGutter(ta);
+  }, true);
   // Tastatureingaben im Overlay nicht an das Spiel darunter weiterreichen
   ['keydown', 'keyup', 'keypress', 'input'].forEach((t) => ov.addEventListener(t, (e) => e.stopPropagation()));
   document.body.appendChild(ov);
@@ -668,13 +747,15 @@ function buildOverlay(pageId) {
 
 function show(pageId = S.page, { preview = false } = {}) {
   if (ov) removeOverlay();
-  if (preview) pagePreview = pageId; else panic = true;
+  if (preview) pagePreview = pageId; else { panic = true; bumpCount('key'); }
   try { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); } catch (e) {}
   buildOverlay(pageId);
   document.documentElement.classList.add('zbt-lock');
   // laufende Medien stummschalten (Spiel läuft weiter)
-  mutedMedia = [...document.querySelectorAll('audio, video')].filter((m) => !m.muted);
-  mutedMedia.forEach((m) => { m.muted = true; });
+  if (S.media) {
+    mutedMedia = [...document.querySelectorAll('audio, video')].filter((m) => !m.muted);
+    mutedMedia.forEach((m) => { m.muted = true; });
+  } else mutedMedia = [];
   if (preview) {
     previewBar = document.createElement('div');
     previewBar.className = 'zbt-preview-bar';
@@ -685,7 +766,7 @@ function show(pageId = S.page, { preview = false } = {}) {
   ov.scrollTop = 0;
   applyTab();
   updateFab();
-  window.dispatchEvent(new CustomEvent('zb-tarnung', { detail: { active: true, page: pageId, preview } }));
+  window.dispatchEvent(new CustomEvent('zb-tarnung', { detail: { active: true, page: pageId, preview, pages: PAGES.length } }));
 }
 
 function removeOverlay() {
@@ -719,14 +800,30 @@ function onKey(e) {
   if (handled === e) return;
   handled = e;
   if (recording) return;
-  if (!S.on && !pagePreview) return;
   if (e.repeat) return;
-  if (e.key !== S.key) { lastKey = 0; return; }
+
+  // Schnellwechsel: Alt + 1…9 öffnet/wechselt eine Tarnseite, Alt + →/← blättert.
+  if (e.altKey && !e.ctrlKey && !e.metaKey) {
+    if (/^[1-9]$/.test(e.key)) {
+      if (!S.on && !pagePreview) return;
+      e.preventDefault(); e.stopPropagation();
+      switchPage(Number(e.key) - 1, (panic || pagePreview) ? 'switch' : 'panic');
+      return;
+    }
+    if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && (panic || pagePreview)) {
+      e.preventDefault(); e.stopPropagation();
+      const n = PAGES.length;
+      switchPage((activePageIndex() + (e.key === 'ArrowRight' ? 1 : n - 1)) % n, 'switch');
+      return;
+    }
+  }
+
+  if (!S.on && !pagePreview) return;
+  if (!matchesSpec(e, S.key)) { lastKey = 0; return; }
   const now = Date.now();
-  if (now - lastKey < DOUBLE_MS) {
-    lastKey = 0;
-    e.preventDefault();
-    toggle();
+  if (S.single) { lastKey = 0; e.preventDefault(); toggle(); return; }
+  if (now - lastKey < (S.delay || DOUBLE_MS)) {
+    lastKey = 0; e.preventDefault(); toggle();
   } else lastKey = now;
 }
 
@@ -757,11 +854,14 @@ function updateFab() {
 export function getSettings() { return { ...S }; }
 export function setSetting(name, value) {
   if (!(name in KEYS)) return;
-  const v = name === 'on' || name === 'fab' ? (value ? '1' : '0') : String(value);
+  const BOOL = ['on', 'fab', 'single', 'auto', 'schedule', 'media'];
+  const v = BOOL.includes(name) ? (value ? '1' : '0') : String(value);
   set(KEYS[name], v);
   S = readState();
   if (!S.on && panic) hide();
   applyTab(); updateFab();
+  if (S.auto) armAuto(); else cancelAuto();
+  window.dispatchEvent(new CustomEvent('zb-tarnung-config', { detail: { on: S.on } }));
   if (ui) ui.render();
 }
 export const showPanic = (page) => show(page || S.page);
@@ -775,6 +875,7 @@ window.addEventListener('storage', (e) => {
   S = readState();
   if (!S.on && panic) hide();
   applyTab(); updateFab();
+  if (S.auto) armAuto(); else cancelAuto();
   if (ui) ui.render();
 });
 
@@ -783,86 +884,1128 @@ window.addEventListener('storage', (e) => {
 // ---------------------------------------------------------------------------
 let ui = null;
 
-const keyLabel = (k) => ({ Escape: 'Esc', ' ': 'Leertaste', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Enter: 'Enter', Tab: 'Tab', Backspace: '⌫' }[k] || (k.length === 1 ? k.toUpperCase() : k));
-
-function mountSettings(root) {
-  const render = () => {
-    const touch = isTouch();
-    const cur = PAGES.find((p) => p.id === S.page) || PAGES[0];
-    const tabIcon = (t) => (t.id === 'passend' ? cur.icon : t.icon);
-    root.innerHTML = `
-      <div class="zx-set-row">
-        <div class="zx-set-txt"><b>Tarnmodus</b><span>Tarnseite, passender Tab und Panik-Taste – für Startseite und alle Spiele.</span></div>
-        <button type="button" class="zx-switch" role="switch" id="zbTarnOn" aria-checked="${S.on}" aria-label="Tarnmodus"><i></i></button>
-      </div>
-      <div class="zx-tarn-opts${S.on ? '' : ' hidden'}" id="zbTarnOpts">
-        <div class="zx-set-block">
-          <span class="zx-set-label">Tarnseite <small>(erscheint bei der Panik-Taste)</small></span>
-          <div class="zx-chips" role="radiogroup" aria-label="Tarnseite">
-            ${PAGES.map((p) => `<button type="button" class="zx-chip" role="radio" data-page="${p.id}" aria-checked="${S.page === p.id}"><img src="${p.icon}" alt="" width="16" height="16">${esc(p.label)}</button>`).join('')}
-            <button type="button" class="zx-chip zx-chip-dash" id="zbTarnPreview">Vorschau</button>
-          </div>
-        </div>
-        <div class="zx-set-block">
-          <span class="zx-set-label">Tab-Tarnung <small>(Titel &amp; Symbol im Browser-Tab – passt automatisch zur Tarnseite)</small></span>
-          <div class="zx-chips" role="radiogroup" aria-label="Tab-Tarnung">
-            ${TAB_TEMPLATES.map((t) => `<button type="button" class="zx-chip" role="radio" data-tab="${t.id}" aria-checked="${S.tab === t.id}">${tabIcon(t) ? `<img src="${tabIcon(t)}" alt="" width="16" height="16">` : ''}${esc(t.id === 'passend' ? `Passend: „${cur.tab}“` : t.label)}</button>`).join('')}
-          </div>
-        </div>
-        <div class="zx-set-block">
-          <span class="zx-set-label">Panik-Taste</span>
-          <div class="zx-set-key">
-            <kbd id="zbTarnKey">${esc(keyLabel(S.key))}</kbd><span>2× schnell drücken</span>
-            <button type="button" class="zx-chip" id="zbTarnKeyBtn">Ändern</button>
-          </div>
-        </div>
-        <div class="zx-set-row zx-set-row-sm">
-          <div class="zx-set-txt"><b>Panik-Knopf auf Touch</b><span>Kleiner Knopf unten links${touch ? '' : ' (nur auf Handy/Tablet sichtbar)'}.</span></div>
-          <button type="button" class="zx-switch" role="switch" id="zbTarnFabSw" aria-checked="${S.fab}" aria-label="Panik-Knopf auf Touch-Geräten"><i></i></button>
-        </div>
-        <p class="zx-set-note">Zurück zum Spiel: dieselbe Taste 2× drücken oder die Ecke oben links 2× antippen. Das Spiel läuft im Hintergrund weiter.</p>
-      </div>`;
-
-    root.querySelector('#zbTarnOn').onclick = () => setSetting('on', !S.on);
-    root.querySelector('#zbTarnFabSw').onclick = () => setSetting('fab', !S.fab);
-    root.querySelectorAll('[data-tab]').forEach((b) => { b.onclick = () => setSetting('tab', b.dataset.tab); });
-    // Neue Tarnseite → Tab-Tarnung springt auf „passend“ (kann danach wieder geändert werden)
-    root.querySelectorAll('[data-page]').forEach((b) => { b.onclick = () => { set(KEYS.tab, 'passend'); setSetting('page', b.dataset.page); }; });
-    root.querySelector('#zbTarnPreview').onclick = () => previewPage(S.page);
-    const kb = root.querySelector('#zbTarnKeyBtn');
-    kb.onclick = () => {
-      if (recording) return;
-      kb.textContent = 'Taste drücken …';
-      root.querySelector('#zbTarnKey').textContent = '?';
-      recording = (e) => {
-        e.preventDefault(); e.stopPropagation();
-        recording = null;
-        const bad = ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Enter', 'Unidentified', 'Dead'];
-        if (!bad.includes(e.key)) setSetting('key', e.key); else render();
-      };
-    };
-  };
-  ui = { render };
-  render();
-}
-
 // ---------------------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------------------
 function init() {
+  installAdvanced();
+  S = readState();
   injectCSS();
   // capture: Panik-Taste greift auch, wenn das Spiel Tasten selbst abfängt
   window.addEventListener('keydown', (e) => {
     if (recording) { recording(e); return; }
     onKey(e);
   }, true);
+  // Tastatureingaben für die Tarnseiten kommen am Fenster an (das Overlay selbst
+  // hat keinen Fokus), deshalb hier in der Capture-Phase abfangen.
+  window.addEventListener('keydown', (e) => { if (ov) onOverlayExtraKey(e); }, true);
   watchTitle();
   applyTab();
   updateFab();
+
+  // Automatische Tarnung, wenn der Tab verlassen oder der Fokus verloren wird.
+  window.addEventListener('blur', armAuto);
+  window.addEventListener('focus', cancelAuto);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) armAuto(); else cancelAuto(); });
+  setInterval(() => { if (ui && S.schedule) ui.render(); }, 60000);
+  window.addEventListener('zb-tarnung-stat', () => { if (ui) ui.render(); });
+
   const root = document.getElementById('zbTarnSettings');
-  if (root) mountSettings(root);
-  window.zbTarnung = { show: showPanic, hide, preview: previewPage, get: getSettings, set: setSetting, isPanic };
+  if (root) mountAdvancedSettings(root);
+  window.zbTarnung = {
+    show: showPanic, hide, preview: previewPage, get: getSettings, set: setSetting, isPanic,
+    pages: () => PAGES.map((p) => ({ id: p.id, label: p.label, title: p.title })),
+    switchTo: (id) => { const i = PAGES.findIndex((p) => p.id === id); if (i >= 0) switchPage(i, (panic || pagePreview) ? 'switch' : 'panic'); },
+    settings: exportConfig, reset: resetConfig,
+    count: () => Number(get(KEYS.count, '0') || 0),
+  };
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
-else init();
+// Mikrotask: erst nach Auswertung des gesamten Moduls starten (die Erweiterungen
+// weiter unten müssen dafür initialisiert sein).
+Promise.resolve().then(() => {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+});
+
+// ===========================================================================
+// ERWEITERTER TARNMODUS
+// ---------------------------------------------------------------------------
+// Ergänzt die drei klassischen Tarnseiten um fünf weitere, vollständig
+// bedienbare Anwendungen (Taschenrechner, Kalender, Notizen, Editor, Tabelle),
+// um zusätzliche Auslöser (Auto-Tarnung, Zeitfenster, Schnellwechsel) und um
+// eine ausführliche Einstellungs-Oberfläche mit Import/Export und Statistik.
+//
+// Auch hier gilt: keine echten Logos, keine echten Markennamen, keine
+// nachgebauten Schriftzüge. Alle Inhalte sind selbst geschrieben/gezeichnet.
+// ===========================================================================
+
+const EXTRA_KEYS = {
+  delay: 'zb_tarn_delay', single: 'zb_tarn_single', auto: 'zb_tarn_auto',
+  autoMs: 'zb_tarn_auto_ms', schedule: 'zb_tarn_schedule',
+  from: 'zb_tarn_from', to: 'zb_tarn_to', term: 'zb_tarn_term',
+  docName: 'zb_tarn_doc_name', media: 'zb_tarn_media',
+  count: 'zb_tarn_count', last: 'zb_tarn_last',
+};
+
+const AKEYS = {
+  notes: 'zb_tarn_notes', cal: 'zb_tarn_cal_notes', doc: 'zb_tarn_doc_html',
+  code: 'zb_tarn_code', sheet: 'zb_tarn_sheet', history: 'zb_tarn_history',
+  calcHist: 'zb_tarn_calc_hist',
+};
+
+const ajson = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+const asave = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const esc2 = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const EXTRA_CSS = `
+/* ===== Erweiterte Tarnung: gemeinsame App-Oberfläche ===== */
+#zbTarnOverlay .zbt-x{min-height:100%;background:#f5f6f7;color:#202124;display:flex;flex-direction:column;
+  font:14px/1.55 Arial,Helvetica,sans-serif}
+#zbTarnOverlay .zbt-x-head{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:12px;
+  padding:9px 18px;background:#fff;border-bottom:1px solid #dadce0}
+#zbTarnOverlay .zbt-x-ic{width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:5px;background:#eef1f5}
+#zbTarnOverlay .zbt-x-ic svg{width:20px;height:20px}
+#zbTarnOverlay .zbt-x-title{font-size:16px;color:#202124;font-weight:500;white-space:nowrap}
+#zbTarnOverlay .zbt-x-sub{font-size:12px;color:#70757a;margin-left:2px}
+#zbTarnOverlay .zbt-x-actions{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#zbTarnOverlay .zbt-btn{height:30px;padding:0 11px;border:1px solid #dadce0;border-radius:5px;background:#fff;
+  color:#3c4043;font:13px Arial,sans-serif;cursor:pointer}
+#zbTarnOverlay .zbt-btn:hover{background:#f1f3f4;border-color:#bdc1c6}
+#zbTarnOverlay .zbt-btn.pri{background:#1a73e8;border-color:#1a73e8;color:#fff}
+#zbTarnOverlay .zbt-btn.pri:hover{background:#1765cc}
+#zbTarnOverlay .zbt-btn.on{background:#e8f0fe;border-color:#1a73e8;color:#174ea6}
+#zbTarnOverlay .zbt-sel{height:30px;padding:0 8px;border:1px solid #dadce0;border-radius:5px;background:#fff;
+  color:#3c4043;font:13px Arial,sans-serif}
+#zbTarnOverlay .zbt-x-body{flex:1;padding:20px;min-width:0}
+#zbTarnOverlay .zbt-x-foot{padding:8px 18px;border-top:1px solid #dadce0;background:#fff;color:#70757a;font-size:12px;
+  display:flex;gap:16px;flex-wrap:wrap}
+#zbTarnOverlay .zbt-panel{background:#fff;border:1px solid #dadce0;border-radius:8px;overflow:hidden}
+#zbTarnOverlay .zbt-empty{padding:22px;color:#70757a;font-size:13px;text-align:center}
+
+/* ===== Taschenrechner ===== */
+#zbTarnOverlay .zbt-calc-wrap{max-width:420px;margin:0 auto;display:grid;gap:12px}
+#zbTarnOverlay .zbt-calc-display{background:#fff;border:1px solid #dadce0;border-radius:8px;padding:16px 18px;min-height:104px;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;text-align:right}
+#zbTarnOverlay .zbt-calc-expr{font-size:15px;color:#70757a;word-break:break-all;min-height:22px}
+#zbTarnOverlay .zbt-calc-res{font-size:34px;line-height:1.2;color:#202124;word-break:break-all;font-weight:400}
+#zbTarnOverlay .zbt-calc-pad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+#zbTarnOverlay .zbt-calc-pad button{height:52px;border:1px solid #dadce0;border-radius:7px;background:#fff;
+  font:18px Arial,sans-serif;color:#202124;cursor:pointer}
+#zbTarnOverlay .zbt-calc-pad button:hover{background:#f1f3f4}
+#zbTarnOverlay .zbt-calc-pad button:active{background:#e8eaed}
+#zbTarnOverlay .zbt-calc-pad button.fn{background:#f8f9fa;color:#3c4043;font-size:16px}
+#zbTarnOverlay .zbt-calc-pad button.op{background:#e8f0fe;color:#174ea6}
+#zbTarnOverlay .zbt-calc-pad button.eq{background:#1a73e8;border-color:#1a73e8;color:#fff}
+#zbTarnOverlay .zbt-calc-pad button.eq:hover{background:#1765cc}
+#zbTarnOverlay .zbt-calc-hist{font-size:12px;color:#70757a;min-height:20px;text-align:right}
+#zbTarnOverlay .zbt-calc-more{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+#zbTarnOverlay .zbt-calc-more button{height:30px;border:1px solid #dadce0;border-radius:5px;background:#fff;
+  font:13px Arial,sans-serif;color:#3c4043;cursor:pointer}
+
+/* ===== Kalender ===== */
+#zbTarnOverlay .zbt-cal{max-width:940px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px}
+#zbTarnOverlay .zbt-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#dadce0;
+  border:1px solid #dadce0;border-radius:8px;overflow:hidden}
+#zbTarnOverlay .zbt-cal-dow{background:#f8f9fa;padding:8px 4px;text-align:center;font-size:11px;color:#70757a;
+  text-transform:uppercase;letter-spacing:.06em}
+#zbTarnOverlay .zbt-cal-cell{background:#fff;min-height:76px;padding:6px;border:0;text-align:left;cursor:pointer;
+  font:13px Arial,sans-serif;color:#202124;display:flex;flex-direction:column;gap:4px}
+#zbTarnOverlay .zbt-cal-cell:hover{background:#f1f3f4}
+#zbTarnOverlay .zbt-cal-cell.out{color:#bdc1c6;background:#fafafa}
+#zbTarnOverlay .zbt-cal-cell.today b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#1a73e8;color:#fff}
+#zbTarnOverlay .zbt-cal-cell.sel{background:#e8f0fe;box-shadow:inset 0 0 0 2px #1a73e8}
+#zbTarnOverlay .zbt-cal-cell .dot{width:5px;height:5px;border-radius:50%;background:#1a73e8}
+#zbTarnOverlay .zbt-cal-cell .mini{font-size:10.5px;color:#70757a;line-height:1.25;max-height:26px;overflow:hidden}
+#zbTarnOverlay .zbt-cal-side{background:#fff;border:1px solid #dadce0;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px}
+#zbTarnOverlay .zbt-cal-side h2{margin:0;font:500 15px Arial,sans-serif;color:#202124}
+#zbTarnOverlay .zbt-cal-side textarea{width:100%;min-height:150px;resize:vertical;border:1px solid #dadce0;border-radius:5px;
+  padding:8px;font:13px/1.5 Arial,sans-serif;color:#202124;outline:0}
+#zbTarnOverlay .zbt-cal-side textarea:focus{border-color:#1a73e8}
+#zbTarnOverlay .zbt-cal-side small{color:#70757a;font-size:11px}
+@media (max-width:760px){#zbTarnOverlay .zbt-cal{grid-template-columns:minmax(0,1fr)}#zbTarnOverlay .zbt-cal-cell{min-height:54px}}
+
+/* ===== Notizen ===== */
+#zbTarnOverlay .zbt-notes{max-width:960px;margin:0 auto;display:grid;grid-template-columns:240px minmax(0,1fr);
+  gap:0;background:#fff;border:1px solid #dadce0;border-radius:8px;overflow:hidden;min-height:460px}
+#zbTarnOverlay .zbt-notes-list{border-right:1px solid #dadce0;background:#f8f9fa;display:flex;flex-direction:column}
+#zbTarnOverlay .zbt-notes-list .top{padding:10px;border-bottom:1px solid #e8eaed;display:flex;gap:6px}
+#zbTarnOverlay .zbt-notes-list .items{overflow:auto;flex:1;padding:6px}
+#zbTarnOverlay .zbt-notes-list button.item{width:100%;display:block;text-align:left;border:0;border-radius:5px;
+  background:transparent;padding:9px 10px;margin-bottom:3px;cursor:pointer;font:13px/1.35 Arial,sans-serif;color:#202124}
+#zbTarnOverlay .zbt-notes-list button.item:hover{background:#eef1f5}
+#zbTarnOverlay .zbt-notes-list button.item.on{background:#e8f0fe;color:#174ea6}
+#zbTarnOverlay .zbt-notes-list button.item small{display:block;color:#70757a;font-size:11px;margin-top:2px}
+#zbTarnOverlay .zbt-notes-edit{display:flex;flex-direction:column;padding:16px;gap:10px;min-width:0}
+#zbTarnOverlay .zbt-notes-edit input{border:0;border-bottom:1px solid #dadce0;padding:6px 2px;font:500 20px Arial,sans-serif;
+  color:#202124;outline:0;width:100%}
+#zbTarnOverlay .zbt-notes-edit textarea{flex:1;min-height:280px;border:0;outline:0;resize:none;
+  font:14px/1.6 Arial,sans-serif;color:#3c4043;width:100%}
+#zbTarnOverlay .zbt-notes-edit .meta{font-size:11px;color:#70757a;display:flex;justify-content:space-between;gap:10px}
+@media (max-width:700px){#zbTarnOverlay .zbt-notes{grid-template-columns:130px minmax(0,1fr)}}
+
+/* ===== Editor ===== */
+#zbTarnOverlay .zbt-code{max-width:980px;margin:0 auto;background:#fff;border:1px solid #dadce0;border-radius:8px;overflow:hidden}
+#zbTarnOverlay .zbt-code-bar{display:flex;align-items:center;gap:8px;padding:7px 12px;background:#f8f9fa;border-bottom:1px solid #e8eaed;flex-wrap:wrap}
+#zbTarnOverlay .zbt-code-bar span{font-size:12px;color:#70757a}
+#zbTarnOverlay .zbt-code-edit{display:grid;grid-template-columns:52px minmax(0,1fr);height:min(62vh,560px);background:#fbfbfc}
+#zbTarnOverlay .zbt-code-gutter{margin:0;padding:12px 8px;text-align:right;background:#f1f3f4;border-right:1px solid #e8eaed;
+  color:#9aa0a6;font:13px/1.55 'Courier New',monospace;overflow:hidden;white-space:pre;user-select:none}
+#zbTarnOverlay .zbt-code-edit textarea{border:0;outline:0;resize:none;padding:12px;width:100%;height:100%;
+  background:transparent;color:#202124;font:13px/1.55 'Courier New',monospace;white-space:pre;tab-size:2}
+
+/* ===== Tabelle ===== */
+#zbTarnOverlay .zbt-sheet{max-width:1000px;margin:0 auto;background:#fff;border:1px solid #dadce0;border-radius:8px;overflow:auto}
+#zbTarnOverlay .zbt-sheet table{border-collapse:collapse;width:100%;table-layout:fixed;min-width:620px}
+#zbTarnOverlay .zbt-sheet th,#zbTarnOverlay .zbt-sheet td{border-right:1px solid #e8eaed;border-bottom:1px solid #e8eaed;
+  height:32px;padding:0;font:13px Arial,sans-serif}
+#zbTarnOverlay .zbt-sheet th{background:#f8f9fa;color:#70757a;font-weight:500;text-align:center;font-size:12px}
+#zbTarnOverlay .zbt-sheet th.rowh{width:38px;background:#f1f3f4}
+#zbTarnOverlay .zbt-sheet td input{width:100%;height:100%;border:0;outline:0;padding:4px 7px;background:transparent;
+  font:13px Arial,sans-serif;color:#202124}
+#zbTarnOverlay .zbt-sheet td input:focus{box-shadow:inset 0 0 0 2px #1a73e8;background:#fff}
+#zbTarnOverlay .zbt-sheet td.formula input{color:#174ea6;background:#f3f8ff}
+#zbTarnOverlay .zbt-sheet-cap{padding:8px 12px;font-size:12px;color:#70757a;border-top:1px solid #e8eaed;background:#fafafa}
+
+/* ===== Dokument: Statusleiste ===== */
+#zbTarnOverlay .zbt-d-status{display:flex;align-items:center;gap:12px;padding:5px 18px;background:#f8f9fa;
+  border-bottom:1px solid #dadce0;font-size:11.5px;color:#70757a}
+#zbTarnOverlay .zbt-d-tools button.on{background:#d2e3fc}
+#zbTarnOverlay .zbt-d-tools button[data-zbt2]{cursor:pointer}
+
+/* ===== Suche: Verlauf / Filter ===== */
+#zbTarnOverlay .zbt-r-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0 0 180px;font-size:12px;color:#70757a}
+#zbTarnOverlay .zbt-r-tools .zbt-fbtn{padding:4px 9px;border:1px solid #dadce0;border-radius:14px;background:#fff;
+  font:12px Arial,sans-serif;color:#5f6368;cursor:pointer}
+#zbTarnOverlay .zbt-r-tools .zbt-fbtn.on{background:#e8f0fe;border-color:#1a73e8;color:#174ea6}
+#zbTarnOverlay .zbt-r-tools .zbt-h{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#zbTarnOverlay .zbt-r-tools .zbt-h a{color:#1a0dab;cursor:pointer}
+#zbTarnOverlay .zbt-r-tabs span[data-zbt2]{cursor:pointer}
+#zbTarnOverlay .zbt-r-pages a[data-zbt2]{cursor:pointer}
+#zbTarnOverlay .zbt-s-hist{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px;font-size:13px;color:#70757a}
+#zbTarnOverlay .zbt-s-hist a{color:#1a0dab;cursor:pointer}
+@media (max-width:860px){#zbTarnOverlay .zbt-r-tools{padding:8px 16px 0}}
+
+/* ===== Lexikon: Suchtreffer ===== */
+#zbTarnOverlay .zbt-v-hits{background:#fff;border:1px solid #a2a9b1;padding:10px 14px;margin:10px 0 0;font-size:13px}
+#zbTarnOverlay .zbt-v-hits a{display:block;padding:4px 0;cursor:pointer}
+#zbTarnOverlay .zbt-v-toc li a[data-zbt2]{cursor:pointer}
+#zbTarnOverlay .zbt-v-body h2[data-sec]{scroll-margin-top:70px}
+
+/* ===== Drucken: nur die Tarnseite ===== */
+@media print {
+  html.zbt-lock body > *:not(#zbTarnOverlay) { display:none!important }
+  html.zbt-lock,html.zbt-lock body { overflow:visible!important;position:static!important;height:auto!important }
+  #zbTarnOverlay { position:static!important;z-index:auto!important;overflow:visible!important;height:auto!important;inset:auto!important }
+  .zbt-back,.zbt-fab,.zbt-preview-bar { display:none!important }
+  #zbTarnOverlay .zbt-d-head,#zbTarnOverlay .zbt-x-head,#zbTarnOverlay .zbt-v-toc { position:static!important }
+  #zbTarnOverlay .zbt-d-page { box-shadow:none!important;min-height:0!important }
+}
+`;
+
+function extraCSS() { return EXTRA_CSS; }
+
+// ---------------------------------------------------------------------------
+// Zusätzliche Symbole / Tarnseiten / Tab-Vorlagen
+// ---------------------------------------------------------------------------
+function advIcons() {
+  return {
+    kalender: svgUrl('<rect x="3" y="5" width="26" height="24" rx="3" fill="#fff" stroke="#5f6368" stroke-width="1.6"/><path d="M3 11h26" stroke="#1a73e8" stroke-width="4"/><g fill="#5f6368"><rect x="7" y="15" width="4" height="4" rx="1"/><rect x="14" y="15" width="4" height="4" rx="1"/><rect x="21" y="15" width="4" height="4" rx="1"/><rect x="7" y="22" width="4" height="4" rx="1"/><rect x="14" y="22" width="4" height="4" rx="1"/></g>'),
+    notizen: svgUrl('<rect x="5" y="3" width="22" height="26" rx="3" fill="#f6c945"/><rect x="5" y="3" width="22" height="6" rx="3" fill="#e0a92a"/><path d="M9 14h14M9 19h14M9 24h9" stroke="#7a5a10" stroke-width="2" stroke-linecap="round"/>'),
+    code: svgUrl('<rect x="2" y="5" width="28" height="22" rx="3" fill="#2b313a"/><path d="M11 12 7 16l4 4M21 12l4 4-4 4M18 10l-4 12" stroke="#9fd0ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'),
+    tabelle: svgUrl('<rect x="3" y="4" width="26" height="24" rx="2" fill="#fff" stroke="#5f6368" stroke-width="1.6"/><path d="M3 11h26M3 18h26M12 4v24M21 4v24" stroke="#5f6368" stroke-width="1.4"/><rect x="3" y="4" width="9" height="7" fill="#cfe3c6"/>'),
+    mail: svgUrl('<rect x="2" y="7" width="28" height="18" rx="3" fill="#fff" stroke="#5f6368" stroke-width="1.6"/><path d="M3 9l13 10L29 9" stroke="#1a73e8" stroke-width="2" fill="none"/>'),
+  };
+}
+
+function installAdvanced() {
+  Object.assign(KEYS, EXTRA_KEYS);
+  Object.assign(ICONS, advIcons());
+  TAB_TEMPLATES.push(
+    { id: 'kalender', label: 'Kalender', title: 'Kalender – Monatsansicht', icon: ICONS.kalender },
+    { id: 'code', label: 'Editor', title: 'Notizen.js – Editor', icon: ICONS.code },
+    { id: 'tabelle', label: 'Tabelle', title: 'Stundenplan – Tabelle', icon: ICONS.tabelle },
+    { id: 'mail', label: 'Postfach', title: 'Posteingang (1)', icon: ICONS.mail },
+  );
+  PAGES.push(
+    { id: 'rechner', label: 'Taschenrechner', tab: 'Taschenrechner', title: 'Taschenrechner', icon: ICONS.rechner },
+    { id: 'kalender', label: 'Kalender', tab: 'Kalender – Monatsansicht', title: 'Kalender – Monatsansicht', icon: ICONS.kalender },
+    { id: 'notizen', label: 'Notizen', tab: 'Notizen', title: 'Notizen', icon: ICONS.notizen },
+    { id: 'code', label: 'Editor', tab: 'Notizen.js – Editor', title: 'Notizen.js – Editor', icon: ICONS.code },
+    { id: 'tabelle', label: 'Tabelle', tab: 'Stundenplan – Tabelle', title: 'Stundenplan – Tabelle', icon: ICONS.tabelle },
+  );
+  Object.assign(RENDER, {
+    rechner: pageRechner, kalender: pageKalender, notizen: pageNotizen,
+    code: pageCode, tabelle: pageTabelle,
+  });
+  searchState.q = S.term || 'photosynthese';
+}
+
+// ---------------------------------------------------------------------------
+// Zustand der neuen Anwendungen
+// ---------------------------------------------------------------------------
+let calcState = { expr: '', justEval: false };
+let calState = { y: new Date().getFullYear(), m: new Date().getMonth(), sel: null };
+let noteState = { notes: ajson(AKEYS.notes, null), active: null };
+let codeState = { lang: 'JavaScript' };
+let sheetState = { cells: ajson(AKEYS.sheet, {}) };
+let searchState = { q: 'photosynthese', page: 1, tab: 'Alle', onlyLex: false };
+let lexTopic = 'photosynthese';
+
+// ---------------------------------------------------------------------------
+// Hilfsfunktionen
+// ---------------------------------------------------------------------------
+const xHead = (title, sub, icon, actions = '') => `<div class="zbt-x-head">
+  <span class="zbt-x-ic">${icon}</span><span class="zbt-x-title">${esc2(title)}</span>
+  <span class="zbt-x-sub">${esc2(sub)}</span><div class="zbt-x-actions">${actions}</div></div>`;
+const ICON_CALC = '<svg viewBox="0 0 24 24" fill="#5f6368"><rect x="4" y="2" width="16" height="20" rx="2"/><rect x="6" y="4" width="12" height="4" fill="#cfe8d6"/><g fill="#fff"><rect x="6" y="10" width="3" height="2"/><rect x="10.5" y="10" width="3" height="2"/><rect x="15" y="10" width="3" height="2"/><rect x="6" y="14" width="3" height="2"/><rect x="10.5" y="14" width="3" height="2"/><rect x="15" y="14" width="3" height="6"/></g></svg>';
+const ICON_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="#5f6368" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+const ICON_NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="#5f6368" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>';
+const ICON_CODE = '<svg viewBox="0 0 24 24" fill="none" stroke="#5f6368" stroke-width="2" stroke-linecap="round"><path d="M9 7 4 12l5 5M15 7l5 5-5 5M13 5l-2 14"/></svg>';
+const ICON_TABLE = '<svg viewBox="0 0 24 24" fill="none" stroke="#5f6368" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M10 4v16"/></svg>';
+const printBtn = '<button type="button" class="zbt-btn" data-zbt2="print">Drucken</button>';
+
+function toastMsg(msg) {
+  if (window.phToast) window.phToast(msg);
+  else if (window.zbToast) window.zbToast(msg);
+}
+
+// ---------------------------------------------------------------------------
+// Taschenrechner – eigener Parser (kein eval), Tastatur und Verlauf
+// ---------------------------------------------------------------------------
+function calcEval(src) {
+  const s = String(src).replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/,/g, '.').replace(/\s/g, '');
+  if (!s || !/^[0-9+\-*/().%]+$/.test(s)) return null;
+  let i = 0;
+  const primary = () => {
+    if (s[i] === '(') { i++; const v = expr(); if (s[i] === ')') i++; return v; }
+    const st = i;
+    while (i < s.length && /[0-9.]/.test(s[i])) i++;
+    if (st === i) throw new Error('zahl');
+    let n = parseFloat(s.slice(st, i));
+    if (s[i] === '%') { i++; n = n / 100; }
+    return n;
+  };
+  const unary = () => {
+    if (s[i] === '-') { i++; return -unary(); }
+    if (s[i] === '+') { i++; return unary(); }
+    return primary();
+  };
+  const term = () => {
+    let v = unary();
+    while (s[i] === '*' || s[i] === '/') { const op = s[i++]; const r = unary(); v = op === '*' ? v * r : v / r; }
+    return v;
+  };
+  const expr = () => {
+    let v = term();
+    while (s[i] === '+' || s[i] === '-') { const op = s[i++]; const r = term(); v = op === '+' ? v + r : v - r; }
+    return v;
+  };
+  try { const v = expr(); return Number.isFinite(v) ? v : null; } catch (e) { return null; }
+}
+const fmtNum = (v) => {
+  if (!Number.isFinite(v)) return 'Fehler';
+  const r = Math.round(v * 1e10) / 1e10;
+  return r.toLocaleString('de-DE', { maximumFractionDigits: 10 });
+};
+
+function pageRechner() {
+  const hist = ajson(AKEYS.calcHist, []);
+  const res = calcEval(calcState.expr || '0');
+  const keys = [
+    ['C', 'fn'], ['Del', 'fn'], ['%', 'fn'], ['÷', 'op'],
+    ['7', ''], ['8', ''], ['9', ''], ['×', 'op'],
+    ['4', ''], ['5', ''], ['6', ''], ['−', 'op'],
+    ['1', ''], ['2', ''], ['3', ''], ['+', 'op'],
+    ['±', 'fn'], ['0', ''], [',', ''], ['=', 'eq'],
+  ];
+  return `<div class="zbt-x">${xHead('Taschenrechner', 'Standard', ICON_CALC,
+    `<span class="zbt-x-sub">Tastatur: 0–9 · + − * / · Enter · Rücktaste</span>${printBtn}`)}
+  <div class="zbt-x-body"><div class="zbt-calc-wrap">
+    <div class="zbt-calc-display"><div class="zbt-calc-expr">${esc2(calcState.expr)}</div>
+      <div class="zbt-calc-res">${res === null ? '–' : esc2(fmtNum(res))}</div></div>
+    <div class="zbt-calc-more">${['√', 'x²', '1/x', '(', ')'].map((k) => `<button type="button" data-zbt2="calc-key" data-k="${esc2(k)}">${esc2(k)}</button>`).join('')}</div>
+    <div class="zbt-calc-pad">${keys.map(([k, c]) => `<button type="button" class="${c}" data-zbt2="calc-key" data-k="${esc2(k)}">${esc2(k)}</button>`).join('')}</div>
+    <div class="zbt-calc-hist">${hist.length ? 'Zuletzt: ' + esc2(hist.slice(-3).join(' · ')) : 'Noch keine Rechnung'}</div>
+  </div></div>
+  <div class="zbt-x-foot"><span>Eigener Rechenkern ohne eval()</span><span>Ergebnisse nur in diesem Browser</span></div>
+</div>`;
+}
+
+function calcPress(k) {
+  let e = calcState.expr;
+  if (k === 'C') { calcState = { expr: '', justEval: false }; }
+  else if (k === '⌫' || k === 'Del') { calcState.expr = e.slice(0, -1); calcState.justEval = false; }
+  else if (k === '=') {
+    const v = calcEval(e || '0');
+    if (v !== null) {
+      const h = ajson(AKEYS.calcHist, []);
+      h.push(`${e} = ${fmtNum(v)}`);
+      asave(AKEYS.calcHist, h.slice(-12));
+      calcState.expr = String(Math.round(v * 1e10) / 1e10).replace('.', ',');
+      calcState.justEval = true;
+    }
+  } else if (k === '±') { calcState.expr = e.startsWith('-') ? e.slice(1) : '-' + e; }
+  else if (k === '√') { const v = calcEval(e || '0'); if (v !== null && v >= 0) { calcState.expr = String(Math.round(Math.sqrt(v) * 1e10) / 1e10).replace('.', ','); calcState.justEval = true; } }
+  else if (k === 'x²') { const v = calcEval(e || '0'); if (v !== null) { calcState.expr = String(Math.round(v * v * 1e10) / 1e10).replace('.', ','); calcState.justEval = true; } }
+  else if (k === '1/x') { const v = calcEval(e || '0'); if (v !== null && v !== 0) { calcState.expr = String(Math.round((1 / v) * 1e10) / 1e10).replace('.', ','); calcState.justEval = true; } }
+  else {
+    const map = { '×': '*', '÷': '/', '−': '-' };
+    const ch = map[k] || k;
+    if (calcState.justEval && /[0-9,.]/.test(ch)) calcState.expr = ch;
+    else calcState.expr = (calcState.expr || '') + ch;
+    calcState.justEval = false;
+  }
+  if (ov) setOverlayContent('rechner', pageRechner(), 'Taschenrechner');
+}
+
+// ---------------------------------------------------------------------------
+// Kalender – echter Monat, Notizen pro Tag
+// ---------------------------------------------------------------------------
+const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+const DOW = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const dayKey = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+function pageKalender() {
+  const notes = ajson(AKEYS.cal, {});
+  const y = calState.y, m = calState.m;
+  const first = new Date(y, m, 1);
+  const shift = (first.getDay() + 6) % 7;
+  const days = new Date(y, m + 1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+  const today = new Date();
+  const cells = [];
+  for (let i = 0; i < 42; i++) {
+    const idx = i - shift + 1;
+    let yy = y, mm = m, dd = idx, out = false;
+    if (idx < 1) { mm = m - 1; dd = prevDays + idx; out = true; if (mm < 0) { mm = 11; yy--; } }
+    else if (idx > days) { mm = m + 1; dd = idx - days; out = true; if (mm > 11) { mm = 0; yy++; } }
+    const key = dayKey(yy, mm, dd);
+    const note = notes[key] || '';
+    const isToday = !out && yy === today.getFullYear() && mm === today.getMonth() && dd === today.getDate();
+    cells.push(`<button type="button" class="zbt-cal-cell${out ? ' out' : ''}${isToday ? ' today' : ''}${calState.sel === key ? ' sel' : ''}" data-zbt2="cal-day" data-day="${key}"><b>${dd}</b>${note ? `<span class="dot"></span><span class="mini">${esc2(note.slice(0, 60))}</span>` : ''}</button>`);
+  }
+  const sel = calState.sel;
+  const selLabel = sel ? new Date(sel + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Tag auswählen';
+  return `<div class="zbt-x">${xHead('Kalender', `${MONATE[m]} ${y}`, ICON_CAL,
+    `<button type="button" class="zbt-btn" data-zbt2="cal-prev">Zurück</button><button type="button" class="zbt-btn" data-zbt2="cal-today">Heute</button><button type="button" class="zbt-btn" data-zbt2="cal-next">Weiter</button>${printBtn}`)}
+  <div class="zbt-x-body"><div class="zbt-cal">
+    <div class="zbt-cal-grid">${DOW.map((d) => `<div class="zbt-cal-dow">${d}</div>`).join('')}${cells.join('')}</div>
+    <div class="zbt-cal-side"><h2>${esc2(selLabel)}</h2>
+      <small>Notizen werden lokal gespeichert.</small>
+      <textarea data-zbt2="cal-note" placeholder="Notiz für diesen Tag …" ${sel ? '' : 'disabled'}>${esc2(sel ? notes[sel] || '' : '')}</textarea>
+      <button type="button" class="zbt-btn" data-zbt2="cal-clear" ${sel ? '' : 'disabled'}>Notiz löschen</button>
+    </div>
+  </div></div>
+  <div class="zbt-x-foot"><span>Montag als Wochenbeginn</span><span>${Object.keys(notes).length} Einträge gespeichert</span></div>
+</div>`;
+}
+
+function calRender() { if (ov) setOverlayContent('kalender', pageKalender(), 'Kalender – Monatsansicht'); }
+
+// ---------------------------------------------------------------------------
+// Notizen – mehrere Notizen, lokal gespeichert
+// ---------------------------------------------------------------------------
+const DEFAULT_NOTES = [
+  { id: 'n1', title: 'Biologie – Test', body: 'Photosynthese wiederholen:\n- Lichtreaktion in den Thylakoiden\n- Calvin-Zyklus im Stroma\n- Formel: 6 CO₂ + 6 H₂O → C₆H₁₂O₆ + 6 O₂', ts: Date.now() },
+  { id: 'n2', title: 'Einkauf', body: 'Milch\nBrot\nÄpfel\nNotizblock', ts: Date.now() - 86400000 },
+];
+function notes() { if (!Array.isArray(noteState.notes)) noteState.notes = DEFAULT_NOTES.map((n) => ({ ...n })); return noteState.notes; }
+function activeNote() { return notes().find((n) => n.id === noteState.active) || notes()[0] || null; }
+
+function pageNotizen() {
+  const list = notes();
+  const cur = activeNote();
+  noteState.active = cur ? cur.id : null;
+  return `<div class="zbt-x">${xHead('Notizen', `${list.length} Notizen`, ICON_NOTE,
+    `<button type="button" class="zbt-btn pri" data-zbt2="note-new">+ Neu</button>${printBtn}`)}
+  <div class="zbt-x-body"><div class="zbt-notes">
+    <div class="zbt-notes-list"><div class="top"><span class="zbt-x-sub">Alle Notizen</span></div>
+      <div class="items">${list.map((n) => `<button type="button" class="item${cur && cur.id === n.id ? ' on' : ''}" data-zbt2="note-select" data-id="${esc2(n.id)}">${esc2(n.title || 'Ohne Titel')}<small>${new Date(n.ts || Date.now()).toLocaleDateString('de-DE')}</small></button>`).join('') || '<div class="zbt-empty">Keine Notizen</div>'}</div>
+    </div>
+    <div class="zbt-notes-edit">
+      ${cur ? `<input data-zbt2="note-title" value="${esc2(cur.title)}" aria-label="Titel" placeholder="Titel">
+        <textarea data-zbt2="note-body" aria-label="Notiz" placeholder="Schreiben …">${esc2(cur.body)}</textarea>
+        <div class="meta"><span>${esc2(String(cur.body || '').length)} Zeichen</span><button type="button" class="zbt-btn" data-zbt2="note-del">Löschen</button></div>`
+        : '<div class="zbt-empty">Wähle links eine Notiz oder lege eine neue an.</div>'}
+    </div>
+  </div></div>
+  <div class="zbt-x-foot"><span>Automatisch gespeichert</span><span>Nur auf diesem Gerät</span></div>
+</div>`;
+}
+
+function notesRender() { if (ov) setOverlayContent('notizen', pageNotizen(), 'Notizen'); }
+
+// ---------------------------------------------------------------------------
+// Editor – Zeilennummern, Tab-Einrückung, Speichern
+// ---------------------------------------------------------------------------
+const DEFAULT_CODE = `// Notizen zur Photosynthese\nconst thema = 'Biologie';\n\nfunction gleichung(co2, h2o) {\n  return {\n    eingang: [co2, h2o],\n    ausgang: ['Glucose', 'Sauerstoff'],\n    energie: 'Licht',\n  };\n}\n\nconsole.log(thema, gleichung(6, 6));\n`;
+function codeText() {
+  try { const v = localStorage.getItem(AKEYS.code); return v === null ? DEFAULT_CODE : v; } catch (e) { return DEFAULT_CODE; }
+}
+function pageCode() {
+  const txt = codeText();
+  const lines = txt.split('\n').length;
+  return `<div class="zbt-x">${xHead('Editor', 'notizen.js', ICON_CODE,
+    `<select class="zbt-sel" data-zbt2="code-lang" aria-label="Sprache">${['JavaScript', 'Text', 'HTML', 'CSS', 'JSON'].map((l) => `<option${codeState.lang === l ? ' selected' : ''}>${l}</option>`).join('')}</select>
+     <button type="button" class="zbt-btn" data-zbt2="code-copy">Kopieren</button>
+     <button type="button" class="zbt-btn" data-zbt2="code-clear">Leeren</button>${printBtn}`)}
+  <div class="zbt-x-body"><div class="zbt-code">
+    <div class="zbt-code-bar"><span>notizen.js</span><span id="zbtCodeCount">${lines} Zeilen · ${txt.length} Zeichen</span></div>
+    <div class="zbt-code-edit"><pre class="zbt-code-gutter" data-code-gutter>${Array.from({ length: lines }, (_, i) => i + 1).join('\n')}</pre>
+      <textarea data-zbt2="code-text" spellcheck="false" wrap="off" aria-label="Quelltext">${esc2(txt)}</textarea></div>
+  </div></div>
+  <div class="zbt-x-foot"><span>Tab fügt zwei Leerzeichen ein</span><span>Änderungen werden lokal gespeichert</span></div>
+</div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Tabelle – editierbare Zellen mit =SUMME() und Zellbezügen
+// ---------------------------------------------------------------------------
+const COLS = 'ABCDEF'.split('');
+const ROWS = 12;
+const DEMO = {
+  A1: 'Fach', B1: 'Stunde', C1: 'Raum', D1: 'Note',
+  A2: 'Biologie', B2: '2', C2: 'B204', D2: '1',
+  A3: 'Mathe', B3: '3', C3: 'A101', D3: '2',
+  A4: 'Deutsch', B4: '2', C4: 'A101', D4: '2',
+  A6: 'Summe', D6: '=SUMME(D2:D4)', E6: '=D2*2',
+};
+function sheetVal(ref, depth = 0) {
+  if (depth > 8) return 0;
+  const raw = sheetState.cells[ref];
+  if (raw == null || raw === '') return 0;
+  if (String(raw).startsWith('=')) return sheetFormula(String(raw).slice(1), depth + 1) || 0;
+  const n = parseFloat(String(raw).replace(',', '.'));
+  return Number.isFinite(n) ? n : 0;
+}
+function sheetFormula(f, depth = 0) {
+  if (depth > 8) return null;
+  const sum = /^SUMME\(([A-F]\d+):([A-F]\d+)\)$/i.exec(f.replace(/\s/g, ''));
+  if (sum) {
+    const a = sum[1].toUpperCase(), b = sum[2].toUpperCase();
+    const c1 = COLS.indexOf(a[0]), r1 = parseInt(a.slice(1), 10);
+    const c2 = COLS.indexOf(b[0]), r2 = parseInt(b.slice(1), 10);
+    let t = 0;
+    for (let r = Math.min(r1, r2); r <= Math.max(r1, r2); r++)
+      for (let c = Math.min(c1, c2); c <= Math.max(c1, c2); c++) {
+        const ref = COLS[c] + r;
+        if (String(sheetState.cells[ref] || '').startsWith('=')) continue;
+        t += (parseFloat(String(sheetState.cells[ref] || '0').replace(',', '.')) || 0);
+      }
+    return t;
+  }
+  const expr = f.replace(/([A-F]\d+)/gi, (m) => String(sheetVal(m.toUpperCase(), depth + 1)));
+  return calcEval(expr);
+}
+function pageTabelle() {
+  let body = '';
+  for (let r = 1; r <= ROWS; r++) {
+    body += `<tr><th class="rowh">${r}</th>`;
+    for (const c of COLS) {
+      const ref = c + r;
+      const raw = sheetState.cells[ref] || '';
+      const isF = String(raw).startsWith('=');
+      const shown = isF ? (() => { const v = sheetFormula(String(raw).slice(1)); return v === null ? '#FEHLER' : fmtNum(v); })() : raw;
+      body += `<td class="${isF ? 'formula' : ''}"><input data-zbt2="sheet-cell" data-ref="${ref}" value="${esc2(shown)}" aria-label="${ref}"></td>`;
+    }
+    body += '</tr>';
+  }
+  return `<div class="zbt-x">${xHead('Tabelle', 'Stundenplan', ICON_TABLE,
+    `<button type="button" class="zbt-btn" data-zbt2="sheet-demo">Beispiel</button>
+     <button type="button" class="zbt-btn" data-zbt2="sheet-clear">Leeren</button>${printBtn}`)}
+  <div class="zbt-x-body"><div class="zbt-sheet">
+    <table><thead><tr><th class="rowh"></th>${COLS.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>
+    <div class="zbt-sheet-cap">Formeln: <b>=SUMME(D2:D4)</b> oder <b>=D2*2</b> · Eingaben werden lokal gespeichert</div>
+  </div></div>
+  <div class="zbt-x-foot"><span>6 Spalten · ${ROWS} Zeilen</span><span>Formeln werden beim Verlassen der Zelle berechnet</span></div>
+</div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Lexikon: weitere Themen + anklickbares Inhaltsverzeichnis
+// ---------------------------------------------------------------------------
+const LEX_DATA = {
+  zellatmung: {
+    title: 'Zellatmung', hat: 'Zur Energiegewinnung mit Licht siehe Photosynthese.',
+    lead: 'Die <b>Zellatmung</b> ist ein Stoffwechselvorgang, bei dem organische Verbindungen mit Sauerstoff abgebaut werden. Die frei werdende Energie wird in Form von <a>ATP</a> gespeichert. Sie findet bei Eukaryoten vor allem in den <a>Mitochondrien</a> statt.',
+    sections: [
+      ['Überblick', 'Vereinfacht lässt sich der Vorgang als Oxidation von Glucose beschreiben. Aus einem Molekül Glucose entstehen Kohlenstoffdioxid und Wasser; gleichzeitig wird energiereiches ATP gebildet.'],
+      ['Glykolyse', 'Im <a>Cytoplasma</a> wird Glucose in zwei Moleküle <a>Pyruvat</a> zerlegt. Dabei entstehen geringe Mengen ATP und NADH. Dieser Schritt benötigt keinen Sauerstoff.'],
+      ['Citratzyklus', 'In der <a>Mitochondrienmatrix</a> wird Pyruvat weiter abgebaut. Der Zyklus liefert Kohlenstoffdioxid sowie die reduzierten Coenzyme NADH und FADH₂.'],
+      ['Atmungskette', 'An der inneren Mitochondrienmembran werden Elektronen auf Sauerstoff übertragen. Die dabei frei werdende Energie treibt die <a>ATP-Synthase</a> an.'],
+      ['Vergleich', 'Im Gegensatz zur Photosynthese wird hier Energie freigesetzt statt gespeichert. Beide Prozesse zusammen bilden den Kern des <a>Kohlenstoffkreislaufs</a>.'],
+    ],
+    cats: ['Stoffwechsel', 'Zellbiologie', 'Biochemie'],
+  },
+  mitose: {
+    title: 'Mitose', hat: 'Zur geschlechtlichen Fortpflanzung siehe Meiose.',
+    lead: 'Die <b>Mitose</b> ist die Kernteilung einer eukaryotischen Zelle, bei der aus einer Mutterzelle zwei genetisch identische Tochterzellen hervorgehen. Sie dient dem Wachstum, der Reparatur und der <a>ungeschlechtlichen Vermehrung</a>.',
+    sections: [
+      ['Interphase', 'Vor der Teilung wird die <a>DNA</a> im S-Phase genannten Abschnitt verdoppelt. Die Zelle prüft außerdem, ob alle Voraussetzungen für eine geordnete Teilung erfüllt sind.'],
+      ['Prophase', 'Die Chromosomen kondensieren, die <a>Kernhülle</a> löst sich auf und der <a>Spindelapparat</a> bildet sich aus.'],
+      ['Metaphase', 'Die Chromosomen ordnen sich in der Äquatorialebene an. An jedem Chromosom sind die beiden Schwesterchromatiden mit gegenüberliegenden Spindelpolen verbunden.'],
+      ['Anaphase und Telophase', 'Die Schwesterchromatiden werden getrennt und zu den Polen gezogen. Anschließend bilden sich zwei neue Kernhüllen, bevor die <a>Cytokinese</a> die Zelle vollständig teilt.'],
+      ['Bedeutung', 'Fehler bei der Verteilung der Chromosomen können zu <a>Chromosomenaberrationen</a> führen. Kontrollpunkte des Zellzyklus verhindern normalsolche Fehler weitgehend.'],
+    ],
+    cats: ['Zellbiologie', 'Genetik'],
+  },
+  osmose: {
+    title: 'Osmose', hat: 'Zum aktiven Transport siehe Membrantransport.',
+    lead: '<b>Osmose</b> bezeichnet die Bewegung von Wassermolekülen durch eine <a>semipermeable Membran</a> von der Seite mit der geringeren zur Seite mit der höheren Konzentration gelöster Teilchen. Sie ist ein passiver Vorgang und benötigt keine Energie.',
+    sections: [
+      ['Grundlagen', 'Treiber ist der Unterschied im <a>osmotischen Druck</a>. Die Membran lässt Wasser, nicht aber alle gelösten Stoffe durch.'],
+      ['Pflanzenzellen', 'In hypotonischer Umgebung entsteht ein <a>Turgordruck</a>, der das Gewebe stützt. In hypertonischer Lösung kommt es zur <a>Plasmolyse</a>.'],
+      ['Tierische Zellen', 'Ohne feste Zellwand können Zellen bei starkem Wassereinstrom platzen oder bei Wasserentzug schrumpfen. Der Organismus reguliert die Osmolarität daher über <a>Homöostase</a>.'],
+      ['Anwendungen', 'Osmotische Vorgänge spielen eine Rolle bei der <a>Wasseraufnahme der Wurzeln</a>, bei Konservierung mit Salz oder Zucker und bei medizinischen Infusionslösungen.'],
+    ],
+    cats: ['Zellbiologie', 'Physik der Membranen'],
+  },
+};
+const LEX_TOPICS = [
+  { id: 'photosynthese', label: 'Photosynthese' },
+  { id: 'zellatmung', label: 'Zellatmung' },
+  { id: 'mitose', label: 'Mitose' },
+  { id: 'osmose', label: 'Osmose' },
+];
+
+function lexArticle(d) {
+  lexTopic = d.title.toLowerCase();
+  const toc = d.sections.map(([h], i) => `<li${i === 0 ? ' class="on"' : ''}><a data-zbt2="toc" data-sec="${i}">${h}</a></li>`).join('');
+  const body = d.sections.map(([h, p], i) => `<h2 data-sec="${i}">${h}<span class="ed">bearbeiten</span></h2><p>${p}</p>`).join('');
+  return `<div class="zbt-v">
+  <header class="zbt-v-head">
+    <span class="zbt-v-menu" aria-hidden="true">${MENU_IC}</span>
+    <a class="zbt-v-brand">${LEX_MARK}<span class="zbt-v-word"><b>Lexikon</b><small>Die freie Enzyklopädie</small></span></a>
+    <form class="zbt-v-search" data-zbt="lexsearch" role="search"><label>${LENS}<input type="search" placeholder="Lexikon durchsuchen" aria-label="Lexikon durchsuchen"></label><button type="submit">Suchen</button></form>
+    <div class="zbt-v-user"><a class="opt">Spenden</a><a class="opt">Benutzerkonto erstellen</a><a>Anmelden</a><span class="dots">···</span></div>
+  </header>
+  <div class="zbt-v-page">
+    <nav class="zbt-v-toc" aria-label="Inhalt"><div class="h"><b>Inhalt</b><span>verbergen</span></div>
+      <ul><li><a data-zbt2="toc" data-sec="-1">(Anfang)</a></li>${toc}<li><a data-zbt2="toc" data-sec="-2">Einzelnachweise</a></li></ul>
+      <div class="zbt-v-hits"><b>Weitere Artikel</b>${LEX_TOPICS.map((t) => `<a data-zbt2="lex-open" data-topic="${t.id}">${t.label}</a>`).join('')}</div>
+    </nav>
+    <main class="zbt-v-main">
+      <div class="zbt-v-titlebar"><h1>${d.title}</h1><span class="zbt-v-lang">${LANG_IC}112 Sprachen ▾</span></div>
+      <div class="zbt-v-tabs"><div><a class="on">Artikel</a><a>Diskussion</a></div><div><a class="on">Lesen</a><a>Bearbeiten</a><a>Quelltext bearbeiten</a><a>Versionsgeschichte</a><a>Werkzeuge ▾</a></div></div>
+      <div class="zbt-v-tag">aus Lexikon, der freien Enzyklopädie</div>
+      <div class="zbt-v-body">
+        <p class="zbt-v-hat">${d.hat}</p>
+        <p>${d.lead}</p>
+        ${body}
+        <h2 data-sec="-2">Einzelnachweise</h2>
+        <ol class="zbt-v-refs"><li>Lehrbuch der Biologie, 12. Auflage, 2022.</li><li>Arbeitsblatt zur Zellbiologie, 2024.</li></ol>
+        <div class="zbt-v-cats"><a>Kategorien</a>: ${d.cats.map((c) => `<a>${c}</a>`).join(' | ')}</div>
+      </div>
+      <footer class="zbt-v-foot"><p>Diese Seite wurde zuletzt am 3. November 2026 um 14:12 Uhr bearbeitet.</p><p>Der Text ist unter der Lizenz „Creative-Commons Namensnennung – Weitergabe unter gleichen Bedingungen“ verfügbar.</p><nav><a>Datenschutz</a><a>Über Lexikon</a><a>Impressum</a><a>Mobile Ansicht</a></nav></footer>
+    </main>
+  </div>
+</div>`;
+}
+
+// Verpasst dem bestehenden Photosynthese-Artikel Sprungmarken und Links.
+function lexEnhance(html) {
+  let n = -1;
+  let out = html.replace(/<h2>([^<]+)<span class="ed">/g, (m, h) => `<h2 data-sec="${++n}">${h}<span class="ed">`);
+  out = out.replace(/<h2>Einzelnachweise<\/h2>/, '<h2 data-sec="-2">Einzelnachweise</h2>');
+  let i = -1;
+  out = out.replace(/<li class="on"><a>\(Anfang\)<\/a><\/li>/, '<li class="on"><a data-zbt2="toc" data-sec="-1">(Anfang)</a></li>');
+  out = out.replace(/<li><a>(Etymologie|Gesamtgleichung|Ablauf|Einflussfaktoren|Bedeutung|Siehe auch|Einzelnachweise)<\/a><\/li>/g,
+    (m, h) => `<li><a data-zbt2="toc" data-sec="${h === 'Einzelnachweise' ? -2 : ++i}">${h}</a></li>`);
+  out = out.replace(/<div class="h"><b>Inhalt<\/b><span>verbergen<\/span><\/div>/,
+    `<div class="h"><b>Inhalt</b><span>verbergen</span></div><div class="zbt-v-hits"><b>Weitere Artikel</b>${LEX_TOPICS.map((t) => `<a data-zbt2="lex-open" data-topic="${t.id}">${t.label}</a>`).join('')}</div>`);
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Suchverlauf
+// ---------------------------------------------------------------------------
+function addHistory(q) {
+  const h = ajson(AKEYS.history, []).filter((x) => x !== q);
+  h.unshift(q); asave(AKEYS.history, h.slice(0, 8));
+}
+
+// ---------------------------------------------------------------------------
+// Zusätzliche Bedienung im Overlay (delegiert)
+// ---------------------------------------------------------------------------
+function onOverlayExtraClick(e) {
+  const t = e.target.closest('[data-zbt2]');
+  if (!t || !ov || !ov.contains(t)) return;
+  const a = t.dataset.zbt2, v = t.dataset;
+  switch (a) {
+    // Suche
+    case 'tab': searchState.tab = v.tab; searchState.page = 1; runSearch(searchState.q, true); break;
+    case 'page': searchState.page = Number(v.page) || 1; runSearch(searchState.q, true); break;
+    case 'filter': searchState.onlyLex = !searchState.onlyLex; searchState.page = 1; runSearch(searchState.q, true); break;
+    case 'history': runSearch(v.q || ''); break;
+    case 'home2': searchState = { q: S.term || 'photosynthese', page: 1, tab: 'Alle', onlyLex: false };
+      if (ov) setOverlayContent('suche', searchHome(), 'Suche'); break;
+    // Lexikon
+    case 'toc': {
+      const sec = Number(v.sec);
+      const el = sec === -1 ? ov.querySelector('.zbt-v-titlebar') : ov.querySelector(`[data-sec="${sec}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      ov.querySelectorAll('.zbt-v-toc li').forEach((li) => li.classList.remove('on'));
+      if (t.parentElement) t.parentElement.classList.add('on');
+      break;
+    }
+    case 'lex-open': {
+      const id = v.topic;
+      const page = id === 'photosynthese' ? pageLexikon() : lexArticle(LEX_DATA[id] || LEX_DATA.zellatmung);
+      const title = (LEX_TOPICS.find((x) => x.id === id) || LEX_TOPICS[0]).label + ' – Lexikon';
+      if (ov) setOverlayContent('lexikon', page, title);
+      break;
+    }
+    // Taschenrechner
+    case 'calc-key': calcPress(v.k); break;
+    // Kalender
+    case 'cal-prev': calState.m--; if (calState.m < 0) { calState.m = 11; calState.y--; } calRender(); break;
+    case 'cal-next': calState.m++; if (calState.m > 11) { calState.m = 0; calState.y++; } calRender(); break;
+    case 'cal-today': { const d = new Date(); calState.y = d.getFullYear(); calState.m = d.getMonth(); calState.sel = dayKey(d.getFullYear(), d.getMonth(), d.getDate()); calRender(); break; }
+    case 'cal-day': calState.sel = v.day; calRender(); break;
+    case 'cal-clear': {
+      const notes = ajson(AKEYS.cal, {}); delete notes[calState.sel]; asave(AKEYS.cal, notes); calRender(); break;
+    }
+    // Notizen
+    case 'note-new': {
+      const list = notes();
+      const n = { id: 'n' + Date.now(), title: 'Neue Notiz', body: '', ts: Date.now() };
+      list.unshift(n); noteState.active = n.id; asave(AKEYS.notes, list); notesRender(); break;
+    }
+    case 'note-select': noteState.active = v.id; notesRender(); break;
+    case 'note-del': {
+      const list = notes().filter((n) => n.id !== noteState.active);
+      noteState.notes = list; noteState.active = list[0] ? list[0].id : null;
+      asave(AKEYS.notes, list); notesRender(); break;
+    }
+    // Editor
+    case 'code-clear': { try { localStorage.setItem(AKEYS.code, ''); } catch (err) {} if (ov) setOverlayContent('code', pageCode(), 'Notizen.js – Editor'); break; }
+    case 'code-copy': {
+      const ta = ov.querySelector('[data-zbt2="code-text"]');
+      if (ta) { try { navigator.clipboard.writeText(ta.value); toastMsg('Quelltext kopiert'); } catch (err) { toastMsg('Kopieren nicht möglich'); } }
+      break;
+    }
+    // Tabelle
+    case 'sheet-demo': sheetState.cells = { ...DEMO }; asave(AKEYS.sheet, sheetState.cells); sheetRender(); break;
+    case 'sheet-clear': sheetState.cells = {}; asave(AKEYS.sheet, {}); sheetRender(); break;
+    // Dokument
+    case 'doc-cmd': {
+      if (!ov) break;
+      const page = ov.querySelector('.zbt-d-page');
+      if (page) page.focus();
+      try { document.execCommand(v.cmd || 'bold', false, v.val || null); } catch (err) {}
+      docSave(page); break;
+    }
+    case 'doc-clear': {
+      if (ov) { const page = ov.querySelector('.zbt-d-page'); if (page) { page.innerHTML = '<p><br></p>'; docSave(page); } }
+      break;
+    }
+    case 'print': try { window.print(); } catch (err) {} break;
+    // Schnellwechsel
+    case 'switch': {
+      const id = v.page;
+      const p = PAGES.find((x) => x.id === id);
+      if (p && ov) setOverlayContent(id, (RENDER[id] || pageSuche)(), p.title);
+      break;
+    }
+    default: break;
+  }
+}
+function sheetRender() { if (ov) setOverlayContent('tabelle', pageTabelle(), 'Stundenplan – Tabelle'); }
+
+let docTimer = null;
+function docSave(page) {
+  if (!page) return;
+  clearTimeout(docTimer);
+  docTimer = setTimeout(() => {
+    try { localStorage.setItem(AKEYS.doc, page.innerHTML); } catch (e) {}
+    const st = ov && ov.querySelector('[data-doc-status]');
+    if (st) st.textContent = 'Alle Änderungen gespeichert · ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    const wc = ov && ov.querySelector('[data-doc-words]');
+    if (wc) wc.textContent = (page.innerText || '').trim().split(/\s+/).filter(Boolean).length + ' Wörter';
+  }, 400);
+}
+
+function onOverlayExtraInput(e) {
+  const t = e.target, a = t.dataset && t.dataset.zbt2;
+  if (!a) return;
+  if (a === 'cal-note' && calState.sel) {
+    const notes = ajson(AKEYS.cal, {});
+    notes[calState.sel] = t.value; asave(AKEYS.cal, notes);
+  } else if (a === 'note-title' || a === 'note-body') {
+    const n = activeNote(); if (!n) return;
+    if (a === 'note-title') n.title = t.value; else n.body = t.value;
+    n.ts = Date.now(); asave(AKEYS.notes, noteState.notes);
+    const c = ov && ov.querySelector('.zbt-notes-edit .meta span');
+    if (c && a === 'note-body') c.textContent = String(n.body.length) + ' Zeichen';
+  } else if (a === 'code-text') {
+    try { localStorage.setItem(AKEYS.code, t.value); } catch (err) {}
+    syncGutter(t);
+  } else if (a === 'sheet-cell') {
+    // erst beim Verlassen speichern (change), hier nur tippen lassen
+  } else if (a === 'doc-name') {
+    try { localStorage.setItem(KEYS.docName, t.textContent.trim()); } catch (err) {}
+  } else if (a === 'doc-page') {
+    docSave(t);
+  }
+}
+
+function syncGutter(ta) {
+  if (!ov) return;
+  const g = ov.querySelector('[data-code-gutter]');
+  if (!g) return;
+  const lines = ta.value.split('\n').length;
+  g.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+  g.scrollTop = ta.scrollTop;
+  const c = ov.querySelector('#zbtCodeCount');
+  if (c) c.textContent = lines + ' Zeilen · ' + ta.value.length + ' Zeichen';
+}
+
+function onOverlayExtraChange(e) {
+  const t = e.target, a = t.dataset && t.dataset.zbt2;
+  if (a === 'code-lang') { codeState.lang = t.value; return; }
+  if (a === 'sheet-cell') {
+    const ref = t.dataset.ref, raw = t.value.trim();
+    if (raw.startsWith('=')) {
+      sheetState.cells[ref] = raw;
+      const v = sheetFormula(raw.slice(1));
+      t.value = v === null ? '#FEHLER' : fmtNum(v);
+    } else { sheetState.cells[ref] = raw; }
+    asave(AKEYS.sheet, sheetState.cells);
+  }
+}
+
+function onOverlayExtraKey(e) {
+  // Tab im Editor = zwei Leerzeichen
+  const t = e.target;
+  if (t && t.dataset && t.dataset.zbt2 === 'code-text') {
+    if (e.key === 'Tab') {
+      e.preventDefault(); e.stopPropagation();
+      const s = t.selectionStart, en = t.selectionEnd;
+      t.value = t.value.slice(0, s) + '  ' + t.value.slice(en);
+      t.selectionStart = t.selectionEnd = s + 2;
+      t.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+  if (t && t.dataset && t.dataset.zbt2 === 'code-text') { syncGutter(t); return; }
+  // Taschenrechner per Tastatur (nur wenn kein Eingabefeld fokussiert)
+  if (!ov || ov.dataset.page !== 'rechner') return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calcPress('='); return; }
+  if (e.key === 'Backspace') { e.preventDefault(); calcPress('⌫'); return; }
+  if (e.key === 'Escape') return;
+  if (e.key === 'Delete') { e.preventDefault(); calcPress('C'); return; }
+  if (/^[0-9]$/.test(k) || ['+', '-', '*', '/', '.', ',', '(', ')', '%'].includes(k)) {
+    e.preventDefault();
+    calcPress(k === '*' ? '×' : k === '/' ? '÷' : k === '-' && !calcState.expr ? '−' : k);
+  }
+}
+
+function onOverlayExtraSubmit(e) {
+  const f = e.target;
+  if (!f || f.dataset.zbt !== 'lexsearch' || !ov) return;
+  e.preventDefault(); e.stopPropagation();
+  const q = (f.querySelector('input') ? f.querySelector('input').value : '').trim().toLowerCase();
+  const hit = LEX_TOPICS.find((t) => t.label.toLowerCase().includes(q) || t.id.includes(q));
+  const id = q && hit ? hit.id : 'photosynthese';
+  const html = id === 'photosynthese' ? pageLexikon() : lexArticle(LEX_DATA[id] || LEX_DATA.zellatmung);
+  setOverlayContent('lexikon', html, (LEX_TOPICS.find((x) => x.id === id) || LEX_TOPICS[0]).label + ' – Lexikon');
+}
+
+// ---------------------------------------------------------------------------
+// Tasten: Kombinationen, einfacher Druck, einstellbares Zeitfenster, Alt+1…8
+// ---------------------------------------------------------------------------
+function eventToSpec(e) {
+  const parts = [];
+  if (e.ctrlKey) parts.push('Ctrl');
+  if (e.altKey) parts.push('Alt');
+  if (e.metaKey) parts.push('Meta');
+  if (e.shiftKey && (e.key.length > 1 || parts.length)) parts.push('Shift');
+  parts.push(e.key === ' ' ? 'Space' : e.key);
+  return parts.join('+');
+}
+function parseSpec(spec) {
+  const p = String(spec || 'Escape').split('+');
+  const key = p.pop();
+  const mods = p.map((x) => x.toLowerCase());
+  return {
+    key: key === 'Space' ? ' ' : key,
+    ctrl: mods.includes('ctrl'), alt: mods.includes('alt'),
+    meta: mods.includes('meta'), shift: mods.includes('shift'),
+  };
+}
+function matchesSpec(e, spec) {
+  const s = parseSpec(spec);
+  if (e.key !== s.key) return false;
+  if (s.ctrl !== !!e.ctrlKey || s.alt !== !!e.altKey || s.meta !== !!e.metaKey) return false;
+  if (s.shift && !e.shiftKey) return false;
+  return true;
+}
+function keyLabel2(k) {
+  const m = { Escape: 'Esc', ' ': 'Leertaste', Space: 'Leertaste', ArrowUp: 'Pfeil hoch', ArrowDown: 'Pfeil runter',
+    ArrowLeft: 'Pfeil links', ArrowRight: 'Pfeil rechts', Enter: 'Enter', Tab: 'Tab', Backspace: 'Rücktaste', Delete: 'Entf' };
+  return String(k || '').split('+').map((p) => m[p] || (p.length === 1 ? p.toUpperCase() : p)).join(' + ');
+}
+
+function activePageIndex() {
+  const id = (ov && ov.dataset.page) || S.page;
+  return Math.max(0, PAGES.findIndex((p) => p.id === id));
+}
+function switchPage(idx, mode = 'panic') {
+  const p = PAGES[idx]; if (!p) return;
+  if (mode === 'panic' && !panic && !pagePreview) { show(p.id); return; }
+  if (ov) setOverlayContent(p.id, (RENDER[p.id] || pageSuche)(), p.title);
+}
+
+// ---------------------------------------------------------------------------
+// Auto-Tarnung bei Tab-Wechsel / Fokusverlust
+// ---------------------------------------------------------------------------
+let autoTimer = null;
+function withinSchedule() {
+  if (!S.schedule) return true;
+  const h = new Date().getHours(), a = S.from, b = S.to;
+  return a <= b ? (h >= a && h < b) : (h >= a || h < b);
+}
+function armAuto() {
+  cancelAuto();
+  if (!(S.on && S.auto && !panic && !pagePreview && withinSchedule())) return;
+  autoTimer = setTimeout(() => {
+    autoTimer = null;
+    if (!(S.on && S.auto && !panic && !pagePreview)) return;
+    if (!document.hidden && document.hasFocus()) return;
+    show(S.page);
+    bumpCount('auto');
+  }, S.autoMs);
+}
+function cancelAuto() { if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; } }
+
+function bumpCount(reason) {
+  const n = Number(get(KEYS.count, '0') || 0) + 1;
+  set(KEYS.count, String(n)); set(KEYS.last, String(Date.now()));
+  window.dispatchEvent(new CustomEvent('zb-tarnung-stat', { detail: { count: n, reason } }));
+}
+
+// ---------------------------------------------------------------------------
+// Einstellungen: Export / Import / Zurücksetzen
+// ---------------------------------------------------------------------------
+function exportConfig() {
+  const o = {};
+  for (const [name, key] of Object.entries(KEYS)) {
+    try { const v = localStorage.getItem(key); if (v !== null) o[name] = v; } catch (e) {}
+  }
+  return JSON.stringify({ app: 'zockbox-tarnung', version: 2, settings: o }, null, 2);
+}
+function importConfig(text) {
+  let data;
+  try { data = JSON.parse(text); } catch (e) { toastMsg('Keine gültige JSON-Datei'); return false; }
+  const s = data && data.settings;
+  if (!s || typeof s !== 'object') { toastMsg('Keine Einstellungen gefunden'); return false; }
+  for (const [name, key] of Object.entries(KEYS)) {
+    if (Object.prototype.hasOwnProperty.call(s, name)) {
+      try { localStorage.setItem(key, String(s[name])); } catch (e) {}
+    }
+  }
+  S = readState(); applyTab(); updateFab();
+  window.dispatchEvent(new CustomEvent('zb-tarnung-config', { detail: { on: S.on } }));
+  if (ui) ui.render();
+  toastMsg('Einstellungen übernommen');
+  return true;
+}
+function resetConfig() {
+  for (const key of Object.values(KEYS)) { try { localStorage.removeItem(key); } catch (e) {} }
+  S = readState(); if (panic || pagePreview) hide();
+  applyTab(); updateFab();
+  window.dispatchEvent(new CustomEvent('zb-tarnung-config', { detail: { on: S.on } }));
+  if (ui) ui.render();
+  toastMsg('Einstellungen zurückgesetzt');
+}
+
+// ---------------------------------------------------------------------------
+// Erweiterte Einstellungs-Oberfläche
+// ---------------------------------------------------------------------------
+function mountAdvancedSettings(root) {
+  const render = () => {
+    const touch = isTouch();
+    const cur = PAGES.find((p) => p.id === S.page) || PAGES[0];
+    const tabIcon = (t) => (t.id === 'passend' ? cur.icon : t.icon);
+    const stats = {
+      count: Number(get(KEYS.count, '0') || 0),
+      last: Number(get(KEYS.last, '0') || 0),
+    };
+    const lastTxt = stats.last ? new Date(stats.last).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'noch nie';
+    const armed = S.on && S.auto && withinSchedule();
+    root.innerHTML = `
+      <div class="zx-set-row">
+        <div class="zx-set-txt"><b>Tarnmodus</b><span>Tarnseiten, Tab-Tarnung und Panik-Auslöser – für Startseite und alle Spiele.</span></div>
+        <button type="button" class="zx-switch" role="switch" id="zbTarnOn" aria-checked="${S.on}" aria-label="Tarnmodus"><i></i></button>
+      </div>
+      <div class="zx-tarn-opts${S.on ? '' : ' hidden'}" id="zbTarnOpts">
+        <div class="zx-set-sub">Tarnseite &amp; Tab</div>
+        <div class="zx-set-block">
+          <span class="zx-set-label">Tarnseite <small>(bei Panik oder Auto-Tarnung · ${PAGES.length} Seiten)</small></span>
+          <div class="zx-chips" role="radiogroup" aria-label="Tarnseite">
+            ${PAGES.map((p, i) => `<button type="button" class="zx-chip" role="radio" data-page="${p.id}" aria-checked="${S.page === p.id}" title="Alt+${i + 1}"><img src="${p.icon}" alt="" width="16" height="16">${esc(p.label)}</button>`).join('')}
+            <button type="button" class="zx-chip zx-chip-dash" id="zbTarnPreview">Vorschau</button>
+          </div>
+          <p class="zx-set-hint">Im geöffneten Overlay wechselt <b>Alt + 1 … ${PAGES.length}</b> direkt die Seite, <b>Alt + Pfeil rechts / links</b> blättert weiter.</p>
+        </div>
+        <div class="zx-set-block">
+          <span class="zx-set-label">Tab-Tarnung <small>(Titel &amp; Symbol im Browser-Tab)</small></span>
+          <div class="zx-chips" role="radiogroup" aria-label="Tab-Tarnung">
+            ${TAB_TEMPLATES.map((t) => `<button type="button" class="zx-chip" role="radio" data-tab="${t.id}" aria-checked="${S.tab === t.id}">${tabIcon(t) ? `<img src="${tabIcon(t)}" alt="" width="16" height="16">` : ''}${esc(t.id === 'passend' ? `Passend: „${cur.tab}“` : t.label)}</button>`).join('')}
+          </div>
+        </div>
+
+        <div class="zx-set-divider"></div>
+        <div class="zx-set-sub">Auslöser</div>
+        <div class="zx-set-block">
+          <span class="zx-set-label">Panik-Taste</span>
+          <div class="zx-set-key">
+            <kbd id="zbTarnKey">${esc(keyLabel2(S.key))}</kbd><span>${S.single ? '1× drücken' : '2× schnell drücken'}</span>
+            <button type="button" class="zx-chip" id="zbTarnKeyBtn">Ändern</button>
+          </div>
+          <p class="zx-set-hint">Auch Kombinationen möglich, z. B. <b>Ctrl + Shift + P</b>. Beim Aufnehmen werden Modifikatoren mitgespeichert.</p>
+        </div>
+        <div class="zx-set-grid">
+          <div class="zx-field"><span>Einmal drücken genügt</span>
+            <div class="zx-set-actions"><button type="button" class="zx-switch" role="switch" data-sw="single" aria-checked="${S.single}" aria-label="Einmal drücken genügt"><i></i></button></div>
+            <small>Sofortige Tarnung ohne Doppeldruck.</small>
+          </div>
+          <div class="zx-field"><span>Zeit für Doppeldruck</span>
+            <select class="zx-select" data-num="delay" aria-label="Zeit für Doppeldruck">
+              ${[[250, '250 ms'], [400, '400 ms'], [550, '550 ms (Standard)'], [750, '750 ms'], [1000, '1 Sekunde'], [1500, '1,5 Sekunden']].map(([n, l]) => `<option value="${n}"${S.delay === n ? ' selected' : ''}>${l}</option>`).join('')}
+            </select>
+          </div>
+          <div class="zx-field"><span>Panik-Knopf auf Touch</span>
+            <div class="zx-set-actions"><button type="button" class="zx-switch" role="switch" data-sw="fab" aria-checked="${S.fab}" aria-label="Panik-Knopf auf Touch"><i></i></button></div>
+            <small>${touch ? 'Unten links sichtbar.' : 'Nur auf Handy/Tablet sichtbar.'}</small>
+          </div>
+        </div>
+
+        <div class="zx-set-divider"></div>
+        <div class="zx-set-sub">Automatisch tarnen</div>
+        <div class="zx-set-row zx-set-row-sm">
+          <div class="zx-set-txt"><b>Bei Tab-Wechsel / Fokusverlust</b><span>Blendet die Tarnseite automatisch ein, wenn du den Tab verlässt. Das Spiel läuft weiter.</span></div>
+          <button type="button" class="zx-switch" role="switch" data-sw="auto" aria-checked="${S.auto}" aria-label="Auto-Tarnung"><i></i></button>
+        </div>
+        <div class="zx-set-grid">
+          <div class="zx-field"><span>Verzögerung</span>
+            <select class="zx-select" data-num="autoMs" aria-label="Verzögerung der Auto-Tarnung">
+              ${[[0, 'sofort'], [300, '300 ms'], [800, '800 ms'], [1500, '1,5 s'], [3000, '3 s']].map(([n, l]) => `<option value="${n}"${S.autoMs === n ? ' selected' : ''}>${l}</option>`).join('')}
+            </select>
+          </div>
+          <div class="zx-field"><span>Nur in einem Zeitfenster</span>
+            <div class="zx-set-actions" style="gap:8px">
+              <button type="button" class="zx-switch" role="switch" data-sw="schedule" aria-checked="${S.schedule}" aria-label="Zeitfenster"><i></i></button>
+              <select class="zx-select" data-num="from" aria-label="Von Uhrzeit" style="width:88px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.from === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
+              <select class="zx-select" data-num="to" aria-label="Bis Uhrzeit" style="width:88px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.to === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
+            </div>
+            <small>${armed ? 'Gerade aktiv.' : S.schedule && S.on ? 'Außerhalb des Zeitfensters – gerade pausiert.' : 'Auto-Tarnung ist aus.'}</small>
+          </div>
+        </div>
+
+        <div class="zx-set-divider"></div>
+        <div class="zx-set-sub">Inhalt der Tarnseiten</div>
+        <div class="zx-set-grid">
+          <div class="zx-field"><span>Standard-Suchbegriff</span><input class="zx-input-sm" data-txt="term" value="${esc(S.term)}" maxlength="60" aria-label="Standard-Suchbegriff"></div>
+          <div class="zx-field"><span>Name des Dokuments</span><input class="zx-input-sm" data-txt="docName" value="${esc(S.docName)}" maxlength="40" aria-label="Name des Dokuments"></div>
+          <div class="zx-field"><span>Medien stummschalten</span>
+            <div class="zx-set-actions"><button type="button" class="zx-switch" role="switch" data-sw="media" aria-checked="${S.media}" aria-label="Medien stummschalten"><i></i></button></div>
+            <small>Ton von Audio/Video während der Tarnung.</small>
+          </div>
+        </div>
+        <p class="zx-set-hint">Notizen, Kalendereinträge, Dokument, Quelltext und Tabelle werden lokal in diesem Browser gespeichert – die Tarnseiten sind damit echte kleine Anwendungen.</p>
+
+        <div class="zx-set-divider"></div>
+        <div class="zx-set-sub">Tasten &amp; Verlauf</div>
+        <ul class="zx-set-list">
+          <li><kbd>${esc(keyLabel2(S.key))}</kbd><span>${S.single ? 'Tarnseite ein-/ausblenden' : 'zweimal: Tarnseite ein-/ausblenden'}</span></li>
+          <li><kbd>Alt + 1…${PAGES.length}</kbd><span>Tarnseite direkt öffnen / wechseln</span></li>
+          <li><kbd>Alt + Pfeil</kbd><span>Nächste / vorherige Tarnseite</span></li>
+          <li><kbd>Ctrl + P</kbd><span>Nur die Tarnseite drucken</span></li>
+          <li><kbd>2× Ecke</kbd><span>Oben links doppelt antippen = zurück</span></li>
+        </ul>
+
+        <div class="zx-set-divider"></div>
+        <div class="zx-set-sub">Statistik &amp; Werkzeuge</div>
+        <div class="zx-set-stats">
+          <div><b>${stats.count}</b><span>Auslösungen</span></div>
+          <div><b>${esc(lastTxt)}</b><span>Zuletzt</span></div>
+          <div><b>${PAGES.length}</b><span>Tarnseiten</span></div>
+          <div><b>${S.on ? 'an' : 'aus'}</b><span>Status</span></div>
+        </div>
+        <div class="zx-set-actions">
+          <button type="button" class="zx-btn-sm zx-btn-sm-zb" data-act="preview">Testlauf starten</button>
+          <button type="button" class="zx-btn-sm" data-act="export">Einstellungen exportieren</button>
+          <button type="button" class="zx-btn-sm" data-act="import">Importieren</button>
+          <button type="button" class="zx-btn-sm" data-act="copy">Kopieren</button>
+          <button type="button" class="zx-btn-sm" data-act="reset">Zurücksetzen</button>
+        </div>
+        <textarea class="zx-input-sm" id="zbTarnJson" rows="4" placeholder="JSON für Import hier einfügen …" aria-label="Einstellungen als JSON" style="height:auto;padding:9px;font:11px/1.5 ui-monospace,monospace"></textarea>
+        <p class="zx-set-note">Zurück zum Spiel: dieselbe Taste ${S.single ? 'einmal' : 'zweimal'} drücken oder oben links 2× antippen. Das Spiel läuft im Hintergrund weiter, die WebRTC-Verbindung bleibt bestehen.</p>
+        <p class="zx-set-note"><span class="zx-set-badge">Hinweis</span> Die Tarnseiten verwenden bewusst keine echten Logos, Markennamen oder Schriftzüge – sonst könnte das Repo als Phishing eingestuft werden. Bitte beim Ändern so lassen.</p>
+      </div>`;
+  };
+
+  // Delegierte Events: überleben das Neuzeichnen der Oberfläche.
+  root.addEventListener('click', (e) => {
+    const b = e.target.closest('button, [data-act]');
+    if (!b || !root.contains(b)) return;
+    if (b.id === 'zbTarnOn') { setSetting('on', !S.on); return; }
+    if (b.dataset.sw) { setSetting(b.dataset.sw, b.getAttribute('aria-checked') !== 'true'); return; }
+    if (b.dataset.tab) { setSetting('tab', b.dataset.tab); return; }
+    if (b.dataset.page) { set(KEYS.tab, 'passend'); setSetting('page', b.dataset.page); return; }
+    if (b.id === 'zbTarnPreview') { previewPage(S.page); return; }
+    if (b.id === 'zbTarnKeyBtn') {
+      if (recording) return;
+      b.textContent = 'Taste drücken …';
+      const kbd = root.querySelector('#zbTarnKey');
+      if (kbd) kbd.textContent = '?';
+      recording = (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        recording = null;
+        const bad = ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Unidentified', 'Dead'];
+        if (!bad.includes(ev.key)) setSetting('key', eventToSpec(ev)); else render();
+      };
+      return;
+    }
+    const act = b.dataset.act;
+    if (act === 'preview') { previewPage(S.page); return; }
+    if (act === 'export') {
+      const ta = root.querySelector('#zbTarnJson');
+      if (ta) { ta.value = exportConfig(); ta.focus(); ta.select(); }
+      toastMsg('Einstellungen als JSON erzeugt'); return;
+    }
+    if (act === 'copy') {
+      const txt = root.querySelector('#zbTarnJson').value || exportConfig();
+      try { navigator.clipboard.writeText(txt).then(() => toastMsg('Kopiert'), () => toastMsg('Kopieren nicht möglich')); }
+      catch (err) { toastMsg('Kopieren nicht möglich'); }
+      return;
+    }
+    if (act === 'import') {
+      const ta = root.querySelector('#zbTarnJson');
+      if (ta && ta.value.trim()) importConfig(ta.value.trim()); else toastMsg('Bitte erst JSON einfügen');
+      return;
+    }
+    if (act === 'reset') { resetConfig(); return; }
+  });
+
+  root.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.dataset.num) { setSetting(t.dataset.num, t.value); return; }
+    if (t.dataset.txt) setSetting(t.dataset.txt, t.value);
+  });
+  root.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t && t.dataset && t.dataset.txt) {
+      // live speichern, aber nicht neu zeichnen (sonst springt der Cursor)
+      set(KEYS[t.dataset.txt], t.value);
+      S = readState();
+      if (t.dataset.txt === 'term') searchState.q = S.term;
+    }
+  });
+
+  ui = { render };
+  render();
+}

@@ -1,6 +1,7 @@
 // Krakelpost – Stille Post mit Zeichnungen. Ein Spiel in der Zockbox – made by Oskar
 // Multiplayer über ../../shared/net.js (PeerJS/WebRTC). Der Browser, der die Lobby erstellt, ist der Host.
 import { Room } from '../../shared/net.js';
+import { playerOptions, normalizeMax, capacityHint } from '../../shared/capacity.js';
 import { AVATARS, getProfile, setName, setAvatar, randomName, NAME_MAX } from '../../shared/profile.js';
 import { Board, PALETTE, SIZES, W as CW, H as CH } from './draw.js';
 import { albumToPngBlob, albumToGifBlob, saveBlob, corpseCanvas, CORPSE_STRIP } from './export.js';
@@ -62,7 +63,7 @@ const TIMES = {
 const TURNS = [['wenige', 'Wenige'], ['mittel', 'Mittel'], ['alle', 'Alle'], ['alle1', 'Alle + 1'], ['doppelt', '200 %'], ['dreifach', '300 %'],
   ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5'], ['6', '6'], ['8', '8'], ['10', '10']];
 const FPS = { langsam: [3, 'Langsam'], normal: [6, 'Normal'], schnell: [10, 'Schnell'] };
-const MAX_OPTS = [2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 20, 25, 30];
+// Keine feste Liste mehr: shared/capacity.js berechnet die Optionen aus Gerät + Spieldynamik.
 const BASE_SETTINGS = { flow: 'sz', time: 'normal', turns: 'alle', secret: false, anim: false, copy: false, keep: '', score: false, first: '' };
 const REACTS = ['❤️', '😂', '🔥', '😮', '👏'];
 const IDEAS = [
@@ -472,7 +473,7 @@ function hostHandle(from, msg) {
       if (msg.time && TIMES[msg.time]) s.time = msg.time;
       if (msg.turns && TURNS.some(([v]) => v === msg.turns)) s.turns = msg.turns;
       if (msg.fps && FPS[msg.fps]) s.fps = msg.fps;
-      if (+msg.max >= 2 && +msg.max <= 30) s.max = Math.round(+msg.max);
+      const nm = normalizeMax(msg.max); if (nm) s.max = nm;
       for (const k of ['secret', 'lateJoin', 'autoAlbum']) if (typeof msg[k] === 'boolean') s[k] = msg[k];
       sync();
       break;
@@ -687,7 +688,7 @@ function renderLobby() {
   $('modeInfo').innerHTML = `<span class="mi-ico">${m.ico}</span><div><b>${esc(m.name)}</b><p>${esc(m.desc)}</p><div class="mi-tags">${modeTags(s).map((t) => `<span>${esc(t)}</span>`).join('')}</div></div>`;
   // Einstellungen
   const dis = host ? '' : 'disabled';
-  const sel = (key, opts, val) => `<select data-set="${key}" ${dis}>${opts.map(([v, l]) => `<option value="${v}" ${String(v) === String(val) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+  const sel = (key, opts, val) => `<select data-set="${key}" ${dis}${key === 'max' ? ' title="' + esc(capacityHint('krakelpost')) + '"' : ''}>${opts.map(([v, l]) => `<option value="${v}" ${String(v) === String(val) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
   const tog = (key, val, off) => `<label class="switch"><input type="checkbox" data-set="${key}" ${val ? 'checked' : ''} ${dis || (off ? 'disabled' : '')}><span></span></label>`;
   const canAnim = !['sz', 's', 'einsatz', 'sandwich', 'solo', 'hintergrund', 'soloanim'].includes(s.flow);
   const canCopy = ['z', 'sandwich'].includes(s.flow) && !s.anim && !s.keep;
@@ -697,7 +698,7 @@ function renderLobby() {
     <div class="set"><span>Zeit <small>Wie lange pro Runde</small></span>${sel('time', Object.entries(TIMES).map(([k, v]) => [k, v.name]), s.time)}</div>
     <div class="set"><span>Runden</span>${sel('turns', TURNS, s.turns)}</div>
     <div class="set"><span>Geheimnis <small>Eigene Striche &amp; Buchstaben unsichtbar</small></span>${tog('secret', s.secret)}</div>
-    <div class="set"><span>Max. Spieler</span>${sel('max', MAX_OPTS.map((v) => [v, String(v)]), s.max)}</div>
+    <div class="set"><span>Max. Spieler</span>${sel('max', playerOptions('krakelpost', s.max), s.max)}</div>
     <div class="set"><span>Zuschauer mitten im Spiel <small>Neue schauen zu, nächstes Spiel sind sie dabei</small></span>${tog('lateJoin', s.lateJoin)}</div>
     <div class="set"><span>Alben automatisch zeigen <small>Sonst blättert der Spielleiter</small></span>${tog('autoAlbum', s.autoAlbum)}</div>
     <div class="set-group">Spielablauf · ändern macht daraus „Eigener“</div>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Zockbox">
+  <title>Zockbox</title>
+  <defs>
+    <linearGradient id="zb-g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#23272f"/>
+      <stop offset="1" stop-color="#14171d"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7.4" fill="url(#zb-g)"/>
+  <path fill="#f4f4f2" d="M7.6 8.2h16.8v4.4l-9.8 6.8h9.8v4.4H7.6v-4.4l9.8-6.8H7.6z"/>
+</svg>

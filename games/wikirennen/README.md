@@ -5,7 +5,7 @@ Das Wikipedia-Wettrennen in der Zockbox – made by Oskar.
 Alle starten auf demselben Wikipedia-Artikel und müssen sich **nur über Links** bis zum Zielartikel (oder zu mehreren Zielen) klicken. Die ganze Seite sieht aus wie Wikipedia selbst: am Rechner wie die Vector-2022-Oberfläche (Inhaltsverzeichnis links, Infobox rechts, Reiter, Tabellen), am Handy wie die mobile Wikipedia (graue Kopfzeile, aufklappbare Abschnitte).
 
 ## Spielmodi
-- **Mehrspieler – private Lobby:** 4-Buchstaben-Code oder Einladungslink (`?code=ABCD`), 2–30 Spieler (Standard 10), Host kann Leute entfernen, Chat als „Diskussion“ in Lobby, Rennen und Ergebnis.
+- **Mehrspieler – private Lobby:** 4-Buchstaben-Code oder Einladungslink (`?code=ABCD`), dynamische Spielerzahl (Standard 10), Host kann Leute entfernen, Chat als „Diskussion“ in Lobby, Rennen und Ergebnis.
 - **Schnelles Spiel:** tritt der vollsten offenen öffentlichen Lobby bei (`?pub=N`), sonst wird eine neue erstellt – allein starten geht auch.
 - **1-gegen-1-Duell:** öffentliche Lobby für genau 2, startet automatisch, sobald ein Gegner da ist. Wenigste Klicks gewinnen, Neustart erlaubt.
 - **Offene Lobbys:** Liste auf der Hauptseite (auch laufende Rennen mit Restzeit – Zuschauen und ab der nächsten Runde mitspielen).

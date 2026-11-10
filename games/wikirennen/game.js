@@ -2,6 +2,7 @@
 // Mehrspieler: Der Host-Browser ist der Spielserver (shared/net.js, PeerJS/WebRTC).
 // Einzelspieler (Einzelrennen, Tageschallenge, Stufen) laufen mit derselben Host-Logik lokal (LocalRoom).
 import { Room } from '../../shared/net.js';
+import { playerOptions, normalizeMax, capacityHint } from '../../shared/capacity.js';
 import {
   normTitle, sameTitle, articleUrl, fetchArticle, fetchSummary, resolveTitle, randomArticle,
   popularArticle, trendingArticle, searchTitles, verifyHop, forbiddenTitles, isForbidden, loadNamespaces, loadWikiCss,
@@ -656,7 +657,7 @@ function hostHandle(from, msg) {
         power: +msg.power ? 1 : 0, suggest: +msg.suggest ? 1 : 0,
         ban: num(msg.ban, [0, 1, 2, 3], s.ban),
         limit: num(msg.limit, [0, 3, 5, 7, 10, 15], 0),
-        max: Math.max(Math.max(2, H.order.length), Math.min(30, +msg.max || s.max)),
+        max: Math.max(Math.max(2, H.order.length), normalizeMax(msg.max) ?? s.max),
       });
       if (H.duel) s.max = 2;
       if (H.phase === 'results' && s.route === 'custom') H.endsAt = 0;
@@ -1030,7 +1031,17 @@ function renderCustomTargets(n) {
   wrap.querySelectorAll('.ac').forEach(setupAc);
 }
 
+function ensureMaxOptions() {
+  const el = $('setMax');
+  if (!el) return;
+  const html = playerOptions('wikirennen', S.settings.max)
+    .map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('');
+  if (el._capHtml !== html) { el.innerHTML = html; el._capHtml = html; }
+  el.title = capacityHint('wikirennen');
+}
+
 function applySettingsToForm() {
+  ensureMaxOptions();
   const host = isHost();
   for (const [id, key] of Object.entries(SET_IDS)) {
     const el = $(id);

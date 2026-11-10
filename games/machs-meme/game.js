@@ -1,6 +1,7 @@
 // Mach's Meme – ein Spiel in der Zockbox – made by Oskar
 // Multiplayer über ../../shared/net.js (PeerJS/WebRTC). Der Browser, der die Lobby erstellt, ist der Host.
 import { Room } from '../../shared/net.js';
+import { playerOptions, normalizeMax, capacityHint } from '../../shared/capacity.js';
 import { PACKS, buildPool } from './templates.js';
 import { LAYOUTS } from './layouts.js';
 import { renderMeme, redrawMeme, memeToPngBlob, memeToGifBlob, saveBlob, captionFontReady } from './memerender.js';
@@ -28,7 +29,7 @@ const MODES = [
 ];
 const TIMES = [[30, 'Wahnsinn'], [60, 'Schwer'], [90, 'Normal'], [120, 'Locker'], [180, 'Gemütlich'], [300, 'Ewigkeit']];
 const REROLL_OPTS = [0, 1, 2, 3, 5, 8, 10, 15, 20];
-const MAX_OPTS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 18, 20, 25, 30];
+// Keine feste Liste mehr: shared/capacity.js berechnet die Optionen aus Gerät + Spieldynamik.
 const TOGGLES = [
   ['family', 'Familienfreundlicher Modus 🦄', 'Filtert Schimpfwörter in Memes, Chat und Namen.'],
   ['autoStart', 'Spiel automatisch starten', 'Startet von selbst, sobald die Lobby voll ist (öffentliche Lobbys: ab 3 Leuten nach 30 Sekunden).'],
@@ -387,7 +388,7 @@ function hostHandle(from, msg) {
       if (TIMES.some(([v]) => v === +msg.time)) s.time = +msg.time;
       if (+msg.rounds >= 1 && +msg.rounds <= 10) s.rounds = Math.round(+msg.rounds);
       if (REROLL_OPTS.includes(+msg.rerolls)) s.rerolls = +msg.rerolls;
-      if (+msg.max >= 2 && +msg.max <= 30) s.max = Math.round(+msg.max);
+      const nm = normalizeMax(msg.max); if (nm) s.max = nm;
       for (const [k] of TOGGLES) if (typeof msg[k] === 'boolean') s[k] = msg[k];
       sync();
       break;
@@ -785,7 +786,8 @@ function renderLobby() {
   fillSelect($('setTime'), TIMES.map(([v, l]) => [v, `${v} Sekunden – ${l}`]), s.time);
   fillSelect($('setRounds'), Array.from({ length: 10 }, (_, i) => [i + 1, `${i + 1} ${i ? 'Runden' : 'Runde'}`]), s.rounds);
   fillSelect($('setRerolls'), REROLL_OPTS.map((v) => [v, v ? `${v} Mal` : 'Keine']), s.rerolls);
-  fillSelect($('setMax'), MAX_OPTS.map((v) => [v, `${v} Spieler`]), s.max);
+  fillSelect($('setMax'), playerOptions('machs-meme', s.max, ' Spieler'), s.max);
+  $('setMax').title = capacityHint('machs-meme');
   for (const id of ['setTime', 'setRounds', 'setRerolls', 'setMax']) $(id).disabled = !host;
   $('expertList').innerHTML = TOGGLES.map(([k, t, d]) => `<div class="tgl-row"><button class="tgl ${s[k] ? 'on' : ''}" data-tgl="${k}" type="button" ${host ? '' : 'disabled'} aria-pressed="${!!s[k]}" aria-label="${esc(t)}"><span class="knob"></span></button>
     <div><div class="tg-t">${esc(t)}</div><div class="tg-d">${esc(d)}</div></div></div>`).join('');
