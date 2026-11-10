@@ -3,10 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Wikirennen – das Wikipedia-Wettrennen</title>
-  <meta name="description" content="Wikirennen: Klick dich nur über Links vom Start- zum Zielartikel. Mehrspieler mit Code, Tageschallenge, Stufen, Einzelrennen – kostenlos im Browser.">
+  <title data-en="Wikirennen – Zockbox">Wikirennen – das Wikipedia-Wettrennen</title>
+  <meta name="description" data-en="The Wikipedia race: click only links from start to target article. Multiplayer with a code, daily challenge, levels." content="Wikirennen: Klick dich nur über Links vom Start- zum Zielartikel. Mehrspieler mit Code, Tageschallenge, Stufen, Einzelrennen – kostenlos im Browser.">
   <meta name="theme-color" content="#eaecf0">
-  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://oskar26.github.io/zockbox/games/wikirennen/">
+  <link rel="alternate" hreflang="de" href="https://oskar26.github.io/zockbox/games/wikirennen/?lang=de">
+  <link rel="alternate" hreflang="en" href="https://oskar26.github.io/zockbox/games/wikirennen/?lang=en">
+  <link rel="alternate" hreflang="x-default" href="https://oskar26.github.io/zockbox/games/wikirennen/?lang=en">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Zockbox">
+  <meta property="og:url" content="https://oskar26.github.io/zockbox/games/wikirennen/">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:title" content="Wikirennen – Zockbox">
+  <meta property="og:description" content="Das Wikipedia-Wettrennen: nur über Links vom Start- zum Zielartikel. Mehrspieler mit Code, Tageschallenge, Stufen.">
+  <meta property="og:image" content="https://oskar26.github.io/zockbox/assets/icon-512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Wikirennen",
+    "url": "https://oskar26.github.io/zockbox/games/wikirennen/",
+    "description": "Das Wikipedia-Wettrennen: nur über Links vom Start- zum Zielartikel. Mehrspieler mit Code, Tageschallenge, Stufen.",
+    "inLanguage": ["de", "en"],
+    "genre": "Party game",
+    "gamePlatform": "Web browser",
+    "playMode": "MultiPlayer",
+    "applicationCategory": "Game",
+    "operatingSystem": "Any (browser)",
+    "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 2 },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "isPartOf": { "@type": "WebSite", "name": "Zockbox", "url": "https://oskar26.github.io/zockbox/" },
+    "publisher": { "@type": "Person", "name": "Oskar" }
+  }
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="../../assets/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://de.wikipedia.org">
   <link rel="preconnect" href="https://upload.wikimedia.org">
   <link rel="preload" href="fonts/libertinus-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -17,7 +52,7 @@
   <!-- ======================= Kopfzeile ======================= -->
   <header class="vh" id="vh">
     <button id="menuBtn" class="vh-burger" aria-label="Hauptmenü" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M1 3h18v2H1zm0 6h18v2H1zm0 6h18v2H1z"/></svg></button>
-    <a class="vh-logo" href="./" id="homeLink" title="Hauptseite"><img src="logo.svg" alt="" width="50" height="50"><span class="vh-wm"><b>Wikirennen</b><small>Das freie Wettrennen</small></span></a>
+    <a class="vh-logo" href="./" id="homeLink" title="Zurück zur Zockbox"><img src="logo.svg" alt="" width="50" height="50"><span class="vh-wm"><b>Wikirennen</b><small>Das freie Wettrennen</small></span></a>
     <form class="vh-search" id="hdrJoin" autocomplete="off">
       <div class="cdx-input-wrap"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M12.2 13.6a7 7 0 1 1 1.4-1.4l5.4 5.4-1.4 1.4zM3 8a5 5 0 1 0 10 0A5 5 0 0 0 3 8"/></svg>
         <input id="hdrCode" type="text" maxlength="4" placeholder="Lobby-Code eingeben" aria-label="Lobby-Code" autocapitalize="characters" spellcheck="false"></div>
@@ -435,6 +470,7 @@
   <div id="fxBadge" class="fx-badge hidden"></div>
 
   <script type="module" src="game.js"></script>
+  <script type="module" src="../../shared/stats.js"></script>
   <script type="module" src="../../shared/tarnung.js"></script>
   <script type="module" src="../../shared/promo.js"></script>
 </body>

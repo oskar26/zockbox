@@ -8,6 +8,30 @@ import { WORDS } from './words.js';
 import { sfx } from './sound.js';
 import { figSvg, validFig, randomFig, parseFig, FIG_PARTS } from './avatars.js';
 
+// ---------------------------------------------------------------------------
+// Tarnmodus: eigenes Theme-Attribut, damit Farben und Schriften der Tarnseiten
+// nicht mit denen der Spiele kollidieren. Das Spiel bleibt unberührt.
+// ---------------------------------------------------------------------------
+(function disguiseTheme() {
+  const root = document.documentElement;
+  const apply = (on) => {
+    root.classList.toggle('zb-tarn-theme', !!on);
+    if (on) root.setAttribute('data-zb-tarn', ''); else root.removeAttribute('data-zb-tarn');
+  };
+  const sync = () => apply(document.getElementById('zbTarnOverlay'));
+  try { if (localStorage.getItem('zb_tarn_on') === '1') apply(true); } catch (e) {}
+  window.addEventListener('zb-tarnung', (e) => apply(e && e.detail && e.detail.active));
+  window.addEventListener('DOMContentLoaded', sync, { once: true });
+  sync();
+})();
+
+
+// Zockbox-Statistik (shared/stats.js hört auf dieses Ereignis). Nur lokal, kein Server.
+function reportZockboxStats(detail) {
+  try { window.dispatchEvent(new CustomEvent('zb:game', { detail })); } catch (e) {}
+}
+
+
 const GAME_ID = 'kritzel-duell-v1'; // nicht ändern – Peer-IDs: zockbox-kritzel-duell-v1-...
 
 // ---------------------------------------------------------------------------
@@ -964,6 +988,15 @@ function renderOverlay() {
       ${rv.likes || rv.dislikes ? `<p class="ov-likes">👍 ${rv.likes} · 👎 ${rv.dislikes}</p>` : ''}`;
   } else if (S.phase === 'final' && S.final) {
     key += ':' + isHost();
+    // Statistik: einmal pro Partie (doppelte Aufrufe filtert zusätzlich stats.js)
+    if (!S.statsReported) {
+      S.statsReported = true;
+      reportZockboxStats({
+        game: 'kritzel-duell',
+        round: S.round,
+        players: S.final.map((p) => ({ id: p.id, name: p.name, score: p.score, place: p.rank, win: p.rank === 1 && p.score > 0, me: p.id === myId() })),
+      });
+    }
     const top = S.final.slice(0, 3);
     const order = [top[1], top[0], top[2]].filter(Boolean);
     const winners = S.final.filter((p) => p.rank === 1);

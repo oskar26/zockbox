@@ -3,11 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-  <title>Kritzel-Duell – Zockbox</title>
-  <meta name="description" content="Kritzel-Duell: Einer zeichnet, alle raten. Das Mal- und Ratespiel für den Browser – gratis, ohne Anmeldung, mit Freunden per Code.">
+  <title data-en="Kritzel-Duell – Zockbox">Kritzel-Duell – Zockbox</title>
+  <meta name="description" data-en="One draws, everyone guesses: a draw-and-guess game in the browser, free and without sign-up, with friends via code." content="Kritzel-Duell: Einer zeichnet, alle raten. Das Mal- und Ratespiel für den Browser – gratis, ohne Anmeldung, mit Freunden per Code.">
   <meta name="theme-color" content="#f3f6fb">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='80' font-size='80' text-anchor='middle'>✏️</text></svg>">
+  <link rel="canonical" href="https://oskar26.github.io/zockbox/games/kritzel-duell/">
+  <link rel="alternate" hreflang="de" href="https://oskar26.github.io/zockbox/games/kritzel-duell/?lang=de">
+  <link rel="alternate" hreflang="en" href="https://oskar26.github.io/zockbox/games/kritzel-duell/?lang=en">
+  <link rel="alternate" hreflang="x-default" href="https://oskar26.github.io/zockbox/games/kritzel-duell/?lang=en">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Zockbox">
+  <meta property="og:url" content="https://oskar26.github.io/zockbox/games/kritzel-duell/">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:title" content="Kritzel-Duell – Zockbox">
+  <meta property="og:description" content="Einer zeichnet, alle raten: Mal- und Ratespiel für den Browser, gratis und ohne Anmeldung, mit Freunden per Code.">
+  <meta property="og:image" content="https://oskar26.github.io/zockbox/assets/icon-512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Kritzel-Duell",
+    "url": "https://oskar26.github.io/zockbox/games/kritzel-duell/",
+    "description": "Einer zeichnet, alle raten: Mal- und Ratespiel für den Browser, gratis und ohne Anmeldung, mit Freunden per Code.",
+    "inLanguage": ["de", "en"],
+    "genre": "Party game",
+    "gamePlatform": "Web browser",
+    "playMode": "MultiPlayer",
+    "applicationCategory": "Game",
+    "operatingSystem": "Any (browser)",
+    "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 2 },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "isPartOf": { "@type": "WebSite", "name": "Zockbox", "url": "https://oskar26.github.io/zockbox/" },
+    "publisher": { "@type": "Person", "name": "Oskar" }
+  }
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="../../assets/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
   <link rel="preload" href="fonts/PermanentMarker-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/PatrickHand-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../../shared/zockbox.css">
@@ -230,6 +265,7 @@
   <div class="toasts" id="toasts"></div>
 
   <script type="module" src="game.js"></script>
+  <script type="module" src="../../shared/stats.js"></script>
   <script type="module" src="../../shared/tarnung.js"></script>
   <script type="module" src="../../shared/promo.js"></script>
 </body>

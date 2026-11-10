@@ -36,7 +36,7 @@
 // API: window.zbTarnung = { show, hide, preview, get, set, isPanic, switchTo, pages, settings, reset, count }.
 // Die Einstellungs-Oberfläche erscheint automatisch in #zbTarnSettings (nur Startseite).
 
-const KEYS = { on: 'zb_tarn_on', tab: 'zb_tarn_tab', page: 'zb_tarn_page', key: 'zb_tarn_key', fab: 'zb_tarn_fab' };
+const KEYS = { on: 'zb_tarn_on', look: 'zb_tarn_look', page: 'zb_tarn_page', key: 'zb_tarn_key', fab: 'zb_tarn_fab' };
 const DOUBLE_MS = 550;
 
 const get = (k, d = '') => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
@@ -49,6 +49,20 @@ const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const svgUrl = (inner) => 'data:image/svg+xml,' + encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">${inner}</svg>`);
 
+// Eigene Moodle-artige Bildmarke (bewusst KEIN fremdes Logo): aufgeschlagenes Buch
+// mit Lichtstrahlen – schlicht, blau, selbst gezeichnet.
+const MARK_MOODLE = `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <defs><linearGradient id="zbtMk" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#1c7ac4"/><stop offset="1" stop-color="#0b4f86"/></linearGradient></defs>
+  <path d="M60 30c-9-7-20-10-31-8-3 .5-4 2-4 5v56c0 3 1.6 4.6 4.6 4 9.6-1.8 21-1 30.4 5.4z" fill="url(#zbtMk)"/>
+  <path d="M60 30c9-7 20-10 31-8 3 .5 4 2 4 5v56c0 3-1.6 4.6-4.6 4-9.6-1.8-21-1-30.4 5.4z" fill="#3f9ce0"/>
+  <path d="M60 30v62.4" stroke="#0a3f6d" stroke-width="3" stroke-linecap="round"/>
+  <path d="M24 40c8-.6 15 .6 22 3M24 52c8-.6 15 .6 22 3M24 64c8-.6 15 .6 22 3" stroke="#fff" stroke-opacity=".72" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M96 40c-8-.6-15 .6-22 3M96 52c-8-.6-15 .6-22 3M96 64c-8-.6-15 .6-22 3" stroke="#fff" stroke-opacity=".6" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="60" cy="22" r="7" fill="#f7c544"/>
+  <path d="M60 9v6M60 29v6M47 22h6M67 22h6M51 13l4 4M69 31l-4-4M69 13l-4 4M51 31l4-4" stroke="#f7c544" stroke-width="2.4" stroke-linecap="round"/>
+</svg>`;
+
 const ICONS = {
   notizen: svgUrl('<rect x="5" y="3" width="22" height="26" rx="3" fill="#f6c945"/><rect x="5" y="3" width="22" height="6" rx="3" fill="#e0a92a"/><path d="M9 14h14M9 19h14M9 24h9" stroke="#7a5a10" stroke-width="2" stroke-linecap="round"/>'),
   dokument: svgUrl('<path d="M7 2h13l6 6v20a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#3a6fd8"/><path d="M20 2v6h6" fill="#8fb0f0"/><path d="M9 14h14M9 18h14M9 22h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>'),
@@ -57,36 +71,109 @@ const ICONS = {
   rechner: svgUrl('<rect x="6" y="2" width="20" height="28" rx="3" fill="#4a4f5c"/><rect x="9" y="5" width="14" height="6" rx="1" fill="#cfe8d6"/><g fill="#e6e8ee"><rect x="9" y="14" width="4" height="3" rx="1"/><rect x="14" y="14" width="4" height="3" rx="1"/><rect x="9" y="19" width="4" height="3" rx="1"/><rect x="14" y="19" width="4" height="3" rx="1"/><rect x="9" y="24" width="4" height="3" rx="1"/><rect x="14" y="24" width="4" height="3" rx="1"/></g><rect x="19" y="14" width="4" height="13" rx="1" fill="#f08a3c"/>'),
 };
 
-// Tab-Tarnung: Vorlagen
-// 'passend' = Titel und Symbol der gewählten Tarnseite (Standard, damit Tab und Tarnseite zusammenpassen).
-export const TAB_TEMPLATES = [
-  { id: 'passend', label: 'Passend zur Tarnseite', title: null, icon: null },
-  { id: 'aus', label: 'Original', title: null, icon: null },
-  { id: 'notizen', label: 'Notizen', title: 'Notizen', icon: ICONS.notizen },
-  { id: 'dokument', label: 'Dokument', title: 'Dokument – Unbenannt', icon: ICONS.dokument },
-  { id: 'suche', label: 'Suche', title: 'Suche', icon: ICONS.suche },
-  { id: 'wiki', label: 'Lexikon', title: 'Lexikon – Die freie Enzyklopädie', icon: ICONS.wiki },
-  { id: 'rechner', label: 'Taschenrechner', title: 'Taschenrechner', icon: ICONS.rechner },
+// Bildmarke als Favicon (data-URL, damit nichts nachgeladen werden muss)
+const MOODLE_ICON = svgUrl(
+  '<rect width="32" height="32" rx="6" fill="#fff"/>' +
+  '<g transform="translate(2.2 2.2) scale(.23)">' +
+  '<path d="M60 30c-9-7-20-10-31-8-3 .5-4 2-4 5v56c0 3 1.6 4.6 4.6 4 9.6-1.8 21-1 30.4 5.4z" fill="#0f6cb6"/>' +
+  '<path d="M60 30c9-7 20-10 31-8 3 .5 4 2 4 5v56c0 3-1.6 4.6-4.6 4-9.6-1.8-21-1-30.4 5.4z" fill="#3f9ce0"/>' +
+  '<path d="M60 30v62.4" stroke="#0a3f6d" stroke-width="4"/><circle cx="60" cy="20" r="9" fill="#f7c544"/></g>');
+// Zockbox-„Z“ im Look der echten Seite
+const ZOCKBOX_ICON = svgUrl('<rect width="32" height="32" rx="7" fill="#191b1e"/><path d="M9 10h14l-9 12h9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>');
+
+export const LOOKS = [
+  {
+    id: 'moodle',
+    label: 'Lernplattform',
+    title: 'Anmeldeseite | Lernplattform',
+    icon: MOODLE_ICON,
+    note: 'Anmeldung, Dashboard, meine Kurse, Kursseite',
+  },
+  {
+    id: 'zockbox',
+    label: 'Zockbox',
+    title: 'Zockbox – Gratis Browser-Spiele mit Freunden',
+    icon: ZOCKBOX_ICON,
+    note: 'Wie diese Seite: Spiele, Dokument, Notizen, Kalender',
+  },
+  {
+    id: 'lexikon',
+    label: 'Lexikon',
+    title: 'Photosynthese – Lexikon',
+    icon: ICONS.wiki,
+    note: 'Nachschlagewerk mit Artikel und Suche',
+  },
 ];
 
+// Rückwärtskompatibel: frühere Versionen hatten eine eigene Tab-Auswahl. Titel und
+// Symbol kommen jetzt immer vom Look (ein Look, ein Tab, eine Seite).
+export const TAB_TEMPLATES = [];
+
 // Tarnseiten (Panik-Modus)
-// tab = Tab-Titel, solange nur die Tab-Tarnung aktiv ist; title = Tab-Titel, während die Tarnseite offen ist.
+// look = zu welchem Look die Seite gehört; title = Tab-Titel, solange die Seite offen ist.
 export const PAGES = [
-  { id: 'suche', label: 'Suche', tab: 'Suche', title: 'photosynthese – Suche', icon: ICONS.suche },
-  { id: 'lexikon', label: 'Lexikon-Artikel', tab: 'Photosynthese – Lexikon', title: 'Photosynthese – Lexikon', icon: ICONS.wiki },
-  { id: 'dokument', label: 'Dokument', tab: 'Biologie-Notizen – Dokument', title: 'Biologie-Notizen – Dokument', icon: ICONS.dokument },
+  { id: 'moodle-start', look: 'moodle', label: 'Anmeldung', tab: 'Anmeldeseite | Lernplattform', title: 'Anmeldeseite | Lernplattform', icon: MOODLE_ICON },
+  { id: 'moodle-dash', look: 'moodle', label: 'Dashboard', tab: 'Dashboard | Lernplattform', title: 'Dashboard | Lernplattform', icon: MOODLE_ICON },
+  { id: 'moodle-kurse', look: 'moodle', label: 'Meine Kurse', tab: 'Meine Kurse | Lernplattform', title: 'Meine Kurse | Lernplattform', icon: MOODLE_ICON },
+  { id: 'moodle-kurs', look: 'moodle', label: 'Kursseite', tab: 'Biologie · Kurs | Lernplattform', title: 'Biologie · Kurs | Lernplattform', icon: MOODLE_ICON },
+  { id: 'zock-start', look: 'zockbox', label: 'Startseite', tab: 'Zockbox – Gratis Browser-Spiele mit Freunden', title: 'Zockbox – Gratis Browser-Spiele mit Freunden', icon: ZOCKBOX_ICON },
+  { id: 'dokument', look: 'zockbox', label: 'Dokument', tab: 'Biologie-Notizen – Dokument', title: 'Biologie-Notizen – Dokument', icon: ICONS.dokument },
+  { id: 'notizen', look: 'zockbox', label: 'Notizen', tab: 'Notizen', title: 'Notizen', icon: ICONS.notizen },
+  { id: 'kalender', look: 'zockbox', label: 'Kalender', tab: 'Kalender – Monatsansicht', title: 'Kalender – Monatsansicht', icon: null },
+  { id: 'code', look: 'zockbox', label: 'Editor', tab: 'Notizen.js – Editor', title: 'Notizen.js – Editor', icon: null },
+  { id: 'tabelle', look: 'zockbox', label: 'Tabelle', tab: 'Stundenplan – Tabelle', title: 'Stundenplan – Tabelle', icon: null },
+  { id: 'rechner', look: 'zockbox', label: 'Taschenrechner', tab: 'Taschenrechner', title: 'Taschenrechner', icon: ICONS.rechner },
+  { id: 'lexikon', look: 'lexikon', label: 'Artikel', tab: 'Photosynthese – Lexikon', title: 'Photosynthese – Lexikon', icon: ICONS.wiki },
+  { id: 'suche', look: 'lexikon', label: 'Suche', tab: 'Suche – Lexikon', title: 'photosynthese – Suche', icon: ICONS.suche },
+  // „Postfach“ und „Suche-Start“ gibt es weiter, sind aber nicht in der Auswahl –
+  // sie werden nur intern (z. B. als Startpunkt der Suche) genutzt.
+  { id: 'mail', look: 'zockbox', label: 'Postfach', tab: 'Posteingang (1)', title: 'Posteingang (1)', icon: null, hidden: true },
 ];
 
 // ---------------------------------------------------------------------------
 // Zustand
 // ---------------------------------------------------------------------------
+function pageById(id) { return PAGES.find((p) => p.id === id) || null; }
+function visiblePages(look) { return PAGES.filter((p) => !p.hidden && (!look || p.look === look)); }
+function lookById(id) { return LOOKS.find((l) => l.id === id) || LOOKS[0]; }
+// Erste Seite eines Looks (für „Look umschalten“ und Erststart).
+function firstPageOf(look) { const p = visiblePages(look)[0]; return p ? p.id : PAGES[0].id; }
+
+// Alter Zustand (frühere Version) → neue Schlüssel
+function migrate() {
+  const out = {};
+  const tab = get(KEYS.tab, '');
+  const page = get(KEYS.page, '');
+  const knownTab = ['suche', 'wiki', 'dokument', 'notizen', 'rechner', 'kalender', 'code', 'tabelle', 'mail'];
+  // 1) Alter Look-Schlüssel 'passend'/'aus'/Tab-Vorlage → Look
+  let look = get(KEYS.look, '');
+  if (!LOOKS.some((l) => l.id === look)) {
+    if (tab === 'aus') look = 'zockbox';
+    else if (knownTab.includes(tab)) look = (tab === 'suche' || tab === 'wiki') ? 'lexikon' : 'zockbox';
+    else if (page === 'lexikon' || page === 'suche') look = 'lexikon';
+    // Standard: Lernplattform
+    else look = 'moodle';
+  }
+  out.look = look;
+  // 2) Alte Seiten-IDs auf neue abbilden
+  const remap = { suche: 'suche', lexikon: 'lexikon', dokument: 'dokument', notizen: 'notizen',
+    rechner: 'rechner', kalender: 'kalender', code: 'code', tabelle: 'tabelle' };
+  let pg = pageById(remap[page] || page);
+  if (!pg) pg = pageById(firstPageOf(look));
+  if (pg.look !== look) pg = pageById(firstPageOf(look));
+  out.page = pg.id;
+  return out;
+}
+
 function readState() {
-  const tab = get(KEYS.tab, 'passend');
-  const page = get(KEYS.page, 'suche');
+  const mig = migrate();
+  const page = pageById(get(KEYS.page, '')) ? get(KEYS.page, '') : mig.page;
+  const pg = pageById(page) || pageById(firstPageOf(mig.look)) || PAGES[0];
+  const look = LOOKS.some((l) => l.id === get(KEYS.look, '')) ? get(KEYS.look, '') : pg.look;
   return {
     on: get(KEYS.on) === '1',
-    tab: TAB_TEMPLATES.some((t) => t.id === tab) ? tab : 'passend',
-    page: PAGES.some((p) => p.id === page) ? page : 'suche',
+    look,
+    page: pg.id,
     key: get(KEYS.key, 'Escape') || 'Escape',
     fab: get(KEYS.fab, '1') !== '0',
     delay: clamp(Number(get(KEYS.delay, 550)), 150, 2000, 550),
@@ -114,12 +201,21 @@ let overlayTitle = null;  // aktueller Titel der offenen Tarnseite
 
 function iconLinks() { return [...document.querySelectorAll('link[rel~="icon"], link[rel="shortcut icon"]')].filter((l) => !l.dataset.zbTarn); }
 
-function setDisguise(title, icon) {
+const THEME_TONES = { moodle: '#f1f1f1', zockbox: '#f7f7f5', lexikon: '#ffffff' };
+let origTheme = null;
+
+function setDisguise(title, icon, lookId) {
   // Titel
   disguiseTitle = title || null;
   if (title) {
     if (document.title !== title) { applyingTitle = true; document.title = title; applyingTitle = false; }
   } else if (document.title !== origTitle) { applyingTitle = true; document.title = origTitle; applyingTitle = false; }
+  // Statusleiste auf dem Handy passend einfärben
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    if (origTheme === null) origTheme = meta.getAttribute('content') || '';
+    meta.setAttribute('content', icon ? (THEME_TONES[lookId] || origTheme) : origTheme);
+  }
   // Favicon
   let mine = document.querySelector('link[data-zb-tarn]');
   if (icon) {
@@ -142,17 +238,15 @@ function setDisguise(title, icon) {
   }
 }
 
+// Titel und Symbol kommen immer aus dem Look der aktiven Seite – nie getrennt.
 function applyTab() {
   if (panic || pagePreview) {
     const id = (ov && ov.dataset.page) || pagePreview || S.page;
-    const p = PAGES.find((x) => x.id === id) || PAGES[0];
-    setDisguise(overlayTitle || p.title, p.icon);
-  } else if (S.on && S.tab === 'passend') {
-    const p = PAGES.find((x) => x.id === S.page);
-    setDisguise(p.tab, p.icon);
-  } else if (S.on && S.tab !== 'aus') {
-    const t = TAB_TEMPLATES.find((x) => x.id === S.tab);
-    setDisguise(t.title, t.icon);
+    const p = pageById(id) || PAGES[0];
+    setDisguise(overlayTitle || p.title, p.icon || lookById(p.look).icon, p.look);
+  } else if (S.on) {
+    const l = lookById(S.look);
+    setDisguise(l.title, l.icon, l.id);
   } else {
     setDisguise(null, null);
   }
@@ -163,9 +257,9 @@ function applyTab() {
 function watchTitle() {
   const obs = new MutationObserver(() => {
     if (applyingTitle) return;
-    const disguised = panic || pagePreview || (S.on && S.tab !== 'aus');
+    const disguised = panic || pagePreview || S.on;
     const t = document.title;
-    const known = t === disguiseTitle || [...TAB_TEMPLATES, ...PAGES].some((x) => x.title === t || x.tab === t);
+    const known = t === disguiseTitle || LOOKS.some((x) => x.title === t) || PAGES.some((x) => x.title === t || x.tab === t);
     if (!known) origTitle = document.title;
     if (disguised) applyTab();
   });
@@ -189,6 +283,9 @@ const CSS = `
   display:grid;place-items:center;padding:0;opacity:.6;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
 .zbt-fab svg{width:20px;height:20px}
 .zbt-fab:active{transform:scale(.92)}
+/* auf der Tarnseite: dunkler, gut sichtbarer Rücksprung-Knopf */
+.zbt-fab.zbt-fab-back{z-index:2147483003;opacity:.9;width:44px;height:44px;background:#1f2933;border-color:rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.zbt-fab.zbt-fab-back:hover{opacity:1}
 .zbt-preview-bar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483002;
   display:flex;gap:10px;align-items:center;padding:8px 8px 8px 14px;border-radius:10px;background:#222;color:#fff;font:600 14px/1.2 Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);white-space:nowrap}
 .zbt-preview-bar button{border:0;border-radius:6px;padding:8px 12px;background:#fff;color:#111;font:700 14px Arial,sans-serif;cursor:pointer}
@@ -430,7 +527,19 @@ html.zbt-lock,html.zbt-lock body{overflow:hidden!important}
 #zbTarnOverlay .zbt-d-page p{margin:0 0 10px}
 `;
 
+// Zusätzliches Stylesheet der Looks (liegt neben dieser Datei). Fällt weg,
+// wenn die Datei fehlt – die Tarnseiten funktionieren dann trotzdem.
+function injectTheme() {
+  if (document.getElementById('zbt-theme')) return;
+  const l = document.createElement('link');
+  l.id = 'zbt-theme';
+  l.rel = 'stylesheet';
+  l.href = new URL('./tarnung-theme.css', import.meta.url).href;
+  (document.head || document.documentElement).appendChild(l);
+}
+
 function injectCSS() {
+  injectTheme();
   if (!document.getElementById('zbt-css')) {
     const st = document.createElement('style');
     st.id = 'zbt-css'; st.textContent = CSS;
@@ -668,7 +777,278 @@ function pageDokument() {
 </div>`;
 }
 
-const RENDER = { suche: pageSuche, lexikon: pageLexikon, dokument: pageDokument };
+
+// ===========================================================================
+// Look „Lernplattform“ – Anmeldung, Dashboard, meine Kurse, Kursseite
+// Eigene Texte, eigene Symbolik, eigene Kursnamen. Keine echten Schulen,
+// keine echten Marken, keine fremden Logos.
+// ===========================================================================
+const mName = () => { try { return (localStorage.getItem('ph_name') || '').trim(); } catch (e) { return ''; } };
+const mHello = () => mName() || 'Gast';
+
+const M_NAV = [
+  ['start', 'Startseite'], ['dash', 'Dashboard'], ['kurse', 'Meine Kurse'],
+  ['buchung', 'Buchungssystem'], ['tafel', 'Digitale Tafel'],
+];
+
+const mIcon = {
+  search: '<svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3h.8l5 5 1.5-1.5-5-5zM10 14a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>',
+  bell: '<svg viewBox="0 0 24 24"><path d="M12 22a2.4 2.4 0 0 0 2.4-2.4H9.6A2.4 2.4 0 0 0 12 22zm7.2-6V10a7.2 7.2 0 0 0-5.4-7v-.8a1.8 1.8 0 1 0-3.6 0V3a7.2 7.2 0 0 0-5.4 7v6L3 18.4v1.2h18v-1.2z"/></svg>',
+  chat: '<svg viewBox="0 0 24 24"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>',
+  mail: '<svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5z"/></svg>',
+  doc: '<svg viewBox="0 0 24 24"><path d="M6 2h8l6 6v14H6z" fill="#3a6fd8"/><path d="M14 2v6h6" fill="#8fb0f0"/><path d="M9 13h8M9 17h8" stroke="#fff" stroke-width="1.8"/></svg>',
+  task: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z" fill="none" stroke="#7a5a10" stroke-width="2"/><path d="M7 12l3 3 6-6" fill="none" stroke="#c99a16" stroke-width="2.4"/></svg>',
+  link: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" fill="none" stroke="#1d7fa3" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" fill="none" stroke="#1d7fa3" stroke-width="2"/></svg>',
+  forum: '<svg viewBox="0 0 24 24"><path d="M3 4h18v11H8l-5 5z" fill="#5c6bc0"/></svg>',
+  file: '<svg viewBox="0 0 24 24"><path d="M6 2h12v20H6z" fill="#e7e9ec" stroke="#b6bcc4" stroke-width="1.4"/><path d="M9 8h6M9 12h6M9 16h4" stroke="#8d949b" stroke-width="1.6"/></svg>',
+  quiz: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#c2552d"/><path d="M9.4 9a2.6 2.6 0 1 1 3.7 2.4c-.7.4-1.1.9-1.1 1.8" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="17" r="1.3" fill="#fff"/></svg>',
+  video: '<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#5c6bc0"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg>',
+  empty: '<svg viewBox="0 0 64 64" fill="none" stroke="#9aa2a9" stroke-width="2.2"><rect x="10" y="16" width="44" height="34" rx="4"/><path d="M10 24h44" stroke-width="3"/><path d="M19 33h12M19 40h20"/></svg>',
+  lang: '<svg viewBox="0 0 20 20" fill="#3c4043" width="14" height="14"><path d="M20 18h-1.4l-1.2-3h-4.9l-1.2 3H9.9l4.4-11h1.3zm-3.2-4.5-1.9-4.9-1.9 4.9zM9 6H6V4H4v2H0v2h6.4C5.9 9.5 5 10.9 3.9 12 3.1 11.2 2.5 10.4 2 9.5H.2c.6 1.3 1.4 2.5 2.4 3.6L0 15.6 1.4 17 4 14.4l1.6 1.6.6-1.6-1-1C6.6 12 7.7 10 8.4 8H9z"/></svg>',
+};
+
+// Kurskarten – Namen und Fächer wie auf einer Stundenplan-Kachel, alles erfunden.
+const M_COURSES = [
+  { id: 'eng', code: '10a E 27 POM', name: 'Englisch', teacher: 'Hr. POMMERENING', cover: 'flag', glyph: 'EN', room: 'A 204' },
+  { id: 'ek', code: '10a EK Mau 27', name: 'Erdkunde', teacher: 'Fr. MAUL', cover: 'circles', glyph: 'EK', room: 'B 112' },
+  { id: 'bio', code: '10a Bi Man 26/27', name: 'Biologie', teacher: 'Hr. Dr. MANTENIOTIS', cover: 'squares', glyph: 'BI', room: 'C 3' },
+  { id: 'mathe', code: 'Mathe 10a ROS', name: 'Mathematik', teacher: 'Hr. ROSENECK', cover: 'math', glyph: '∑', room: 'A 105' },
+  { id: 'geo', code: '10 GE 27 Wey', name: 'Geschichte', teacher: 'Fr. WEYERS', cover: 'diag', glyph: 'GE', room: 'B 208' },
+  { id: 'deutsch', code: '10 BLP 27 Stu', name: 'Deutsch', teacher: 'Fr. MAUL', cover: 'tri', glyph: 'DE', room: 'A 011' },
+  { id: 'info', code: '10a IF Kro 27', name: 'Informatik', teacher: 'Hr. KROMBACH', cover: 'code', glyph: '<>', room: 'PC 2' },
+  { id: 'kunst', code: '10a KU Fel 27', name: 'Kunst', teacher: 'Fr. FELDT', cover: 'blob', glyph: 'KU', room: 'D 1' },
+];
+
+const M_COVERS = {
+  flag: 'background:linear-gradient(178deg,#b22234 0 8%,#fff 8% 15%,#b22234 15% 23%,#fff 23% 30%,#b22234 30% 38%,#fff 38% 45%,#b22234 45% 53%,#fff 53% 60%,#b22234 60% 68%,#fff 68% 75%,#b22234 75% 83%,#fff 83% 90%,#b22234 90%)',
+  circles: 'background:radial-gradient(circle at 18% 26%,rgba(255,255,255,.34) 0 12%,transparent 12.6%),radial-gradient(circle at 58% 66%,rgba(255,255,255,.28) 0 17%,transparent 17.6%),radial-gradient(circle at 86% 22%,rgba(255,255,255,.24) 0 9%,transparent 9.6%),linear-gradient(135deg,#8d8ce8,#a5a4f2)',
+  squares: 'background:repeating-linear-gradient(0deg,rgba(255,255,255,.28) 0 2px,transparent 2px 22px),repeating-linear-gradient(90deg,rgba(255,255,255,.28) 0 2px,transparent 2px 22px),linear-gradient(135deg,#ee5d94,#f4739f)',
+  math: 'background:radial-gradient(circle at 78% 22%,rgba(255,236,150,.5) 0 14%,transparent 15%),linear-gradient(150deg,#2f2a24,#4d4437 60%,#6b5c45)',
+  diag: 'background:repeating-linear-gradient(45deg,rgba(255,255,255,.34) 0 14px,transparent 14px 28px),repeating-linear-gradient(-45deg,rgba(255,255,255,.2) 0 14px,transparent 14px 28px),linear-gradient(135deg,#b9bec4,#d6dade)',
+  tri: 'background:conic-gradient(from 210deg at 30% 70%,rgba(255,255,255,.3) 0 60deg,transparent 60deg 180deg,rgba(255,255,255,.22) 180deg 250deg,transparent 250deg),linear-gradient(150deg,#1f6fd0,#3f95e6)',
+  code: 'background:repeating-linear-gradient(90deg,rgba(255,255,255,.16) 0 1px,transparent 1px 16px),repeating-linear-gradient(0deg,rgba(255,255,255,.16) 0 1px,transparent 1px 16px),linear-gradient(140deg,#2b313a,#424c59)',
+  blob: 'background:radial-gradient(circle at 26% 74%,rgba(255,223,120,.55) 0 20%,transparent 21%),radial-gradient(circle at 74% 30%,rgba(255,160,200,.5) 0 18%,transparent 19%),linear-gradient(135deg,#f0f1f3,#dfe3e6)',
+};
+
+function mCover(kind, glyph, cls = 'zbt-m-cover') {
+  return `<div class="${cls}" style="${M_COVERS[kind] || M_COVERS.circles}"><span>${esc2(glyph || '')}</span></div>`;
+}
+
+// Gemeinsamer Rahmen: Kopfleiste + Inhalt
+function mShell(active, inner, brand = 'Lernplattform') {
+  const nav = M_NAV.map(([id, label]) =>
+    `<a href="#" class="${active === id ? 'on' : ''}" data-zbt2="ml-go" data-page="${id}">${label}</a>`).join('');
+  return `<div class="zbt-x zbt-m">
+  <div class="zbt-m-bar">
+    <span class="zbt-m-brand">${MARK_MOODLE}<span>${esc2(brand)}</span></span>
+    <nav class="zbt-m-nav">${nav}</nav>
+    <div class="zbt-m-bar-r">
+      <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Suche ist in dieser Demo leer." aria-label="Suche">${mIcon.search}</button>
+      <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Keine neuen Mitteilungen." aria-label="Mitteilungen">${mIcon.bell}</button>
+      <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Keine neuen Nachrichten." aria-label="Nachrichten">${mIcon.chat}</button>
+      <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Postfach ist leer." aria-label="Postfach">${mIcon.mail}</button>
+      <span class="zbt-m-ava" title="${esc2(mHello())}">${esc2((mHello()[0] || 'G').toUpperCase())}</span>
+      <span class="zbt-m-edit">Bearbeiten<i></i></span>
+    </div>
+  </div>
+  ${inner}
+</div>`;
+}
+
+// Rechte Spalte auf der Kursseite: eigene Notizen (lokal, wie die Notiz-Seite)
+function mSidePanel() {
+  const notes = ajson(AKEYS.cal, {});
+  const key = 'kurs-' + mCourseId;
+  const val = notes[key] || '';
+  return `<aside class="zbt-m-side">
+    <h2>Eigene Notizen</h2>
+    <p style="margin:0 0 8px;font-size:12.5px;color:var(--m-muted)">Nur auf diesem Gerät gespeichert.</p>
+    <textarea data-zbt2="ml-course-note" data-key="${key}" placeholder="Notizen zum Kurs …" style="width:100%;min-height:120px;resize:vertical;border:1px solid var(--m-border);border-radius:5px;padding:8px;font:13px/1.5 system-ui,sans-serif;color:var(--m-text)">${esc2(val)}</textarea>
+    <h2 style="margin-top:16px">Kursmaterial</h2>
+    <a href="#" data-zbt2="ml-note" data-t="Nur in der Schulversion verfügbar.">Arbeitsblätter</a>
+    <a href="#" data-zbt2="ml-note" data-t="Nur in der Schulversion verfügbar.">Lernkarten</a>
+    <a href="#" data-zbt2="ml-note" data-t="Nur in der Schulversion verfügbar.">Klausurvorbereitung</a>
+  </aside>`;
+}
+
+// --- 1 · Anmeldung ---------------------------------------------------------
+function pageMoodleStart() {
+  const err = searchState.loginErr ? `<p class="zbt-m-sub" style="color:#a1261b;font-size:13.5px;margin:0 0 12px">Ungültige Anmeldung. Bitte prüfe Anmeldename und Kennwort.</p>` : '';
+  return `<div class="zbt-x zbt-m">
+  <div class="zbt-m-login">
+    <div class="zbt-m-logincard">
+      <div class="zbt-m-logo">${MARK_MOODLE}</div>
+      ${err}
+      <form data-zbt2="ml-login" autocomplete="off">
+        <div class="zbt-m-field"><input type="text" name="user" placeholder="Anmeldename" aria-label="Anmeldename" autocomplete="username" spellcheck="false"></div>
+        <div class="zbt-m-field"><input type="password" name="pass" placeholder="Kennwort" aria-label="Kennwort" autocomplete="current-password"></div>
+        <button type="submit" class="zbt-m-btn">Anmelden</button>
+      </form>
+      <p style="margin:6px 0 0"><a href="#" data-zbt2="ml-forgot" style="font-size:14px">Kennwort vergessen?</a></p>
+      <div class="zbt-m-login-foot">
+        <span class="zbt-m-lang">${mIcon.lang} Deutsch (de) <span style="font-size:10px">▾</span></span>
+        <button type="button" class="zbt-m-cookie" data-zbt2="ml-note" data-t="Es werden nur technisch notwendige Cookies gesetzt.">Cookie-Hinweis</button>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="zbt-m-help" data-zbt2="ml-note" data-t="Hilfe: Anmeldung mit dem Schulkonto oder als Gast." aria-label="Hilfe">?</button>
+</div>`;
+}
+
+// --- 2 · Dashboard ---------------------------------------------------------
+function mCalendarPanel() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const first = new Date(y, m, 1);
+  const shift = (first.getDay() + 6) % 7;
+  const days = new Date(y, m + 1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < 35; i++) {
+    const idx = i - shift + 1;
+    let dd = idx, out = false;
+    if (idx < 1) { dd = prevDays + idx; out = true; }
+    else if (idx > days) { dd = idx - days; out = true; }
+    const today = !out && dd === now.getDate();
+    cells.push(`<div style="padding:6px 8px;font-size:13px;color:${out ? '#adb3b9' : '#1d2125'};${today ? 'font-weight:700' : ''}">${dd}</div>`);
+  }
+  return `<div class="zbt-m-panel">
+    <h2>Kalender</h2>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <select class="zbt-m-sel" style="height:38px;border:1px solid var(--m-border);border-radius:5px;padding:0 10px;font:14px system-ui,sans-serif;color:#1d2125;background:#fff"><option>Alle Kurse</option><option>Biologie</option><option>Mathematik</option></select>
+      <button type="button" class="zbt-m-btn" style="margin-left:auto" data-zbt2="ml-note" data-t="Termine lassen sich hier nur ansehen.">Neuer Termin</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:15px">
+      <span style="color:var(--m-blue)">◀ ${MONATE[(m + 11) % 12]}</span>
+      <b>${MONATE[m]} ${y}</b>
+      <span style="color:var(--m-blue)">${MONATE[(m + 1) % 12]} ▶</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--m-border);border-radius:5px;overflow:hidden">
+      ${DOW.map((d) => `<div style="padding:6px 8px;font-size:12px;font-weight:600;background:#f8f9fa;border-bottom:1px solid var(--m-border)">${d}</div>`).join('')}
+      ${cells.join('')}
+    </div>
+  </div>`;
+}
+
+function pageMoodleDash() {
+  const inner = `<div class="zbt-m-main">
+    <h1 class="zbt-m-h1">Dashboard</h1>
+    <p class="zbt-m-sub" style="font-size:25px;font-weight:600;margin:0 0 18px">Hallo, ${esc2(mHello())}! 👋</p>
+    <div class="zbt-m-panel">
+      <h2>Zeitlinie</h2>
+      <div class="zbt-m-filters">
+        <select><option>Nächste 7 Tage</option><option>Nächste 30 Tage</option><option>Alle</option></select>
+        <select><option>Sortiert nach Datum</option><option>Sortiert nach Kurs</option></select>
+        <input type="search" placeholder="Suche nach Aktivitätstyp oder Aktivitätsname" aria-label="Aktivitäten suchen">
+      </div>
+      <div class="zbt-m-empty">${mIcon.empty}Keine Aktivität erfordert ein Handeln</div>
+    </div>
+    ${mCalendarPanel()}
+    <div class="zbt-m-panel">
+      <h2>Kursübersicht</h2>
+      <div style="display:grid;gap:8px">
+        ${M_COURSES.slice(0, 4).map((c) => `<button type="button" class="zbt-m-act" style="border:0;background:none;cursor:pointer;text-align:left;width:100%" data-zbt2="ml-course" data-course="${c.id}">
+          ${mCover(c.cover, c.glyph, 'zbt-m-mini')} <span style="color:var(--m-blue)">${esc2(c.name)}</span><small>${esc2(c.teacher)}</small></button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  return mShell('dash', inner);
+}
+
+// --- 3 · Meine Kurse -------------------------------------------------------
+let mCourseFilter = '';
+function pageMoodleKurse() {
+  const q = mCourseFilter.toLowerCase();
+  const list = M_COURSES.filter((c) => !q || c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.teacher.toLowerCase().includes(q));
+  const inner = `<div class="zbt-m-main">
+    <h1 class="zbt-m-h1">Meine Kurse</h1>
+    <p class="zbt-m-sub">Kursübersicht</p>
+    <div class="zbt-m-sep"></div>
+    <div class="zbt-m-filters">
+      <select><option>Alle</option><option>In Bearbeitung</option><option>Abgeschlossen</option></select>
+      <input type="search" placeholder="Suchen" aria-label="Kurse suchen" data-zbt2="ml-filter" value="${esc2(mCourseFilter)}">
+      <select><option>Sortiert nach letztem Zugriff</option><option>Sortiert nach Kursnamen</option></select>
+      <select><option>Kachel</option><option>Liste</option></select>
+    </div>
+    <div class="zbt-m-courses">
+      ${list.map((c) => `<button type="button" class="zbt-m-course" data-zbt2="ml-course" data-course="${c.id}">
+        ${mCover(c.cover, c.glyph)}
+        <div class="zbt-m-course-body"><b>${esc2(c.code)}</b><span>${esc2(c.teacher)}</span></div>
+        <div class="zbt-m-course-foot"><span class="zbt-m-kebab" aria-hidden="true">⋮</span></div>
+      </button>`).join('') || `<div class="zbt-m-empty" style="grid-column:1/-1">${mIcon.empty}Keine Kurse gefunden</div>`}
+    </div>
+  </div>`;
+  return mShell('kurse', inner);
+}
+
+// --- 4 · Kursseite ---------------------------------------------------------
+let mCourseId = 'bio';
+function pageMoodleKurs(courseId) {
+  const c = M_COURSES.find((x) => x.id === (courseId || mCourseId)) || M_COURSES[2];
+  mCourseId = c.id;
+  const sec = (title, rows) => `<div class="zbt-m-sec"><h2>${esc2(title)}</h2><div class="zbt-m-panel" style="padding:0">${rows}</div></div>`;
+  const act = (icon, label, note) => `<div class="zbt-m-act">${icon}<span>${esc2(label)}</span><small>${esc2(note)}</small></div>`;
+  const inner = `<div class="zbt-m-main">
+    <div class="zbt-m-crumb"><a href="#" data-zbt2="ml-go" data-page="kurse">Meine Kurse</a> · ${esc2(c.name)}</div>
+    <div class="zbt-m-course-head">
+      ${mCover(c.cover, c.glyph)}
+      <div><h1 class="zbt-m-h1" style="font-size:24px;margin:0 0 2px">${esc2(c.name)} · ${esc2(c.code)}</h1>
+      <div style="color:var(--m-muted);font-size:14px">${esc2(c.teacher)} · Raum ${esc2(c.room)}</div></div>
+    </div>
+    <div class="zbt-m-tabs"><span class="on">Kurs</span><span>Einstellungen</span><span>Teilnehmer/innen</span><span>Bewertungen</span><span>Mehr ▾</span></div>
+    ${sec('Allgemeines', act(mIcon.forum, 'Ankündigungen', 'Forum') + act(mIcon.file, 'Organisatorisches (PDF)', 'Datei'))}
+    ${sec('Vergangene Woche', act(mIcon.doc, 'Arbeitsblatt 4 – Vertiefung', 'Aufgabe · fällig letzte Woche') + act(mIcon.file, 'Zusammenfassung', 'Datei · 240 KB'))}
+    ${sec('Aktuelle Woche', act(mIcon.doc, 'Arbeitsblatt 5 – Übungen', 'Aufgabe · fällig Freitag') + act(mIcon.link, 'Material zum Nachlesen', 'Link') + act(mIcon.video, 'Erklärvideo (12 Min.)', 'Video'))}
+    ${sec('Nächste Woche', act(mIcon.quiz, 'Kurztest', 'Test · 15 Minuten') + act(mIcon.task, 'Hausaufgaben abgeben', 'Aufgabe'))}
+    <div class="zbt-m-panel"><h2>Lernfortschritt</h2>
+      <div style="height:10px;background:#e8ebee;border-radius:99px;overflow:hidden"><div style="height:100%;width:62%;background:var(--m-blue)"></div></div>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--m-muted)">62 % der Aktivitäten angesehen</p>
+    </div>
+    ${mSidePanel()}
+  </div>`;
+  return mShell('kurse', inner);
+}
+
+// ===========================================================================
+// Look „Zockbox“ – Startseite im Look dieser Seite (Papier, feine Linien)
+// ===========================================================================
+const Z_GAMES = [
+  ['Mach\u2019s Meme', 'caption', 'Alle bekommen dieselbe Vorlage – die witzigste Caption gewinnt.',
+    '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="12" width="50" height="36" rx="6"/><path d="M15 22h26M15 29h34M15 36h18"/><path d="M15 48l6 6v-6"/><circle cx="47" cy="39" r="3"/></svg>'],
+  ['Wikirennen', 'wiki', 'Von „Pizza“ zu „Mond“ – nur über Links. Wer ist zuerst am Ziel?',
+    '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 46 26 27l14 9 12-21"/><circle cx="12" cy="46" r="4"/><circle cx="26" cy="27" r="4"/><circle cx="40" cy="36" r="4"/><circle cx="52" cy="15" r="4"/></svg>'],
+  ['Kritzel-Duell', 'draw', 'Einer zeichnet, alle raten. Wer es zuerst erkennt, holt die Punkte.',
+    '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 45c8-24 15-28 21-14s12 14 18-6 8-12 8-12"/><path d="M46 10l10 2-3 10" opacity=".5"/><circle cx="9" cy="45" r="2.5"/></svg>'],
+  ['Krakelpost', 'post', 'Stille Post mit Zeichnen: Satz wird Bild, Bild wird Satz.',
+    '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="10" width="30" height="19" rx="3"/><rect x="26" y="35" width="30" height="19" rx="3"/><path d="M14 17h16M14 22h10M32 42h16M32 47h10"/><path d="M38 29v4m0 0-3-3m3 3 3-3"/></svg>'],
+];
+
+function pageZockStart() {
+  const games = Z_GAMES.map(([name, cls, desc, art], i) => `<button type="button" class="zbt-z-card zc-${cls}" data-zbt2="ml-note" data-t="Hier geht es nur um die Optik – zurück mit der Panik-Taste.">
+    <span class="zbt-z-shot">${art}</span><b>${esc2(name)}</b><p>${esc2(desc)}</p></button>`).join('');
+  return `<div class="zbt-x zbt-z">
+  <div class="zbt-z-top">
+    <span class="zbt-z-logo">Z</span><span class="zbt-z-name">Zockbox</span>
+    <span class="zbt-z-sub">Browser-Spiele ohne Anmeldung</span>
+    <span class="zbt-z-nav"><a>Spiele</a><a>So geht's</a><a>Profil</a></span>
+  </div>
+  <div class="zbt-z-main">
+    <div class="zbt-z-stamps"><span class="zbt-z-stamp">Vier Spiele</span><span class="zbt-z-stamp on">Kostenlos · ohne Konto</span></div>
+    <h1 class="zbt-z-h1">Spiele mit Freunden.<br><em>Direkt im Browser.</em></h1>
+    <p class="zbt-z-lead">Lobby erstellen, Code teilen, losspielen. Kein Konto, kein Download – die Verbindung läuft direkt zwischen euren Geräten.</p>
+    <div class="zbt-z-sec"><h2>Spiele</h2><span>Gruppengröße nach Gerät &amp; Spieldynamik</span></div>
+    <div class="zbt-z-grid">${games}</div>
+    <div class="zbt-z-foot"><span>Zockbox · made by Oskar</span><span>Verbunden über WebRTC · keine Anmeldung</span></div>
+  </div>
+</div>`;
+}
+
+const RENDER = {
+  suche: pageSuche, lexikon: pageLexikon, dokument: pageDokument,
+  'moodle-start': pageMoodleStart, 'moodle-dash': pageMoodleDash,
+  'moodle-kurse': pageMoodleKurse, 'moodle-kurs': () => pageMoodleKurs(),
+  'zock-start': pageZockStart,
+};
 
 // ---------------------------------------------------------------------------
 // Overlay
@@ -678,8 +1058,16 @@ let mutedMedia = [];
 let lastBackTap = 0;
 
 // Inhalt der Tarnseite tauschen (z. B. Suche → Ergebnisse → Lexikon-Artikel), ohne das Overlay neu aufzubauen.
+function applyLook(pageId) {
+  if (!ov) return;
+  const p = pageById(pageId) || PAGES[0];
+  ov.className = 'zbt-ov look-' + p.look;
+  ov.dataset.look = p.look;
+}
+
 function setOverlayContent(pageId, html, title) {
   ov.dataset.page = pageId;
+  applyLook(pageId);
   ov.innerHTML = html;
   ov.appendChild(backBtn);
   ov.scrollTop = 0;
@@ -723,7 +1111,8 @@ function buildOverlay(pageId) {
     if (now - lastBackTap < (S.delay || DOUBLE_MS)) { lastBackTap = 0; hide(); } else lastBackTap = now;
   });
   const p = PAGES.find((x) => x.id === pageId) || PAGES[0];
-  setOverlayContent(pageId, RENDER[pageId](), p.title);
+  const render = RENDER[pageId] || pageSuche;
+  setOverlayContent(pageId, render(), p.title);
   // Bedienung der Tarnseiten (nur Attrappen, nichts verlässt die Seite)
   ov.addEventListener('click', onOverlayClick);
   ov.addEventListener('submit', (e) => {
@@ -812,7 +1201,7 @@ function onKey(e) {
     }
     if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && (panic || pagePreview)) {
       e.preventDefault(); e.stopPropagation();
-      const n = PAGES.length;
+      const n = visiblePages(S.look).length;
       switchPage((activePageIndex() + (e.key === 'ArrowRight' ? 1 : n - 1)) % n, 'switch');
       return;
     }
@@ -833,35 +1222,81 @@ function onKey(e) {
 let fab = null;
 const isTouch = () => { try { return matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0; } catch (e) { return false; } };
 
+// Ein kleiner Knopf unten links, in beiden Richtungen:
+//   Spiel sichtbar  → Tarnseite einblenden
+//   Tarnseite offen → sofort zurück ins Spiel (ein Tipp, kein Doppeltippen)
+const FAB_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6c-2.5 4-5.5 6-9 6s-6.5-2-9-6z"/><circle cx="12" cy="12" r="2.6"/></svg>';
+const FAB_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5 4 11l6 6"/><path d="M4 11h9.5a6 6 0 0 1 0 12"/></svg>';
+
 function updateFab() {
-  const want = S.on && S.fab && isTouch() && !panic && !pagePreview && document.body;
+  const active = panic || pagePreview;
+  const want = S.fab && isTouch() && document.body && (S.on || active);
   if (want && !fab) {
     injectCSS();
     fab = document.createElement('button');
     fab.type = 'button';
-    fab.className = 'zbt-fab';
     fab.id = 'zbTarnFab';
-    fab.setAttribute('aria-label', 'Tarnseite einblenden');
-    fab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6"/><path d="M5 15l-1.5 2M9.5 17l-.5 2.5M14.5 17l.5 2.5M19 15l1.5 2"/></svg>';
-    fab.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); show(S.page); });
+    fab.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (panic || pagePreview) hide(); else show(S.page);
+    });
     document.body.appendChild(fab);
-  } else if (!want && fab) { fab.remove(); fab = null; }
+  }
+  if (!want && fab) { fab.remove(); fab = null; }
+  if (fab) {
+    fab.className = 'zbt-fab' + (active ? ' zbt-fab-back' : '');
+    fab.setAttribute('aria-label', active ? 'Zurück ins Spiel' : 'Tarnseite einblenden');
+    fab.title = active ? 'Zurück ins Spiel' : 'Tarnseite einblenden';
+    const html = active ? FAB_BACK : FAB_EYE;
+    if (fab.dataset.icon !== (active ? 'back' : 'eye')) {
+      fab.dataset.icon = active ? 'back' : 'eye';
+      fab.innerHTML = html;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Einstellungen speichern (auch von außen nutzbar)
 // ---------------------------------------------------------------------------
 export function getSettings() { return { ...S }; }
+
+// Look wechseln: Titel, Symbol und die Auswahl der Seiten ziehen gemeinsam um.
+export function setLook(id) {
+  const l = lookById(id);
+  const prevLook = S.look;
+  set(KEYS.look, l.id);
+  // Seite im neuen Look: gleiche Art, wenn es sie gibt, sonst die erste des Looks
+  const cur = pageById(S.page);
+  const same = cur && visiblePages(l.id).find((p) => p.id === cur.id);
+  const next = same ? same.id : firstPageOf(l.id);
+  set(KEYS.page, next);
+  S = readState();
+  applyTab(); updateFab();
+  if (prevLook !== l.id && (panic || pagePreview) && ov) {
+    setOverlayContent(S.page, (RENDER[S.page] || pageSuche)(), (pageById(S.page) || {}).title);
+  }
+  window.dispatchEvent(new CustomEvent('zb-tarnung-config', { detail: { on: S.on, look: S.look } }));
+  if (ui) ui.render();
+  return S.look;
+}
+
 export function setSetting(name, value) {
   if (!(name in KEYS)) return;
   const BOOL = ['on', 'fab', 'single', 'auto', 'schedule', 'media'];
   const v = BOOL.includes(name) ? (value ? '1' : '0') : String(value);
-  set(KEYS[name], v);
+  if (name === 'page') {
+    const p = pageById(v);
+    if (!p) return;
+    set(KEYS.page, p.id);
+    set(KEYS.look, p.look);          // Seite und Look bleiben immer zusammen
+  } else {
+    set(KEYS[name], v);
+  }
   S = readState();
   if (!S.on && panic) hide();
   applyTab(); updateFab();
   if (S.auto) armAuto(); else cancelAuto();
-  window.dispatchEvent(new CustomEvent('zb-tarnung-config', { detail: { on: S.on } }));
+  window.dispatchEvent(new CustomEvent('zb-tarnung-config', { detail: { on: S.on, look: S.look } }));
   if (ui) ui.render();
 }
 export const showPanic = (page) => show(page || S.page);
@@ -913,8 +1348,10 @@ function init() {
   const root = document.getElementById('zbTarnSettings');
   if (root) mountAdvancedSettings(root);
   window.zbTarnung = {
-    show: showPanic, hide, preview: previewPage, get: getSettings, set: setSetting, isPanic,
-    pages: () => PAGES.map((p) => ({ id: p.id, label: p.label, title: p.title })),
+    show: showPanic, hide, preview: previewPage, get: getSettings, set: setSetting, setLook, isPanic,
+    looks: () => LOOKS.map((l) => ({ id: l.id, label: l.label, title: l.title })),
+    look: () => S.look,
+    pages: () => visiblePages(S.look).map((p) => ({ id: p.id, label: p.label, title: p.title, look: p.look })),
     switchTo: (id) => { const i = PAGES.findIndex((p) => p.id === id); if (i >= 0) switchPage(i, (panic || pagePreview) ? 'switch' : 'panic'); },
     settings: exportConfig, reset: resetConfig,
     count: () => Number(get(KEYS.count, '0') || 0),
@@ -1120,20 +1557,14 @@ function advIcons() {
 
 function installAdvanced() {
   Object.assign(KEYS, EXTRA_KEYS);
-  Object.assign(ICONS, advIcons());
-  TAB_TEMPLATES.push(
-    { id: 'kalender', label: 'Kalender', title: 'Kalender – Monatsansicht', icon: ICONS.kalender },
-    { id: 'code', label: 'Editor', title: 'Notizen.js – Editor', icon: ICONS.code },
-    { id: 'tabelle', label: 'Tabelle', title: 'Stundenplan – Tabelle', icon: ICONS.tabelle },
-    { id: 'mail', label: 'Postfach', title: 'Posteingang (1)', icon: ICONS.mail },
-  );
-  PAGES.push(
-    { id: 'rechner', label: 'Taschenrechner', tab: 'Taschenrechner', title: 'Taschenrechner', icon: ICONS.rechner },
-    { id: 'kalender', label: 'Kalender', tab: 'Kalender – Monatsansicht', title: 'Kalender – Monatsansicht', icon: ICONS.kalender },
-    { id: 'notizen', label: 'Notizen', tab: 'Notizen', title: 'Notizen', icon: ICONS.notizen },
-    { id: 'code', label: 'Editor', tab: 'Notizen.js – Editor', title: 'Notizen.js – Editor', icon: ICONS.code },
-    { id: 'tabelle', label: 'Tabelle', tab: 'Stundenplan – Tabelle', title: 'Stundenplan – Tabelle', icon: ICONS.tabelle },
-  );
+  const ic = advIcons();
+  Object.assign(ICONS, ic);
+  // Symbole der Seiten ergänzen (Kalender, Editor, Tabelle, Postfach)
+  const pageIcon = (id, icon) => { const p = pageById(id); if (p && !p.icon) p.icon = icon; };
+  pageIcon('kalender', ic.kalender);
+  pageIcon('code', ic.code);
+  pageIcon('tabelle', ic.tabelle);
+  pageIcon('mail', ic.mail);
   Object.assign(RENDER, {
     rechner: pageRechner, kalender: pageKalender, notizen: pageNotizen,
     code: pageCode, tabelle: pageTabelle,
@@ -1532,6 +1963,32 @@ function onOverlayExtraClick(e) {
   const t = e.target.closest('[data-zbt2]');
   if (!t || !ov || !ov.contains(t)) return;
   const a = t.dataset.zbt2, v = t.dataset;
+
+  // --- Lernplattform-Look ---
+  if (a && a.startsWith('ml-')) {
+    const go = (id, title) => setOverlayContent(id, (RENDER[id] || pageSuche)(), title || (pageById(id) || {}).title);
+    if (a === 'ml-go') {
+      e.preventDefault();
+      const map = { start: ['moodle-start', 'Anmeldeseite | Lernplattform'], dash: ['moodle-dash', 'Dashboard | Lernplattform'],
+        kurse: ['moodle-kurse', 'Meine Kurse | Lernplattform'], buchung: ['moodle-kurse', 'Buchungssystem | Lernplattform'],
+        tafel: ['moodle-kurs', 'Digitale Tafel | Lernplattform'] };
+      const [id, title] = map[v.page] || map.kurse;
+      go(id, title);
+      return;
+    }
+    if (a === 'ml-course') { mCourseId = v.course || 'bio'; go('moodle-kurs', 'Kurs | Lernplattform'); return; }
+    if (a === 'ml-note') {
+      if (window.phToast) window.phToast(v.t || 'In dieser Ansicht nicht verfügbar.');
+      return;
+    }
+    if (a === 'ml-forgot') {
+      e.preventDefault();
+      searchState.loginErr = false;
+      if (window.phToast) window.phToast('Ein neues Kennwort vergibt die Schulverwaltung.');
+      return;
+    }
+  }
+
   switch (a) {
     // Suche
     case 'tab': searchState.tab = v.tab; searchState.page = 1; runSearch(searchState.q, true); break;
@@ -1647,6 +2104,14 @@ function onOverlayExtraInput(e) {
     try { localStorage.setItem(KEYS.docName, t.textContent.trim()); } catch (err) {}
   } else if (a === 'doc-page') {
     docSave(t);
+  } else if (a === 'ml-course-note') {
+    const notes = ajson(AKEYS.cal, {});
+    notes[t.dataset.key] = t.value;
+    asave(AKEYS.cal, notes);
+  } else if (a === 'ml-filter') {
+    mCourseFilter = t.value;
+    clearTimeout(docTimer);
+    docTimer = setTimeout(() => { if (ov && ov.dataset.page === 'moodle-kurse') setOverlayContent('moodle-kurse', pageMoodleKurse(), 'Meine Kurse | Lernplattform'); }, 260);
   }
 }
 
@@ -1704,6 +2169,20 @@ function onOverlayExtraKey(e) {
 
 function onOverlayExtraSubmit(e) {
   const f = e.target;
+  // Anmeldung der Lernplattform: prüft nur, ob etwas eingetragen wurde – nichts wird gesendet.
+  if (f && f.dataset && f.dataset.zbt2 === 'ml-login' && ov) {
+    e.preventDefault();
+    const user = f.querySelector('input[name="user"]');
+    const pass = f.querySelector('input[name="pass"]');
+    if (user && user.value.trim() && pass && pass.value) {
+      searchState.loginErr = false;
+      setOverlayContent('moodle-dash', pageMoodleDash(), 'Dashboard | Lernplattform');
+    } else {
+      searchState.loginErr = true;
+      setOverlayContent('moodle-start', pageMoodleStart(), 'Anmeldeseite | Lernplattform');
+    }
+    return;
+  }
   if (!f || f.dataset.zbt !== 'lexsearch' || !ov) return;
   e.preventDefault(); e.stopPropagation();
   const q = (f.querySelector('input') ? f.querySelector('input').value : '').trim().toLowerCase();
@@ -1750,12 +2229,14 @@ function keyLabel2(k) {
 
 function activePageIndex() {
   const id = (ov && ov.dataset.page) || S.page;
-  return Math.max(0, PAGES.findIndex((p) => p.id === id));
+  const list = visiblePages(S.look);
+  return Math.max(0, list.findIndex((p) => p.id === id));
 }
 function switchPage(idx, mode = 'panic') {
-  const p = PAGES[idx]; if (!p) return;
+  const list = visiblePages(S.look);
+  const p = list[idx]; if (!p) return;
   if (mode === 'panic' && !panic && !pagePreview) { show(p.id); return; }
-  if (ov) setOverlayContent(p.id, (RENDER[p.id] || pageSuche)(), p.title);
+  if (ov) { const fn = RENDER[p.id] || pageSuche; setOverlayContent(p.id, fn(), p.title); }
 }
 
 // ---------------------------------------------------------------------------
@@ -1825,10 +2306,26 @@ function resetConfig() {
 // Erweiterte Einstellungs-Oberfläche
 // ---------------------------------------------------------------------------
 function mountAdvancedSettings(root) {
+  // Die Einstellungen stehen jetzt in einem breiten Pop-up (Startseite: #zbTarnDialog).
+  if (!root) return;
+
+  const lookChip = (l) => {
+    const on = S.look === l.id;
+    return `<button type="button" class="zx-look${on ? ' on' : ''}" role="radio" aria-checked="${on}" data-look="${l.id}" title="${esc(l.note)}">
+      <span class="zx-look-ic"><img src="${l.icon}" alt="" width="34" height="34"></span>
+      <span class="zx-look-tx"><b>${esc(l.label)}</b><small>${esc(l.note)}</small></span>
+      <span class="zx-look-tick" aria-hidden="true">✓</span>
+    </button>`;
+  };
+  const pageChip = (p) => `<button type="button" class="zx-chip" role="radio" data-page="${p.id}" aria-checked="${S.page === p.id}">
+    ${p.icon ? `<img src="${p.icon}" alt="" width="16" height="16">` : ''}${esc(p.label)}</button>`;
+
   const render = () => {
     const touch = isTouch();
-    const cur = PAGES.find((p) => p.id === S.page) || PAGES[0];
-    const tabIcon = (t) => (t.id === 'passend' ? cur.icon : t.icon);
+    const cur = pageById(S.page) || PAGES[0];
+    const look = lookById(S.look);
+    const pages = visiblePages(S.look);
+    const others = PAGES.filter((p) => !p.hidden && p.look !== S.look).length;
     const stats = {
       count: Number(get(KEYS.count, '0') || 0),
       last: Number(get(KEYS.last, '0') || 0),
@@ -1836,25 +2333,23 @@ function mountAdvancedSettings(root) {
     const lastTxt = stats.last ? new Date(stats.last).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'noch nie';
     const armed = S.on && S.auto && withinSchedule();
     root.innerHTML = `
-      <div class="zx-set-row">
-        <div class="zx-set-txt"><b>Tarnmodus</b><span>Tarnseiten, Tab-Tarnung und Panik-Auslöser – für Startseite und alle Spiele.</span></div>
+      <div class="zx-set-row zx-set-row-lead">
+        <div class="zx-set-txt"><b>Tarnmodus</b><span>Titel &amp; Symbol im Tab, dazu eine echte Tarnseite als Vollbild – für Startseite und alle Spiele.</span></div>
         <button type="button" class="zx-switch" role="switch" id="zbTarnOn" aria-checked="${S.on}" aria-label="Tarnmodus"><i></i></button>
       </div>
-      <div class="zx-tarn-opts${S.on ? '' : ' hidden'}" id="zbTarnOpts">
-        <div class="zx-set-sub">Tarnseite &amp; Tab</div>
+
+      <div class="zx-set-sub">Look · Titel, Symbol und Seite gehören zusammen</div>
+      <div class="zx-looks" role="radiogroup" aria-label="Look">${LOOKS.map(lookChip).join('')}</div>
+      <p class="zx-set-hint">Ein Look = ein Tab-Titel, ein Favicon und passende Seiten. Titel und Symbol einzeln zu wählen gibt es bewusst nicht mehr, damit nichts verrutscht. Standard: <b>Lernplattform</b>.</p>
+
+      <div class="zx-tarn-opts${S.on ? '' : ' dim'}" id="zbTarnOpts">
         <div class="zx-set-block">
-          <span class="zx-set-label">Tarnseite <small>(bei Panik oder Auto-Tarnung · ${PAGES.length} Seiten)</small></span>
+          <span class="zx-set-label">Seite in diesem Look <small>(${pages.length} Seiten${others ? ` · ${others} in anderen Looks` : ''})</small></span>
           <div class="zx-chips" role="radiogroup" aria-label="Tarnseite">
-            ${PAGES.map((p, i) => `<button type="button" class="zx-chip" role="radio" data-page="${p.id}" aria-checked="${S.page === p.id}" title="Alt+${i + 1}"><img src="${p.icon}" alt="" width="16" height="16">${esc(p.label)}</button>`).join('')}
+            ${pages.map(pageChip).join('')}
             <button type="button" class="zx-chip zx-chip-dash" id="zbTarnPreview">Vorschau</button>
           </div>
-          <p class="zx-set-hint">Im geöffneten Overlay wechselt <b>Alt + 1 … ${PAGES.length}</b> direkt die Seite, <b>Alt + Pfeil rechts / links</b> blättert weiter.</p>
-        </div>
-        <div class="zx-set-block">
-          <span class="zx-set-label">Tab-Tarnung <small>(Titel &amp; Symbol im Browser-Tab)</small></span>
-          <div class="zx-chips" role="radiogroup" aria-label="Tab-Tarnung">
-            ${TAB_TEMPLATES.map((t) => `<button type="button" class="zx-chip" role="radio" data-tab="${t.id}" aria-checked="${S.tab === t.id}">${tabIcon(t) ? `<img src="${tabIcon(t)}" alt="" width="16" height="16">` : ''}${esc(t.id === 'passend' ? `Passend: „${cur.tab}“` : t.label)}</button>`).join('')}
-          </div>
+          <p class="zx-set-hint">Im geöffneten Overlay: <b>Alt + 1 … ${pages.length}</b> wechselt die Seite, <b>Alt + Pfeil</b> blättert. Mit dem Look wechselt auch der Tab.</p>
         </div>
 
         <div class="zx-set-divider"></div>
@@ -1865,7 +2360,7 @@ function mountAdvancedSettings(root) {
             <kbd id="zbTarnKey">${esc(keyLabel2(S.key))}</kbd><span>${S.single ? '1× drücken' : '2× schnell drücken'}</span>
             <button type="button" class="zx-chip" id="zbTarnKeyBtn">Ändern</button>
           </div>
-          <p class="zx-set-hint">Auch Kombinationen möglich, z. B. <b>Ctrl + Shift + P</b>. Beim Aufnehmen werden Modifikatoren mitgespeichert.</p>
+          <p class="zx-set-hint">Auch Kombinationen wie <b>Ctrl + Shift + P</b> funktionieren.</p>
         </div>
         <div class="zx-set-grid">
           <div class="zx-field"><span>Einmal drücken genügt</span>
@@ -1877,9 +2372,9 @@ function mountAdvancedSettings(root) {
               ${[[250, '250 ms'], [400, '400 ms'], [550, '550 ms (Standard)'], [750, '750 ms'], [1000, '1 Sekunde'], [1500, '1,5 Sekunden']].map(([n, l]) => `<option value="${n}"${S.delay === n ? ' selected' : ''}>${l}</option>`).join('')}
             </select>
           </div>
-          <div class="zx-field"><span>Panik-Knopf auf Touch</span>
-            <div class="zx-set-actions"><button type="button" class="zx-switch" role="switch" data-sw="fab" aria-checked="${S.fab}" aria-label="Panik-Knopf auf Touch"><i></i></button></div>
-            <small>${touch ? 'Unten links sichtbar.' : 'Nur auf Handy/Tablet sichtbar.'}</small>
+          <div class="zx-field"><span>Panik-Knopf unten links</span>
+            <div class="zx-set-actions"><button type="button" class="zx-switch" role="switch" data-sw="fab" aria-checked="${S.fab}" aria-label="Panik-Knopf"><i></i></button></div>
+            <small>${touch ? 'Sichtbar – führt direkt zurück ins Spiel.' : 'Erscheint auf Handy und Tablet.'}</small>
           </div>
         </div>
 
@@ -1908,21 +2403,20 @@ function mountAdvancedSettings(root) {
         <div class="zx-set-divider"></div>
         <div class="zx-set-sub">Inhalt der Tarnseiten</div>
         <div class="zx-set-grid">
-          <div class="zx-field"><span>Standard-Suchbegriff</span><input class="zx-input-sm" data-txt="term" value="${esc(S.term)}" maxlength="60" aria-label="Standard-Suchbegriff"></div>
+          <div class="zx-field"><span>Name im Dashboard</span><input class="zx-input-sm" data-txt="term" value="${esc(S.term)}" maxlength="60" aria-label="Standard-Suchbegriff"><small>Wird für Suche und Begrüßung genutzt.</small></div>
           <div class="zx-field"><span>Name des Dokuments</span><input class="zx-input-sm" data-txt="docName" value="${esc(S.docName)}" maxlength="40" aria-label="Name des Dokuments"></div>
           <div class="zx-field"><span>Medien stummschalten</span>
             <div class="zx-set-actions"><button type="button" class="zx-switch" role="switch" data-sw="media" aria-checked="${S.media}" aria-label="Medien stummschalten"><i></i></button></div>
             <small>Ton von Audio/Video während der Tarnung.</small>
           </div>
         </div>
-        <p class="zx-set-hint">Notizen, Kalendereinträge, Dokument, Quelltext und Tabelle werden lokal in diesem Browser gespeichert – die Tarnseiten sind damit echte kleine Anwendungen.</p>
 
         <div class="zx-set-divider"></div>
         <div class="zx-set-sub">Tasten &amp; Verlauf</div>
         <ul class="zx-set-list">
           <li><kbd>${esc(keyLabel2(S.key))}</kbd><span>${S.single ? 'Tarnseite ein-/ausblenden' : 'zweimal: Tarnseite ein-/ausblenden'}</span></li>
-          <li><kbd>Alt + 1…${PAGES.length}</kbd><span>Tarnseite direkt öffnen / wechseln</span></li>
-          <li><kbd>Alt + Pfeil</kbd><span>Nächste / vorherige Tarnseite</span></li>
+          <li><kbd>Alt + 1…${pages.length}</kbd><span>Seite direkt öffnen / wechseln</span></li>
+          <li><kbd>Alt + Pfeil</kbd><span>Nächste / vorherige Seite</span></li>
           <li><kbd>Ctrl + P</kbd><span>Nur die Tarnseite drucken</span></li>
           <li><kbd>2× Ecke</kbd><span>Oben links doppelt antippen = zurück</span></li>
         </ul>
@@ -1932,19 +2426,19 @@ function mountAdvancedSettings(root) {
         <div class="zx-set-stats">
           <div><b>${stats.count}</b><span>Auslösungen</span></div>
           <div><b>${esc(lastTxt)}</b><span>Zuletzt</span></div>
-          <div><b>${PAGES.length}</b><span>Tarnseiten</span></div>
+          <div><b>${pages.length}</b><span>Seiten</span></div>
           <div><b>${S.on ? 'an' : 'aus'}</b><span>Status</span></div>
         </div>
         <div class="zx-set-actions">
           <button type="button" class="zx-btn-sm zx-btn-sm-zb" data-act="preview">Testlauf starten</button>
-          <button type="button" class="zx-btn-sm" data-act="export">Einstellungen exportieren</button>
+          <button type="button" class="zx-btn-sm" data-act="export">Exportieren</button>
           <button type="button" class="zx-btn-sm" data-act="import">Importieren</button>
           <button type="button" class="zx-btn-sm" data-act="copy">Kopieren</button>
           <button type="button" class="zx-btn-sm" data-act="reset">Zurücksetzen</button>
         </div>
         <textarea class="zx-input-sm" id="zbTarnJson" rows="4" placeholder="JSON für Import hier einfügen …" aria-label="Einstellungen als JSON" style="height:auto;padding:9px;font:11px/1.5 ui-monospace,monospace"></textarea>
-        <p class="zx-set-note">Zurück zum Spiel: dieselbe Taste ${S.single ? 'einmal' : 'zweimal'} drücken oder oben links 2× antippen. Das Spiel läuft im Hintergrund weiter, die WebRTC-Verbindung bleibt bestehen.</p>
-        <p class="zx-set-note"><span class="zx-set-badge">Hinweis</span> Die Tarnseiten verwenden bewusst keine echten Logos, Markennamen oder Schriftzüge – sonst könnte das Repo als Phishing eingestuft werden. Bitte beim Ändern so lassen.</p>
+        <p class="zx-set-note">Zurück zum Spiel: dieselbe Taste ${S.single ? 'einmal' : 'zweimal'} drücken, oben links 2× antippen – auf dem Handy auch der kleine Knopf unten links. Das Spiel läuft im Hintergrund weiter.</p>
+        <p class="zx-set-note"><span class="zx-set-badge">Hinweis</span> Die Looks sind eigene Nachbauten: keine echten Logos, Markennamen oder Schriftzüge – sonst könnte das Repo als Phishing gelten. Aktuell: <b>${esc(look.label)}</b>.</p>
       </div>`;
   };
 
@@ -1953,9 +2447,9 @@ function mountAdvancedSettings(root) {
     const b = e.target.closest('button, [data-act]');
     if (!b || !root.contains(b)) return;
     if (b.id === 'zbTarnOn') { setSetting('on', !S.on); return; }
+    if (b.dataset.look) { setLook(b.dataset.look); return; }
     if (b.dataset.sw) { setSetting(b.dataset.sw, b.getAttribute('aria-checked') !== 'true'); return; }
-    if (b.dataset.tab) { setSetting('tab', b.dataset.tab); return; }
-    if (b.dataset.page) { set(KEYS.tab, 'passend'); setSetting('page', b.dataset.page); return; }
+    if (b.dataset.page) { setSetting('page', b.dataset.page); return; }
     if (b.id === 'zbTarnPreview') { previewPage(S.page); return; }
     if (b.id === 'zbTarnKeyBtn') {
       if (recording) return;
@@ -1965,8 +2459,8 @@ function mountAdvancedSettings(root) {
       recording = (ev) => {
         ev.preventDefault(); ev.stopPropagation();
         recording = null;
-        const bad = ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Unidentified', 'Dead'];
-        if (!bad.includes(ev.key)) setSetting('key', eventToSpec(ev)); else render();
+        const skip = ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Unidentified', 'Dead'];
+        if (!skip.includes(ev.key)) setSetting('key', eventToSpec(ev)); else render();
       };
       return;
     }
@@ -1999,7 +2493,6 @@ function mountAdvancedSettings(root) {
   root.addEventListener('input', (e) => {
     const t = e.target;
     if (t && t.dataset && t.dataset.txt) {
-      // live speichern, aber nicht neu zeichnen (sonst springt der Cursor)
       set(KEYS[t.dataset.txt], t.value);
       S = readState();
       if (t.dataset.txt === 'term') searchState.q = S.term;
