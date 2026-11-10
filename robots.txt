@@ -1,0 +1,9 @@
+# Zockbox – robots.txt
+# Startseite und Spiele dürfen gefunden werden; die private Statistikseite nicht.
+User-agent: *
+Allow: /
+Disallow: /statistik.html
+Disallow: /games/*?code=
+Disallow: /games/*?join=
+
+Sitemap: https://oskar26.github.io/zockbox/sitemap.xml

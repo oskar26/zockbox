@@ -8,6 +8,30 @@ import { albumToPngBlob, albumToGifBlob, saveBlob, corpseCanvas, CORPSE_STRIP } 
 import { sfx } from './sound.js';
 import { qrSvg } from './qr.js';
 
+// ---------------------------------------------------------------------------
+// Tarnmodus: eigenes Theme-Attribut, damit Farben und Schriften der Tarnseiten
+// nicht mit denen der Spiele kollidieren. Das Spiel bleibt unberührt.
+// ---------------------------------------------------------------------------
+(function disguiseTheme() {
+  const root = document.documentElement;
+  const apply = (on) => {
+    root.classList.toggle('zb-tarn-theme', !!on);
+    if (on) root.setAttribute('data-zb-tarn', ''); else root.removeAttribute('data-zb-tarn');
+  };
+  const sync = () => apply(document.getElementById('zbTarnOverlay'));
+  try { if (localStorage.getItem('zb_tarn_on') === '1') apply(true); } catch (e) {}
+  window.addEventListener('zb-tarnung', (e) => apply(e && e.detail && e.detail.active));
+  window.addEventListener('DOMContentLoaded', sync, { once: true });
+  sync();
+})();
+
+
+// Zockbox-Statistik (shared/stats.js hört auf dieses Ereignis). Nur lokal, kein Server.
+function reportZockboxStats(detail) {
+  try { window.dispatchEvent(new CustomEvent('zb:game', { detail })); } catch (e) {}
+}
+
+
 const GAME_ID = 'krakelpost-v1'; // nicht ändern – Peer-IDs: zockbox-krakelpost-v1-p-CODE
 
 // ---------------------------------------------------------------------------
@@ -1068,6 +1092,12 @@ function floatEmoji(e) {
 // ---------- ENDE ----------
 function renderEnd() {
   stopAnim();
+  if (Array.isArray(S.scores) && S.scores.length) {
+    reportZockboxStats({
+      game: 'krakelpost',
+      players: S.scores.map((p, i) => ({ id: p.id, name: p.name, score: p.pts || 0, place: i + 1, win: i === 0 && (p.pts || 0) > 0, me: p.id === myId() })),
+    });
+  }
   const idxs = Object.keys(albums).map(Number).sort((a, b) => a - b);
   $('albumList').innerHTML = idxs.length ? idxs.map((i) => {
     const a = albums[i]; const first = a.steps.find(Boolean); const lastImg = [...a.steps].reverse().find((s) => s && s.img);

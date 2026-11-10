@@ -1,0 +1,306 @@
+/* =========================================================================
+   Zockbox – Tarnmodus: Looks für die Tarnseiten. made by Oskar
+
+   Drei Looks, jeweils Titel + Symbol + Seiten in einem Guss:
+     moodle   – Lernplattform (Anmeldung, Dashboard, Meine Kurse, Kurs)
+     zockbox  – Zockbox-Look (Startseite, Dokument, Notizen, Kalender, …)
+     lexikon  – Nachschlagewerk (Artikel, Suche)
+
+   Bewusst ohne echte Logos, Markennamen oder nachgebaute Schriftzüge –
+   alle Symbole sind selbst gezeichnet, alle Texte selbst geschrieben.
+   ========================================================================= */
+
+/* ------------------------------------------------------------------ */
+/* 1 · Gemeinsamer Rahmen                                              */
+/* ------------------------------------------------------------------ */
+#zbTarnOverlay.m-moodle {
+  --m-blue: #0f6cb6;
+  --m-blue-dark: #0a5591;
+  --m-blue-soft: #e7f1fa;
+  --m-bg: #f1f1f1;
+  --m-card: #ffffff;
+  --m-text: #1d2125;
+  --m-muted: #6a737b;
+  --m-border: #dee2e6;
+  --m-radius: 8px;
+  background: var(--m-bg);
+  color: var(--m-text);
+  font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+#zbTarnOverlay.m-moodle .zbt-m { min-height: 100%; display: flex; flex-direction: column; background: var(--m-bg); }
+#zbTarnOverlay.m-moodle a { color: var(--m-blue); }
+#zbTarnOverlay.m-moodle a:hover { text-decoration: underline; }
+
+/* Kopfleiste wie in einer Lernplattform */
+#zbTarnOverlay .zbt-m-bar {
+  display: flex; align-items: center; gap: 22px; height: 56px; padding: 0 18px;
+  background: var(--m-card); border-bottom: 1px solid var(--m-border);
+  position: sticky; top: 0; z-index: 4; box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+#zbTarnOverlay .zbt-m-brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 17px; color: var(--m-text); white-space: nowrap; }
+#zbTarnOverlay .zbt-m-brand svg { width: 30px; height: 30px; flex: none; }
+#zbTarnOverlay .zbt-m-nav { display: flex; align-items: center; gap: 20px; font-size: 14px; color: var(--m-text); overflow: hidden; }
+#zbTarnOverlay .zbt-m-nav a { color: var(--m-text); padding: 18px 0 16px; border-bottom: 3px solid transparent; white-space: nowrap; }
+#zbTarnOverlay .zbt-m-nav a:hover { text-decoration: none; color: var(--m-blue); }
+#zbTarnOverlay .zbt-m-nav a.on { border-bottom-color: var(--m-blue); font-weight: 600; }
+#zbTarnOverlay .zbt-m-bar-r { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+#zbTarnOverlay .zbt-m-ico {
+  width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 50%;
+  background: transparent; color: var(--m-muted); cursor: pointer;
+}
+#zbTarnOverlay .zbt-m-ico:hover { background: var(--m-bg); color: var(--m-text); }
+#zbTarnOverlay .zbt-m-ico svg { width: 19px; height: 19px; fill: currentColor; }
+#zbTarnOverlay .zbt-m-ava {
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  background: #d7e6f5; color: #274b6b; font-size: 15px; font-weight: 600; margin-left: 4px; flex: none;
+}
+#zbTarnOverlay .zbt-m-edit { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--m-text); padding-left: 14px; border-left: 1px solid var(--m-border); margin-left: 6px; }
+#zbTarnOverlay .zbt-m-edit i { width: 30px; height: 17px; border-radius: 999px; background: #cfd4d9; position: relative; display: inline-block; }
+#zbTarnOverlay .zbt-m-edit i::after { content: ''; position: absolute; left: 2px; top: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+
+/* Inhalt */
+#zbTarnOverlay .zbt-m-main { width: 100%; max-width: 1120px; margin: 0 auto; padding: 26px 20px 60px; }
+#zbTarnOverlay .zbt-m-h1 { font-size: 27px; font-weight: 600; letter-spacing: -.2px; margin: 0 0 6px; }
+#zbTarnOverlay .zbt-m-sub { font-size: 16px; color: var(--m-text); margin: 0 0 18px; }
+#zbTarnOverlay .zbt-m-sep { height: 1px; background: var(--m-border); margin: 0 0 16px; }
+#zbTarnOverlay .zbt-m-panel { background: var(--m-card); border: 1px solid var(--m-border); border-radius: var(--m-radius); padding: 16px; margin-bottom: 16px; }
+#zbTarnOverlay .zbt-m-panel h2 { font-size: 17px; font-weight: 600; margin: 0 0 12px; letter-spacing: normal; }
+#zbTarnOverlay .zbt-m-side { background: #fff; border: 1px solid var(--m-border); border-radius: var(--m-radius); padding: 14px 16px; margin-top: 16px; }
+#zbTarnOverlay .zbt-m-side h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+#zbTarnOverlay .zbt-m-side a { display: block; padding: 5px 0; font-size: 13.5px; }
+#zbTarnOverlay .zbt-m-empty { text-align: center; color: var(--m-muted); padding: 26px 10px 10px; font-size: 14px; }
+#zbTarnOverlay .zbt-m-empty svg { width: 54px; height: 54px; display: block; margin: 0 auto 10px; opacity: .55; }
+#zbTarnOverlay .zbt-m-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+#zbTarnOverlay .zbt-m-filters select,
+#zbTarnOverlay .zbt-m-filters input {
+  height: 38px; padding: 0 10px; border: 1px solid var(--m-border); border-radius: 5px;
+  background: #fff; color: var(--m-text); font: 14px system-ui, sans-serif; min-width: 120px;
+}
+#zbTarnOverlay .zbt-m-filters input { flex: 1; min-width: 160px; }
+#zbTarnOverlay .zbt-m-filters input::placeholder { color: #8d949b; }
+#zbTarnOverlay .zbt-m-btn {
+  height: 36px; padding: 0 14px; border: 1px solid var(--m-blue); border-radius: 4px;
+  background: var(--m-blue); color: #fff; font: 500 14px system-ui, sans-serif; cursor: pointer;
+}
+#zbTarnOverlay .zbt-m-btn:hover { background: var(--m-blue-dark); border-color: var(--m-blue-dark); }
+#zbTarnOverlay .zbt-m-btn.ghost { background: #fff; color: var(--m-text); border-color: var(--m-border); }
+#zbTarnOverlay .zbt-m-btn.ghost:hover { background: var(--m-bg); }
+#zbTarnOverlay .zbt-m-btn.link { background: none; border: 0; color: var(--m-blue); padding: 0; height: auto; }
+
+/* ------------------------------------------------------------------ */
+/* 2 · Anmeldeseite                                                    */
+/* ------------------------------------------------------------------ */
+#zbTarnOverlay .zbt-m-login { display: grid; place-items: center; padding: 6vh 20px 12vh; min-height: 100%; }
+#zbTarnOverlay .zbt-m-logincard {
+  width: min(520px, 100%); background: var(--m-card); border-radius: var(--m-radius);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .08); padding: 34px 40px 26px;
+}
+#zbTarnOverlay .zbt-m-logincard .zbt-m-logo { display: grid; place-items: center; margin-bottom: 26px; }
+#zbTarnOverlay .zbt-m-logincard .zbt-m-logo svg { width: 118px; height: 118px; }
+#zbTarnOverlay .zbt-m-field { margin-bottom: 14px; }
+#zbTarnOverlay .zbt-m-field input {
+  width: 100%; height: 48px; padding: 0 12px; border: 1px solid #919191; border-radius: 5px;
+  background: #fff; color: var(--m-text); font: 15px system-ui, sans-serif;
+}
+#zbTarnOverlay .zbt-m-field input:focus { outline: 2px solid var(--m-blue); outline-offset: 1px; border-color: var(--m-blue); }
+#zbTarnOverlay .zbt-m-field input::placeholder { color: #767676; }
+#zbTarnOverlay .zbt-m-login .zbt-m-btn { height: 42px; padding: 0 22px; font-size: 15px; margin: 4px 0 12px; }
+#zbTarnOverlay .zbt-m-login-foot { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--m-border); font-size: 14px; color: var(--m-text); }
+#zbTarnOverlay .zbt-m-login-foot .zbt-m-lang { display: inline-flex; align-items: center; gap: 6px; color: var(--m-text); }
+#zbTarnOverlay .zbt-m-cookie { height: 36px; padding: 0 14px; border: 0; border-radius: 5px; background: #c8ccd0; color: #1d2125; font: 14px system-ui, sans-serif; cursor: pointer; }
+#zbTarnOverlay .zbt-m-cookie:hover { background: #bcc1c6; }
+#zbTarnOverlay .zbt-m-help {
+  position: fixed; right: 22px; bottom: 20px; width: 44px; height: 44px; border-radius: 50%;
+  border: 0; background: #b9bec3; color: #fff; font: 600 19px system-ui, sans-serif; z-index: 6; cursor: pointer;
+}
+#zbTarnOverlay .zbt-m-help:hover { background: #a7adb3; }
+
+@media (max-width: 860px) {
+  #zbTarnOverlay .zbt-m-bar { gap: 14px; padding: 0 12px; }
+  #zbTarnOverlay .zbt-m-nav { display: none; }
+  #zbTarnOverlay .zbt-m-edit { display: none; }
+  #zbTarnOverlay .zbt-m-brand span { font-size: 16px; }
+  #zbTarnOverlay .zbt-m-main { padding: 18px 14px 60px; }
+  #zbTarnOverlay .zbt-m-courses { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  #zbTarnOverlay .zbt-m-cover { height: 96px; }
+  #zbTarnOverlay .zbt-m-course-body { padding: 10px 11px 8px; }
+  #zbTarnOverlay .zbt-m-course-body b { font-size: 13.5px; }
+  #zbTarnOverlay .zbt-m-course-body span { font-size: 12px; }
+  #zbTarnOverlay .zbt-m-h1 { font-size: 22px; }
+  #zbTarnOverlay .zbt-m-sub { font-size: 15px; }
+  #zbTarnOverlay .zbt-m-logincard { padding: 24px 20px 20px; }
+  #zbTarnOverlay .zbt-m-logincard .zbt-m-logo svg { width: 84px; height: 84px; }
+  #zbTarnOverlay .zbt-m-tabs { gap: 14px; overflow: auto; }
+  #zbTarnOverlay .zbt-z-main { padding: 34px 16px 60px; }
+  #zbTarnOverlay .zbt-z-sub { display: none; }
+  #zbTarnOverlay .zbt-z-nav { gap: 12px; }
+}
+
+/* ------------------------------------------------------------------ */
+/* 3 · Kurskarten                                                      */
+/* ------------------------------------------------------------------ */
+#zbTarnOverlay .zbt-m-courses { display: grid; grid-template-columns: repeat(auto-fill, minmax(286px, 1fr)); gap: 20px; }
+#zbTarnOverlay .zbt-m-course {
+  display: flex; flex-direction: column; background: var(--m-card); border: 1px solid var(--m-border);
+  border-radius: var(--m-radius); overflow: hidden; text-align: left; padding: 0; cursor: pointer;
+  font: inherit; color: inherit; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+#zbTarnOverlay .zbt-m-course:hover { box-shadow: 0 3px 10px rgba(0,0,0,.08); }
+#zbTarnOverlay .zbt-m-cover { height: 118px; position: relative; }
+#zbTarnOverlay .zbt-m-cover span {
+  position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.9);
+  font-size: 26px; font-weight: 600; letter-spacing: .02em;
+}
+#zbTarnOverlay .zbt-m-course-body { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 3px; }
+#zbTarnOverlay .zbt-m-course-body b { font-size: 15px; font-weight: 600; color: var(--m-blue); }
+#zbTarnOverlay .zbt-m-course-body span { font-size: 13.5px; color: var(--m-text); }
+#zbTarnOverlay .zbt-m-course-foot { margin-top: auto; padding: 10px 12px; display: flex; justify-content: flex-end; }
+#zbTarnOverlay .zbt-m-mini { width: 36px; height: 28px; flex: none; border-radius: 4px; position: relative; overflow: hidden; }
+#zbTarnOverlay .zbt-m-mini span { font-size: 10px; font-weight: 600; }
+#zbTarnOverlay .zbt-m-kebab { width: 30px; height: 26px; border: 0; background: transparent; color: var(--m-muted); font-size: 17px; line-height: 1; border-radius: 4px; }
+#zbTarnOverlay .zbt-m-kebab:hover { background: var(--m-bg); }
+
+/* ------------------------------------------------------------------ */
+/* 4 · Kursseite                                                       */
+/* ------------------------------------------------------------------ */
+#zbTarnOverlay .zbt-m-crumb { font-size: 13px; color: var(--m-muted); margin-bottom: 10px; }
+#zbTarnOverlay .zbt-m-course-head { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; }
+#zbTarnOverlay .zbt-m-course-head .zbt-m-cover { width: 96px; height: 72px; border-radius: 6px; overflow: hidden; flex: none; }
+#zbTarnOverlay .zbt-m-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--m-border); margin-bottom: 18px; font-size: 14px; }
+#zbTarnOverlay .zbt-m-tabs span { padding: 10px 0; border-bottom: 3px solid transparent; color: var(--m-text); }
+#zbTarnOverlay .zbt-m-tabs span.on { border-bottom-color: var(--m-blue); font-weight: 600; }
+#zbTarnOverlay .zbt-m-sec { margin-bottom: 18px; }
+#zbTarnOverlay .zbt-m-sec h2 { font-size: 16px; font-weight: 600; margin: 0 0 8px; }
+#zbTarnOverlay .zbt-m-act { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid #eef0f2; font-size: 14px; }
+#zbTarnOverlay .zbt-m-act:last-child { border-bottom: 0; }
+#zbTarnOverlay .zbt-m-act svg { width: 18px; height: 18px; flex: none; }
+#zbTarnOverlay .zbt-m-act small { margin-left: auto; color: var(--m-muted); font-size: 12.5px; }
+
+/* ------------------------------------------------------------------ */
+/* 5 · Zockbox-Look (Papier, feine Linien)                             */
+/* ------------------------------------------------------------------ */
+#zbTarnOverlay.z-theme {
+  background: #f7f7f5; color: #191b1e;
+  font: 15px/1.6 system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+}
+#zbTarnOverlay.z-theme .zbt-x { background: #f7f7f5; color: #191b1e; }
+#zbTarnOverlay.z-theme .zbt-x-head { background: #f7f7f5; border-bottom: 1px solid #e4e5e1; }
+#zbTarnOverlay.z-theme .zbt-x-title { font-weight: 600; letter-spacing: -.02em; color: #191b1e; }
+#zbTarnOverlay.z-theme .zbt-x-ic { background: #efefe9; border-radius: 7px; }
+#zbTarnOverlay.z-theme .zbt-x-sub,
+#zbTarnOverlay.z-theme .zbt-x-foot { color: #747a80; }
+#zbTarnOverlay.z-theme .zbt-x-foot { background: #fff; border-top: 1px solid #e4e5e1; }
+#zbTarnOverlay.z-theme .zbt-btn,
+#zbTarnOverlay.z-theme .zbt-sel {
+  border: 1px solid #d2d4cf; border-radius: 7px; background: #fff; color: #3c4147; height: 32px;
+}
+#zbTarnOverlay.z-theme .zbt-btn:hover { background: #f1f1ed; border-color: #aab0a8; }
+#zbTarnOverlay.z-theme .zbt-btn.pri { background: #191b1e; border-color: #191b1e; color: #fff; }
+#zbTarnOverlay.z-theme .zbt-btn.pri:hover { background: #33373d; }
+#zbTarnOverlay.z-theme .zbt-panel { border: 1px solid #e4e5e1; border-radius: 10px; }
+#zbTarnOverlay.z-theme .zbt-calc-pad button { border-color: #e4e5e1; background: #fff; color: #191b1e; border-radius: 8px; }
+#zbTarnOverlay.z-theme .zbt-calc-pad button.op { background: #eef3f0; color: #2d5b4f; }
+#zbTarnOverlay.z-theme .zbt-calc-pad button.eq { background: #2d5b4f; border-color: #2d5b4f; color: #fff; }
+#zbTarnOverlay.z-theme .zbt-calc-pad button.fn { background: #f4f4f1; }
+#zbTarnOverlay.z-theme .zbt-calc-display { border-color: #e4e5e1; border-radius: 10px; }
+#zbTarnOverlay.z-theme .zbt-cal-grid { border-color: #e4e5e1; background: #e4e5e1; border-radius: 10px; }
+#zbTarnOverlay.z-theme .zbt-cal-dow { background: #f4f4f1; color: #747a80; }
+#zbTarnOverlay.z-theme .zbt-cal-cell { background: #fff; color: #191b1e; }
+#zbTarnOverlay.z-theme .zbt-cal-cell:hover { background: #f1f1ed; }
+#zbTarnOverlay.z-theme .zbt-cal-cell.today b { background: #2d5b4f; }
+#zbTarnOverlay.z-theme .zbt-cal-cell.sel { background: #eef3f0; box-shadow: inset 0 0 0 2px #2d5b4f; }
+#zbTarnOverlay.z-theme .zbt-cal-side { border-color: #e4e5e1; border-radius: 10px; }
+#zbTarnOverlay.z-theme .zbt-notes { border-color: #e4e5e1; border-radius: 10px; }
+#zbTarnOverlay.z-theme .zbt-notes-list { background: #f4f4f1; border-right-color: #e4e5e1; }
+#zbTarnOverlay.z-theme .zbt-notes-list button.item.on { background: #eef3f0; color: #2d5b4f; }
+#zbTarnOverlay.z-theme .zbt-code,
+#zbTarnOverlay.z-theme .zbt-sheet { border-color: #e4e5e1; border-radius: 10px; }
+#zbTarnOverlay.z-theme .zbt-code-bar { background: #f4f4f1; border-bottom-color: #e4e5e1; }
+#zbTarnOverlay.z-theme .zbt-code-gutter { background: #f4f4f1; border-right-color: #e4e5e1; color: #9aa09c; }
+#zbTarnOverlay.z-theme .zbt-sheet th { background: #f4f4f1; color: #747a80; }
+#zbTarnOverlay.z-theme .zbt-sheet th,
+#zbTarnOverlay.z-theme .zbt-sheet td { border-color: #e4e5e1; }
+#zbTarnOverlay.z-theme .zbt-sheet td.formula input { color: #2d5b4f; background: #f2f7f4; }
+#zbTarnOverlay.z-theme .zbt-d-status { background: #f4f4f1; border-bottom-color: #e4e5e1; color: #747a80; }
+#zbTarnOverlay.z-theme .zbt-d-page { box-shadow: 0 2px 10px rgba(25, 27, 30, .06); border-radius: 4px; }
+
+/* Zockbox-Startseite als Tarnseite */
+#zbTarnOverlay .zbt-z { min-height: 100%; background: #f7f7f5; color: #191b1e; }
+#zbTarnOverlay .zbt-z-top {
+  display: flex; align-items: center; gap: 16px; height: 68px; padding: 0 24px;
+  background: rgba(247, 247, 245, .94); border-bottom: 1px solid #e4e5e1; position: sticky; top: 0; z-index: 3;
+}
+#zbTarnOverlay .zbt-z-logo { width: 30px; height: 30px; border-radius: 7px; background: #191b1e; color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 700; }
+#zbTarnOverlay .zbt-z-name { font-size: 17px; font-weight: 600; letter-spacing: -.035em; }
+#zbTarnOverlay .zbt-z-sub { font-size: 12px; color: #747a80; padding-left: 12px; margin-left: 4px; border-left: 1px solid #d2d4cf; }
+#zbTarnOverlay .zbt-z-nav { margin-left: auto; display: flex; align-items: center; gap: 18px; font-size: 13px; color: #747a80; }
+#zbTarnOverlay .zbt-z-nav a { color: #747a80; }
+#zbTarnOverlay .zbt-z-nav a:hover { color: #191b1e; text-decoration: none; }
+#zbTarnOverlay .zbt-z-main { max-width: 1120px; margin: 0 auto; padding: 56px 24px 70px; }
+#zbTarnOverlay .zbt-z-h1 { font-size: clamp(30px, 5vw, 52px); line-height: 1.1; font-weight: 600; letter-spacing: -.045em; margin: 0 0 18px; }
+#zbTarnOverlay .zbt-z-h1 em { font-style: italic; font-weight: 400; font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif; color: #2d5b4f; }
+#zbTarnOverlay .zbt-z-lead { font-size: 16px; line-height: 1.65; color: #3c4147; max-width: 33em; margin: 0 0 34px; }
+#zbTarnOverlay .zbt-z-stamps { display: flex; gap: 8px; margin-bottom: 20px; }
+#zbTarnOverlay .zbt-z-stamp {
+  height: 24px; padding: 0 9px; display: inline-flex; align-items: center; border: 1px solid #d2d4cf; border-radius: 4px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #747a80; background: #fff;
+}
+#zbTarnOverlay .zbt-z-stamp.on { color: #2d5b4f; border-color: #cbdcd4; background: #eef3f0; }
+#zbTarnOverlay .zbt-z-sec { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid #e4e5e1; padding-bottom: 12px; margin: 42px 0 20px; }
+#zbTarnOverlay .zbt-z-sec h2 { font-size: 22px; font-weight: 600; letter-spacing: -.035em; margin: 0; }
+#zbTarnOverlay .zbt-z-sec span { font-size: 12px; color: #747a80; }
+#zbTarnOverlay .zbt-z-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 14px; }
+#zbTarnOverlay .zbt-z-card {
+  background: #fff; border: 1px solid #d2d4cf; border-radius: 10px; overflow: hidden;
+  display: flex; flex-direction: column; text-align: left; padding: 0; cursor: pointer; font: inherit; color: inherit;
+}
+#zbTarnOverlay .zbt-z-card:hover { border-color: #a8b0a6; box-shadow: 0 8px 24px rgba(25, 27, 30, .06); }
+#zbTarnOverlay .zbt-z-shot { height: 118px; background: #f1f1ed; display: grid; place-items: center; border-bottom: 1px solid #e4e5e1; }
+#zbTarnOverlay .zbt-z-shot svg { width: 62px; height: 62px; color: #3c4147; }
+#zbTarnOverlay .zbt-z-card b { font-size: 15px; font-weight: 600; letter-spacing: -.03em; padding: 14px 15px 0; }
+#zbTarnOverlay .zbt-z-card p { margin: 4px 0 0; padding: 0 15px 15px; font-size: 12.5px; color: #747a80; line-height: 1.5; }
+#zbTarnOverlay .zbt-z-foot { border-top: 1px solid #e4e5e1; padding: 22px 0 0; margin-top: 40px; font-size: 12px; color: #747a80; display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; }
+
+/* Drucken: Tarnseiten im jeweiligen Look */
+@media print {
+  #zbTarnOverlay.m-moodle { background: #fff; }
+  #zbTarnOverlay .zbt-m-bar { position: static; }
+}
+
+/* ------------------------------------------------------------------ */
+/* 5b · In Spielen: Schriften der Tarnseiten gegen Spiel-Styles sichern */
+/* ------------------------------------------------------------------ */
+html.zb-tarn-theme #zbTarnOverlay.moodle-look *:not(svg):not(path):not(pre):not(code):not(textarea),
+#zbTarnOverlay.m-moodle *:not(svg):not(path):not(pre):not(code):not(textarea) {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+html.zb-tarn-theme #zbTarnOverlay pre,
+html.zb-tarn-theme #zbTarnOverlay code,
+html.zb-tarn-theme #zbTarnOverlay textarea,
+html.zb-tarn-theme #zbTarnOverlay .zbt-code-gutter {
+  font-family: 'Courier New', ui-monospace, SFMono-Regular, monospace !important;
+}
+html.zb-tarn-theme #zbTarnOverlay .zbt-ov button,
+#zbTarnOverlay button { box-shadow: none; }
+
+/* ------------------------------------------------------------------ */
+/* 6 · Lexikon-Look: gleiche Ruhe wie der Rest                        */
+/* ------------------------------------------------------------------ */
+#zbTarnOverlay.look-lexikon { background: #fff; }
+#zbTarnOverlay.look-lexikon .zbt-v-brand .zbt-v-word b { letter-spacing: -.02em; }
+
+/* ------------------------------------------------------------------ */
+/* 7 · Drucken: Papier statt Bildschirm                               */
+/* ------------------------------------------------------------------ */
+@media print {
+  #zbTarnOverlay .zbt-m-bar,
+  #zbTarnOverlay .zbt-z-top,
+  #zbTarnOverlay .zbt-v-head,
+  #zbTarnOverlay .zbt-m-help,
+  #zbTarnOverlay .zbt-m-course-foot,
+  #zbTarnOverlay .zbt-m-filters { display: none !important; }
+  #zbTarnOverlay .zbt-m-panel,
+  #zbTarnOverlay .zbt-m-side,
+  #zbTarnOverlay .zbt-m-course { break-inside: avoid; box-shadow: none !important; }
+  #zbTarnOverlay .zbt-m-courses { grid-template-columns: repeat(2, 1fr); }
+}

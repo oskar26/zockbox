@@ -12,6 +12,24 @@ import { WikiFrame } from './wikiframe.js';
 import { POPULAR } from './popular.js';
 import { DAILY_STARTS, LEVELS } from './data.js';
 
+// ---------------------------------------------------------------------------
+// Tarnmodus: eigenes Theme-Attribut, damit Farben und Schriften der Tarnseiten
+// nicht mit denen der Spiele kollidieren. Das Spiel bleibt unberührt.
+// ---------------------------------------------------------------------------
+(function disguiseTheme() {
+  const root = document.documentElement;
+  const apply = (on) => {
+    root.classList.toggle('zb-tarn-theme', !!on);
+    if (on) root.setAttribute('data-zb-tarn', ''); else root.removeAttribute('data-zb-tarn');
+  };
+  const sync = () => apply(document.getElementById('zbTarnOverlay'));
+  try { if (localStorage.getItem('zb_tarn_on') === '1') apply(true); } catch (e) {}
+  window.addEventListener('zb-tarnung', (e) => apply(e && e.detail && e.detail.active));
+  window.addEventListener('DOMContentLoaded', sync, { once: true });
+  sync();
+})();
+
+
 // PeerJS leiser stellen: Beim Durchsuchen der öffentlichen Lobbys sind leere Plätze normal –
 // die Fehler kommen trotzdem als Ereignis bei shared/net.js an, nur ohne rote Konsolenmeldung.
 if (typeof window.Peer === 'function' && !window.Peer.__wrQuiet) {
@@ -1629,6 +1647,17 @@ function renderResults() {
   $('resLang').textContent = R ? LANG_NAMES[R.lang] : '';
   $('resultsRoute').innerHTML = R ? `<b>Route:</b> ${wikiLink(R.lang, R.start)} → ${R.targets.map((t) => wikiLink(R.lang, t.title)).join(', ')}` : '';
   const sorted = S.players.slice().sort((a, b) => b.score - a.score);
+  // Statistik erst am Ende der Partie (nicht nach jeder Runde) und nicht im Einzelspiel.
+  if (final && !solo && !S.statsReported) {
+    const played = S.players.filter((p) => !p.off);
+    S.statsReported = true;
+    reportZockboxStats({
+      game: 'wikirennen',
+      round: S.settings.rounds,
+      players: (played.length ? played : S.players).slice().sort((a, b) => b.score - a.score)
+        .map((p, i) => ({ id: p.id, name: p.name, score: p.score, place: i + 1, win: i === 0, me: p.id === myId() })),
+    });
+  }
 
   // Podest
   const showPod = final && !solo && sorted.length >= 2;

@@ -3,11 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Krakelpost – Stille Post mit Zeichnungen · Zockbox</title>
-  <meta name="description" content="Krakelpost: Stille Post mit Zeichnungen. Schreib einen Satz, zeichne, rate – und lacht am Ende über die Alben. Gratis im Browser, ohne Anmeldung.">
+  <title data-en="Krakelpost – Zockbox">Krakelpost – Stille Post mit Zeichnungen · Zockbox</title>
+  <meta name="description" data-en="Chinese whispers with drawings: write a sentence, draw it, guess it – and laugh at the albums. Free in the browser." content="Krakelpost: Stille Post mit Zeichnungen. Schreib einen Satz, zeichne, rate – und lacht am Ende über die Alben. Gratis im Browser, ohne Anmeldung.">
   <meta name="theme-color" content="#f3ead6">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='5' y='14' width='54' height='38' rx='5' fill='%23fffaf0' stroke='%2323284d' stroke-width='4'/%3E%3Cpath d='M7 17l25 19 25-19' fill='none' stroke='%2323284d' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M12 46c6-6 10 2 15-3' fill='none' stroke='%23ef4a36' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="canonical" href="https://oskar26.github.io/zockbox/games/krakelpost/">
+  <link rel="alternate" hreflang="de" href="https://oskar26.github.io/zockbox/games/krakelpost/?lang=de">
+  <link rel="alternate" hreflang="en" href="https://oskar26.github.io/zockbox/games/krakelpost/?lang=en">
+  <link rel="alternate" hreflang="x-default" href="https://oskar26.github.io/zockbox/games/krakelpost/?lang=en">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Zockbox">
+  <meta property="og:url" content="https://oskar26.github.io/zockbox/games/krakelpost/">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:title" content="Krakelpost – Zockbox">
+  <meta property="og:description" content="Stille Post mit Zeichnungen: Satz schreiben, zeichnen, raten – und am Ende über die Alben lachen. Gratis im Browser.">
+  <meta property="og:image" content="https://oskar26.github.io/zockbox/assets/icon-512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Krakelpost",
+    "url": "https://oskar26.github.io/zockbox/games/krakelpost/",
+    "description": "Stille Post mit Zeichnungen: Satz schreiben, zeichnen, raten – und am Ende über die Alben lachen. Gratis im Browser.",
+    "inLanguage": ["de", "en"],
+    "genre": "Party game",
+    "gamePlatform": "Web browser",
+    "playMode": "MultiPlayer",
+    "applicationCategory": "Game",
+    "operatingSystem": "Any (browser)",
+    "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 2 },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "isPartOf": { "@type": "WebSite", "name": "Zockbox", "url": "https://oskar26.github.io/zockbox/" },
+    "publisher": { "@type": "Person", "name": "Oskar" }
+  }
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="../../assets/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
   <link rel="preload" href="fonts/GochiHand.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/Nunito-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="game.css">
@@ -385,6 +420,7 @@
   <div class="toasts" id="toasts" aria-live="polite"></div>
 
   <script type="module" src="game.js"></script>
+  <script type="module" src="../../shared/stats.js"></script>
   <script type="module" src="../../shared/tarnung.js"></script>
   <script type="module" src="../../shared/promo.js"></script>
 </body>

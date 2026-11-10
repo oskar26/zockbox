@@ -7,6 +7,30 @@ import { LAYOUTS } from './layouts.js';
 import { renderMeme, redrawMeme, memeToPngBlob, memeToGifBlob, saveBlob, captionFontReady } from './memerender.js';
 import { sfx } from './sound.js';
 
+// ---------------------------------------------------------------------------
+// Tarnmodus: eigenes Theme-Attribut, damit Farben und Schriften der Tarnseiten
+// nicht mit denen der Spiele kollidieren. Das Spiel bleibt unberührt.
+// ---------------------------------------------------------------------------
+(function disguiseTheme() {
+  const root = document.documentElement;
+  const apply = (on) => {
+    root.classList.toggle('zb-tarn-theme', !!on);
+    if (on) root.setAttribute('data-zb-tarn', ''); else root.removeAttribute('data-zb-tarn');
+  };
+  const sync = () => apply(document.getElementById('zbTarnOverlay'));
+  try { if (localStorage.getItem('zb_tarn_on') === '1') apply(true); } catch (e) {}
+  window.addEventListener('zb-tarnung', (e) => apply(e && e.detail && e.detail.active));
+  window.addEventListener('DOMContentLoaded', sync, { once: true });
+  sync();
+})();
+
+
+// Zockbox-Statistik (shared/stats.js hört auf dieses Ereignis). Nur lokal, kein Server.
+function reportZockboxStats(detail) {
+  try { window.dispatchEvent(new CustomEvent('zb:game', { detail })); } catch (e) {}
+}
+
+
 const GAME_ID = 'machs-meme-v1'; // nicht ändern – die Zockbox-Startseite sucht Lobbys unter dieser ID
 const AVATARS = ['🐸','🦊','🐼','🐵','🐱','🐶','🦄','🐙','🤖','👽','🦖','🐧','🐷','🦁','🐨','🐯','🐮','🦉','🐝','🍕','🌮','👻','🤡','😎','🥸','🧠','🗿','🐢'];
 const AV_COLORS = ['#ffb3dc', '#a8e6ff', '#c3f7a0', '#ffe28a', '#d6c2ff', '#ffc9a3', '#9ff5e1', '#ffaaa8'];
@@ -1250,6 +1274,14 @@ function renderFinal() {
   const relaxed = S.settings.mode === 'relaxed';
   const sorted = S.players.slice().sort((a, b) => b.score - a.score);
   const meP = sorted.findIndex((p) => p.id === myId());
+  if (!relaxed) {
+    reportZockboxStats({
+      game: 'machs-meme',
+      mode: S.settings.mode,
+      round: S.settings.rounds,
+      players: sorted.map((p, i) => ({ id: p.id, name: p.name, score: p.score, place: i + 1, win: i === 0, me: p.id === myId() })),
+    });
+  }
   const meS = sorted[meP];
   $('finalSum').innerHTML = relaxed ? '<span>😌 Entspannt gespielt – danke fürs Mitmachen!</span>'
     : `<span>Deine Punkte: <b>${meS ? meS.score : 0}</b></span><span>Platz: <b class="gold">${meP + 1}</b> von ${sorted.length}</span>`;

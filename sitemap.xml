@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://oskar26.github.io/zockbox/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oskar26.github.io/zockbox/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oskar26.github.io/zockbox/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oskar26.github.io/zockbox/?lang=en"/>
+  </url>
+  <url>
+    <loc>https://oskar26.github.io/zockbox/games/machs-meme/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oskar26.github.io/zockbox/games/machs-meme/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oskar26.github.io/zockbox/games/machs-meme/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oskar26.github.io/zockbox/games/machs-meme/?lang=en"/>
+  </url>
+  <url>
+    <loc>https://oskar26.github.io/zockbox/games/wikirennen/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oskar26.github.io/zockbox/games/wikirennen/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oskar26.github.io/zockbox/games/wikirennen/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oskar26.github.io/zockbox/games/wikirennen/?lang=en"/>
+  </url>
+  <url>
+    <loc>https://oskar26.github.io/zockbox/games/kritzel-duell/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oskar26.github.io/zockbox/games/kritzel-duell/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oskar26.github.io/zockbox/games/kritzel-duell/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oskar26.github.io/zockbox/games/kritzel-duell/?lang=en"/>
+  </url>
+  <url>
+    <loc>https://oskar26.github.io/zockbox/games/krakelpost/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oskar26.github.io/zockbox/games/krakelpost/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oskar26.github.io/zockbox/games/krakelpost/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oskar26.github.io/zockbox/games/krakelpost/?lang=en"/>
+  </url>
+</urlset>
