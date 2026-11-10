@@ -250,8 +250,9 @@
       <label class="fld multi-only">Rundenende
         <select id="setEnd"><option value="grace">60 s nach dem Ersten</option><option value="all">Wenn alle fertig</option><option value="first">Sofort beim Ersten</option></select>
       </label>
+      <!-- Optionen kommen aus shared/capacity.js (Gerät + Spieldynamik), nicht aus einer festen Liste. -->
       <label class="fld multi-only">Max. Spieler
-        <select id="setMax"><option>2</option><option>4</option><option>6</option><option>8</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select>
+        <select id="setMax"><option value="10">10</option></select>
       </label>
     </div>
 
@@ -435,5 +436,6 @@
 
   <script type="module" src="game.js"></script>
   <script type="module" src="../../shared/tarnung.js"></script>
+  <script type="module" src="../../shared/promo.js"></script>
 </body>
 </html>

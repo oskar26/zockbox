@@ -19,7 +19,7 @@ Alles ist Post – auf hellem Papier statt dunklem Bildschirm:
 ## Spielen
 - **Start:** private Lobby mit 4-Buchstaben-Code. **Schnelles Spiel:** rein in eine offene öffentliche Lobby (oder eine neue erstellen).
 - Einladungslink: `games/krakelpost/?code=ABCD` (auch `?join=ABCD`, öffentliche Lobby `?pub=3`). In der Lobby gibt es einen **QR-Code** (selbst erzeugt, ohne CDN).
-- **2–30 Spieler**, Standard 10 (Solo/Meisterwerk auch allein). Wer mitten im Spiel kommt, schaut zu und ist im nächsten Spiel dabei. Der Spielleiter kann Leute rauswerfen (Spieler antippen).
+- **Spielerzahl nach Gerät & Gruppe**, Standard 10 (Solo/Meisterwerk auch allein). Wer mitten im Spiel kommt, schaut zu und ist im nächsten Spiel dabei. Der Spielleiter kann Leute rauswerfen (Spieler antippen).
 
 ## Modi (Voreinstellungen)
 Normal · Imitation · Animation · Eisbrecher · Fremdkörper · Ergänzen · Meisterwerk · Story · Fehlendes Teil · Geheimnis · Koop · Punkte · Sandwich · Hintergrund · Solo · Speedrun · Kein Druck · **Eigener**

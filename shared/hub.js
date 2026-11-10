@@ -1,6 +1,7 @@
-// Zockbox – Startseite (Bibliothek): Flüster-Intro, Profil, Einstellungen, "Mit Code beitreten", iPhone-Installationshinweis.
+// Zockbox – Startseite (Bibliothek): Profil, Einstellungen, "Mit Code beitreten", iPhone-Installationshinweis.
 // made by Oskar
 import { AVATARS, getProfile, setName, setAvatar, randomName, NAME_MAX } from './profile.js';
+import { capacity, capacityHint } from './capacity.js';
 
 // Spiele, die per Code beitreten können.
 // id = interner Schlüssel für die Auswahl-Chips (data-game in index.html).
@@ -217,6 +218,35 @@ function initJoin() {
 }
 
 // ---------------------------------------------------------------------------
+// Spielerzahlen: keine feste Grenze, sondern Gerät + Spieldynamik.
+// Die Zahlen auf den Karten und im Hero werden zur Laufzeit berechnet.
+// ---------------------------------------------------------------------------
+function initCapacity() {
+  const cards = Array.from(document.querySelectorAll('[data-cap-game]'));
+  if (!cards.length) return;
+  const values = cards.map((el) => {
+    const id = el.dataset.capGame;
+    const c = capacity(id);
+    el.textContent = c.rangeLabel;
+    el.title = capacityHint(id);
+    el.setAttribute('aria-label', `${c.rangeLabel} Personen, geschätzt für dieses Gerät`);
+    return c;
+  });
+  const technical = Math.max(...values.map((c) => c.technical));
+  const idealMin = Math.min(...values.map((c) => c.idealMin));
+  const idealMax = Math.max(...values.map((c) => c.idealMax));
+  const d = values[0];
+  const hero = $('zbCapacity');
+  if (hero) {
+    hero.textContent = `2–${technical}`;
+    const fact = $('zbCapacityFact');
+    if (fact) fact.title = `Geschätzt aus ${d.cores} CPU-Kernen, ~${d.ram} GB RAM und ~${d.downlink} Mbit/s Verbindung. Kein festes Limit – der Host entscheidet.`;
+  }
+  const note = $('zbCapacityNote');
+  if (note) note.textContent = `Ideal je Spiel ${idealMin}–${idealMax} · auf diesem Gerät bis ~${technical} flüssig · Host entscheidet`;
+}
+
+// ---------------------------------------------------------------------------
 // "Zum Home-Bildschirm" (iPhone/iPad Safari)
 // ---------------------------------------------------------------------------
 function initInstallHint() {
@@ -234,52 +264,21 @@ function initInstallHint() {
 }
 
 // ---------------------------------------------------------------------------
-// Flüster-Intro ("psst…") – nur Startseite. Ob es läuft, entscheidet das kleine Inline-Skript im <head>
-// (Klasse zb-intro-on). Das Ausblenden passiert per CSS-Animation; hier nur Überspringen + Aufräumen.
+// Einstellungen: der Hash #einstellungen klappt den Bereich direkt auf.
+// (Das frühere „psst…“-Intro gibt es nicht mehr – die Startseite ist bewusst ruhig.)
 // ---------------------------------------------------------------------------
-const INTRO_MS = 2200;
-function initIntro() {
-  const el = $('zbIntro');
-  const root = document.documentElement;
-  if (!el) return;
-  if (!root.classList.contains('zb-intro-on')) { el.remove(); return; }
-  let done = false;
-  const end = () => {
-    if (done) return; done = true;
-    root.classList.remove('zb-intro-on'); root.classList.add('zb-intro-done');
-    el.remove();
-    window.removeEventListener('keydown', onKey, true);
-  };
-  const skip = () => {
-    if (done) return;
-    el.classList.add('zb-intro-out');
-    setTimeout(end, 260);
-  };
-  const onKey = () => skip();
-  el.addEventListener('pointerdown', skip);
-  window.addEventListener('keydown', onKey, true);
-  el.addEventListener('animationend', (e) => { if (e.target === el) end(); });
-  setTimeout(end, INTRO_MS + 400); // Sicherheitsnetz
+function initSettings() {
+  if (location.hash === '#einstellungen') {
+    const d = $('einstellungen');
+    if (d) d.open = true;
+  }
 }
 
-function initIntroSetting() {
-  const sw = $('zbIntroOn');
-  if (!sw) return;
-  const isOn = () => { try { return localStorage.getItem('zb_intro') !== 'off'; } catch (e) { return true; } };
-  sw.setAttribute('aria-checked', String(isOn()));
-  sw.onclick = () => {
-    const next = !isOn();
-    try { if (next) localStorage.removeItem('zb_intro'); else localStorage.setItem('zb_intro', 'off'); } catch (e) {}
-    sw.setAttribute('aria-checked', String(next));
-  };
-  // #einstellungen in der URL klappt die Einstellungen auf
-  if (location.hash === '#einstellungen') $('einstellungen').open = true;
-}
-
-initIntro();
-initIntroSetting();
+initSettings();
+initCapacity();
 initProfile();
 initJoin();
 initInstallHint();
 window.phToast = toast;
 window.zbToast = toast;
+window.zbCapacity = { capacity, capacityHint };

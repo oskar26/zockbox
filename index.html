@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zockbox – Gratis Browser-Spiele mit Freunden</title>
   <meta name="description" content="Zockbox: kostenlose Multiplayer-Spiele im Browser – ohne Anmeldung, ohne Download. Made by Oskar.">
-  <meta name="theme-color" content="#d8a96a">
+  <meta name="theme-color" content="#f7f7f5">
   <meta name="color-scheme" content="light">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -17,52 +17,36 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="preload" href="shared/fonts/Anton-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="shared/fonts/Inter-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="shared/zockbox.css">
   <script>
-    // Flüster-Intro: nur einmal pro Tab, nicht bei "Intro aus", reduzierter Bewegung, Tarnmodus oder Einladungslink.
-    (function () {
-      var d = document.documentElement, skip = true;
-      try {
-        skip = localStorage.getItem('zb_intro') === 'off' || localStorage.getItem('zb_tarn_on') === '1' ||
-          sessionStorage.getItem('zb_intro_seen') === '1' || /[?&]join=/.test(location.search) ||
-          matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (!skip) sessionStorage.setItem('zb_intro_seen', '1');
-      } catch (e) {}
-      d.classList.add(skip ? 'zb-no-intro' : 'zb-intro-on');
-    })();
+    // Bei aktivem Tarnmodus bleibt die Startseite frei von Werbung – auch schon
+    // bevor die Module geladen sind (kein kurzes Aufblitzen).
+    try { if (localStorage.getItem('zb_tarn_on') === '1') document.documentElement.classList.add('zb-ads-hidden'); } catch (e) {}
   </script>
+  <style>
+    .zb-ads-hidden .zx-promo-inline, .zb-ads-hidden .zx-promo-band,
+    .zb-ads-hidden .zx-modal, .zb-ads-hidden .zb-promo-chip { display: none !important; }
+  </style>
 </head>
 <body class="zx">
-  <!-- Flüster-Intro: die Kiste geht auf, „psst…“ kommt raus -->
-  <div class="zb-intro" id="zbIntro" aria-hidden="true">
-    <div class="zxi-stage">
-      <p class="zxi-psst"><span>p</span><span>s</span><span>s</span><span>t</span><span>…</span></p>
-      <div class="zxi-box">
-        <span class="zxi-flap zxi-flap-l"></span>
-        <span class="zxi-flap zxi-flap-r"></span>
-        <div class="zxi-front">
-          <span class="zxi-arrows">↑↑</span>
-          <span class="zxi-word">ZOCKBOX</span>
-        </div>
-      </div>
-      <p class="zxi-sub">die Zockbox ist offen</p>
-    </div>
-    <span class="zxi-skip">Tippen zum Überspringen</span>
-  </div>
-
   <header class="zx-top">
     <div class="zx-wrap zx-top-in">
       <a class="zx-brand" href="./" aria-label="Zockbox Startseite">
         <span class="zx-logo" aria-hidden="true">Z</span>
         <span class="zx-brand-txt">Zockbox</span>
+        <span class="zx-brand-sub">Browser-Spiele ohne Anmeldung</span>
       </a>
-      <a class="zx-tag" href="#profil" id="zbMe" aria-label="Dein Profil">
-        <span class="zx-tag-hi">Hallo, ich bin</span>
-        <span class="zx-tag-me"><span class="zx-tag-av" id="zbMeAv" aria-hidden="true">🐸</span><span class="zx-tag-name" id="zbMeName">Profil</span></span>
-      </a>
+      <div class="zx-top-right">
+        <a class="zx-top-link" href="#spiele">Spiele</a>
+        <a class="zx-top-link" href="https://github.com/oskar26" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a class="zx-tag" href="#profil" id="zbMe" aria-label="Dein Profil">
+          <span class="zx-tag-hi">Hallo, ich bin</span>
+          <span class="zx-tag-me"><span class="zx-tag-av" id="zbMeAv" aria-hidden="true">🐸</span><span class="zx-tag-name" id="zbMeName">Profil</span></span>
+        </a>
+      </div>
     </div>
   </header>
 
@@ -70,22 +54,27 @@
     <div id="installHint" class="zx-install hidden" role="note">
       <span class="zx-install-ic" aria-hidden="true">📲</span>
       <p>Tipp: In Safari auf <b>Teilen</b> und dann <b>„Zum Home-Bildschirm“</b> – dann startet die Zockbox wie eine App.</p>
-      <button id="installClose" class="zx-x" type="button" aria-label="Hinweis schließen">✕</button>
+      <button id="installClose" class="zx-x" type="button" aria-label="Hinweis schließen">×</button>
     </div>
 
     <section class="zx-hero">
       <div class="zx-hero-text">
         <div class="zx-stamps">
-          <span class="zx-stamp">Inhalt: 4 Spiele</span>
-          <span class="zx-stamp zx-stamp-red">Gratis</span>
+          <span class="zx-stamp">Vier Spiele</span>
+          <span class="zx-stamp zx-stamp-red">Kostenlos · ohne Konto</span>
         </div>
-        <h1 class="zx-h1">Zocken mit Freunden.<br><mark>Direkt im</mark> <mark>Browser.</mark></h1>
-        <p class="zx-lead">Lobby erstellen, Code teilen, losspielen. Kein Konto, kein Download – bis zu 30 Leute pro Runde, auf Handy, iPad und Laptop.</p>
+        <h1 class="zx-h1">Spiele mit Freunden.<br><em>Direkt im Browser.</em></h1>
+        <p class="zx-lead">Lobby erstellen, Code teilen, losspielen. Kein Konto, kein Download – die Verbindung läuft direkt zwischen euren Geräten.</p>
+        <ul class="zx-facts">
+          <li><b>4</b><span>Spiele</span></li>
+          <li id="zbCapacityFact"><b id="zbCapacity">2+</b><span>Personen · geschätzt</span></li>
+          <li><b>0</b><span>Anmeldungen</span></li>
+        </ul>
       </div>
 
       <section class="zx-label" id="beitreten" aria-labelledby="joinTitle">
         <div class="zx-label-head">
-          <h2 id="joinTitle">Mit Code rein</h2>
+          <h2 id="joinTitle">Mit Code beitreten</h2>
           <span class="zx-label-meta">4 Buchstaben</span>
         </div>
         <form id="joinForm" class="zx-label-body" autocomplete="off" novalidate>
@@ -105,94 +94,95 @@
           </div>
           <p id="joinStatus" class="zx-status hidden" aria-live="polite"></p>
         </form>
+        <p class="zx-label-foot">Den Code bekommst du von der Person, die die Lobby erstellt hat.</p>
       </section>
     </section>
 
-    <div class="zx-sec">
-      <h2>In der Kiste</h2>
-      <span class="zx-sec-note">Tipp auf eine Schachtel</span>
+    <div class="zx-sec" id="spiele">
+      <h2>Spiele</h2>
+      <span class="zx-sec-note" id="zbCapacityNote">Gruppengröße nach Gerät &amp; Spieldynamik · kein festes Limit</span>
     </div>
 
     <section class="zx-shelf" aria-label="Spiele">
-      <a class="zx-box zx-c-meme" href="games/machs-meme/">
+      <a class="zx-box zx-c-meme" data-game="machs-meme" href="games/machs-meme/">
         <div class="zx-lid" aria-hidden="true">
-          <div class="zx-meme">
-            <span class="zx-meme-t">WENN DER CODE</span>
-            <span class="zx-meme-f">😂</span>
-            <span class="zx-meme-b">SOFORT KLAPPT</span>
-          </div>
-          <span class="zx-pop">LOL</span>
+          <span class="zx-art-num">01</span>
+          <span class="zx-art"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="12" width="50" height="36" rx="6"/><path d="M15 22h26M15 29h34M15 36h18"/><path d="M15 48l6 6v-6"/><circle cx="47" cy="39" r="3"/></svg></span>
         </div>
         <div class="zx-box-body">
           <span class="zx-live">Live</span>
           <h3>Mach's Meme</h3>
           <p>Alle bekommen dieselbe Vorlage – die witzigste Caption gewinnt.</p>
-          <div class="zx-box-foot"><span class="zx-players">2–30</span><span class="zx-play">Spielen</span></div>
+          <div class="zx-box-foot"><span class="zx-players" data-cap-game="machs-meme">2+</span><span class="zx-play">Öffnen</span></div>
         </div>
       </a>
 
-      <a class="zx-box zx-c-wiki" href="games/wikirennen/">
+      <a class="zx-box zx-c-wiki" data-game="wikirennen" href="games/wikirennen/">
         <div class="zx-lid" aria-hidden="true">
-          <svg class="zx-wiki-net" viewBox="0 0 320 240" preserveAspectRatio="xMidYMid slice">
-            <g class="l"><path d="M40 190 L110 120 L180 150 L262 66"/><path d="M110 120 L150 54"/><path d="M180 150 L236 206"/><path d="M40 190 L100 222"/><path d="M180 150 L214 96"/></g>
-            <path class="r" d="M40 190 L110 120 L180 150 L262 66"/>
-            <g class="n"><circle cx="150" cy="54" r="7"/><circle cx="236" cy="206" r="7"/><circle cx="100" cy="222" r="7"/><circle cx="214" cy="96" r="7"/><circle cx="110" cy="120" r="9"/><circle cx="180" cy="150" r="9"/></g>
-            <circle class="s" cx="40" cy="190" r="13"/><circle class="g" cx="262" cy="66" r="15"/>
-          </svg>
-          <span class="zx-wiki-a">Pizza</span>
-          <span class="zx-wiki-b">Mond</span>
+          <span class="zx-art-num">02</span>
+          <span class="zx-art"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 46 26 27l14 9 12-21"/><circle cx="12" cy="46" r="4"/><circle cx="26" cy="27" r="4"/><circle cx="40" cy="36" r="4"/><circle cx="52" cy="15" r="4"/><path d="M26 27 22 12M40 36l10 14" opacity=".45"/></svg></span>
         </div>
         <div class="zx-box-body">
           <span class="zx-live">Live</span>
           <h3>Wikirennen</h3>
           <p>Von „Pizza“ zu „Mond“ – nur über Links. Wer ist zuerst am Ziel?</p>
-          <div class="zx-box-foot"><span class="zx-players">2–30</span><span class="zx-play">Spielen</span></div>
+          <div class="zx-box-foot"><span class="zx-players" data-cap-game="wikirennen">2+</span><span class="zx-play">Öffnen</span></div>
         </div>
       </a>
 
-      <a class="zx-box zx-c-draw" href="games/kritzel-duell/">
+      <a class="zx-box zx-c-draw" data-game="kritzel-duell" href="games/kritzel-duell/">
         <div class="zx-lid" aria-hidden="true">
-          <svg class="zx-scribble" viewBox="0 0 200 150" preserveAspectRatio="xMidYMid slice"><path d="M22 118 C40 40, 76 36, 88 82 S128 136, 148 66 S180 34, 188 92"/><path class="b" d="M34 46 q18 18 36 0 t36 0"/></svg>
-          <span class="zx-word">K _ T Z _</span>
-          <span class="zx-pen">✏️</span>
+          <span class="zx-art-num">03</span>
+          <span class="zx-art"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 45c8-24 15-28 21-14s12 14 18-6 8-12 8-12"/><path d="M46 10l10 2-3 10" opacity=".5"/><circle cx="9" cy="45" r="2.5"/></svg></span>
         </div>
         <div class="zx-box-body">
           <span class="zx-live">Live</span>
           <h3>Kritzel-Duell</h3>
           <p>Einer zeichnet, alle raten. Wer's zuerst erkennt, holt die Punkte.</p>
-          <div class="zx-box-foot"><span class="zx-players">2–30</span><span class="zx-play">Spielen</span></div>
+          <div class="zx-box-foot"><span class="zx-players" data-cap-game="kritzel-duell">2+</span><span class="zx-play">Öffnen</span></div>
         </div>
       </a>
 
-      <a class="zx-box zx-c-post" href="games/krakelpost/">
+      <a class="zx-box zx-c-post" data-game="krakelpost" href="games/krakelpost/">
         <div class="zx-lid" aria-hidden="true">
-          <div class="zx-chain">
-            <span class="zx-card k1">„Katze auf Skate&shy;board“</span>
-            <span class="zx-card k2"><svg viewBox="0 0 60 44"><path d="M8 34h44M14 34a3 3 0 1 0 0 .1M46 34a3 3 0 1 0 0 .1M20 30c0-8 6-14 13-14s11 5 11 12M24 18l-3-8 7 5M38 16l4-7 1 9"/></svg></span>
-            <span class="zx-card k3">„Hund im Auto?“</span>
-          </div>
+          <span class="zx-art-num">04</span>
+          <span class="zx-art"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="10" width="30" height="19" rx="3"/><rect x="26" y="35" width="30" height="19" rx="3"/><path d="M14 17h16M14 22h10M32 42h16M32 47h10"/><path d="M38 29v4m0 0-3-3m3 3 3-3"/></svg></span>
         </div>
         <div class="zx-box-body">
           <span class="zx-live">Live</span>
           <h3>Krakelpost</h3>
           <p>Stille Post mit Zeichnen: Satz wird Bild, Bild wird Satz.</p>
-          <div class="zx-box-foot"><span class="zx-players">2–30</span><span class="zx-play">Spielen</span></div>
+          <div class="zx-box-foot"><span class="zx-players" data-cap-game="krakelpost">2+</span><span class="zx-play">Öffnen</span></div>
         </div>
       </a>
 
       <div class="zx-box zx-box-soon zx-c-lie" aria-disabled="true">
         <div class="zx-lid" aria-hidden="true">
-          <span class="zx-q q1">?</span><span class="zx-q q2">?</span><span class="zx-q q3">?</span>
-          <span class="zx-spy">🕵️</span>
-          <span class="zx-tape t1"></span><span class="zx-tape t2"></span>
+          <span class="zx-art"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"><rect x="10" y="10" width="44" height="44" rx="6"/><path d="M26 26a6 6 0 0 1 12 0c0 4-6 5-6 10" stroke-dasharray="none"/><circle cx="32" cy="45" r="1.5" fill="currentColor" stroke="none"/></svg></span>
         </div>
         <div class="zx-box-body">
           <h3>Wer lügt?</h3>
           <p>Alle kennen das Wort – nur einer nicht. Findet den Bluffer.</p>
+          <div class="zx-box-foot"><span class="zx-players">In Arbeit</span></div>
         </div>
         <span class="zx-soon-stamp">Bald</span>
       </div>
     </section>
+
+    <!-- Werbung 1/4: ruhige Inline-Karte -->
+    <aside class="zx-promo-inline zx-ads" aria-label="Hinweis auf die App Hain">
+      <div class="zx-promo-thumb"><img src="assets/promo/shot-chat.webp" alt="Hain: Chat-Ansicht auf dem Handy" loading="lazy" width="108" height="132"></div>
+      <div>
+        <div class="zx-promo-eyebrow">Ein anderes Projekt von Oskar</div>
+        <h2>Hain – KI, die auf deinem Handy bleibt</h2>
+        <p>Private Android-App mit einem KI-Assistenten direkt auf dem Gerät: kein Konto, keine Cloud, keine Werbung, kein Tracking. Nach dem einmaligen Download der Modelle auch offline nutzbar.</p>
+        <div class="zx-promo-tags"><span>On-device</span><span>Ohne Konto</span><span>Open Source</span><span>Deutsch &amp; Englisch</span></div>
+      </div>
+      <div class="zx-promo-actions">
+        <a class="zx-btn-primary" href="https://oskar26.github.io/hain/" target="_blank" rel="noopener noreferrer">Hain ansehen</a>
+        <a class="zx-btn-ghost" href="https://github.com/oskar26/hain" target="_blank" rel="noopener noreferrer">Quellcode</a>
+      </div>
+    </aside>
 
     <div class="zx-lower">
       <section class="zx-sheet zx-profile" id="profil" aria-labelledby="profTitle">
@@ -214,9 +204,9 @@
         <details class="zx-settings" id="einstellungen">
           <summary><span>Einstellungen</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
           <div class="zx-set-body">
-            <div class="zx-set-row">
-              <div class="zx-set-txt"><b>Intro beim Öffnen</b><span>Das kurze „psst…“ beim Start der Startseite.</span></div>
-              <button type="button" class="zx-switch" role="switch" id="zbIntroOn" aria-checked="true" aria-label="Intro beim Öffnen"><i></i></button>
+            <div class="zx-set-row zx-set-row-sm">
+              <div class="zx-set-txt"><b>Werbung für Hain &amp; GitHub</b><span>Dezente Hinweise und gelegentlich ein kleines Pop-up. Hier dauerhaft abschaltbar.</span></div>
+              <button type="button" class="zx-switch" role="switch" id="zbAdsOn" aria-checked="true" aria-label="Werbung anzeigen"><i></i></button>
             </div>
             <div id="zbTarnSettings" class="zx-tarn-set"></div>
           </div>
@@ -234,15 +224,51 @@
     </div>
   </main>
 
+  <!-- Werbung 2/4: Banner direkt vor dem Footer, inkl. GitHub-Profil -->
+  <div class="zx-wrap">
+    <section class="zx-promo-band zx-ads" aria-label="Hain und GitHub-Profil">
+      <div class="zx-band-main">
+        <div class="zx-band-icon"><img src="assets/promo/hain-icon.webp" alt="Hain App-Icon" loading="lazy" width="56" height="56"></div>
+        <div>
+          <div class="zx-promo-eyebrow">Hain · Private KI für Android</div>
+          <h2>Deine Fragen bleiben auf deinem Handy.</h2>
+          <p>Hain ist ein kleiner KI-Assistent, der komplett auf dem Gerät läuft – ohne Konto, ohne Cloud, ohne Werbung und ohne Tracking. Antworten auf Deutsch, Werkzeuge wie Wetter und Wikipedia nur auf Anfrage, jede Verbindung im Netzwerk-Log sichtbar.</p>
+          <div class="zx-band-shots" aria-hidden="true">
+            <img src="assets/promo/shot-pim.webp" alt="" loading="lazy"><img src="assets/promo/shot-cards.webp" alt="" loading="lazy"><img src="assets/promo/shot-news.webp" alt="" loading="lazy">
+          </div>
+          <div class="zx-band-actions">
+            <a class="zx-btn-primary" href="https://oskar26.github.io/hain/" target="_blank" rel="noopener noreferrer">Webseite ansehen</a>
+            <a class="zx-btn-ghost" href="https://github.com/oskar26/hain/releases/latest" target="_blank" rel="noopener noreferrer">APK herunterladen</a>
+          </div>
+        </div>
+      </div>
+      <div class="zx-band-side">
+        <div class="zx-promo-eyebrow">Offene Projekte</div>
+        <h3>GitHub: @oskar26</h3>
+        <p>Zockbox, Hain und mehr – der komplette Quellcode liegt offen auf GitHub. Issues, Ideen und Beiträge sind willkommen.</p>
+        <a class="zx-btn-ghost" href="https://github.com/oskar26" target="_blank" rel="noopener noreferrer">Profil ansehen</a>
+      </div>
+      <div class="zx-band-legal">Eigene Projekte, keine bezahlte Werbung. Hain ist kostenlos und Open Source; für den Download ist Android 10 oder neuer nötig.</div>
+    </section>
+  </div>
+
   <footer class="zx-foot">
-    <div class="zx-wrap">
-      <div class="zx-sig">made by <b>Oskar</b></div>
-      <p class="zx-foot-note">Zum Spaß mit Freunden. Bitte halte dich an die Regeln deiner Schule.</p>
-      <p class="zx-foot-small">Zockbox · Verbindung über PeerJS · Memes über imgflip &amp; memegen.link · Texte aus Wikipedia (CC BY-SA 4.0)</p>
+    <div class="zx-wrap zx-foot-in">
+      <div>
+        <div class="zx-sig">made by <b>Oskar</b></div>
+        <p class="zx-foot-note">Zum Spaß mit Freunden. Bitte halte dich an die Regeln deiner Schule.</p>
+        <p class="zx-foot-small">Zockbox · Verbindung über PeerJS · Memes über imgflip &amp; memegen.link · Texte aus Wikipedia (CC BY-SA 4.0)</p>
+      </div>
+      <div class="zx-foot-links">
+        <a href="https://github.com/oskar26" target="_blank" rel="noopener noreferrer">GitHub @oskar26</a>
+        <a href="https://github.com/oskar26/hain" target="_blank" rel="noopener noreferrer">Hain</a>
+        <a href="https://github.com/oskar26/zockbox" target="_blank" rel="noopener noreferrer">Quellcode</a>
+      </div>
     </div>
   </footer>
 
   <script type="module" src="shared/tarnung.js"></script>
+  <script type="module" src="shared/promo.js"></script>
   <script type="module" src="shared/hub.js"></script>
 </body>
 </html>
