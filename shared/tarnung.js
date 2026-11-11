@@ -848,7 +848,7 @@ function mShell(active, inner, brand = 'Lernplattform') {
       <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Keine neuen Nachrichten." aria-label="Nachrichten">${mIcon.chat}</button>
       <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Postfach ist leer." aria-label="Postfach">${mIcon.mail}</button>
       <span class="zbt-m-ava" title="${esc2(mHello())}">${esc2((mHello()[0] || 'G').toUpperCase())}</span>
-      <span class="zbt-m-edit">Bearbeiten<i></i></span>
+      <span class="zbt-m-edit" title="Bearbeiten">Bearbeiten<i></i></span>
     </div>
   </div>
   ${inner}
@@ -896,35 +896,51 @@ function pageMoodleStart() {
 }
 
 // --- 2 · Dashboard ---------------------------------------------------------
+// Wochenraster mit echten Terminen: eine Aufgabe, ein Test, ein Feiertag.
+// Die Termine liegen relativ zu heute, damit immer etwas zu sehen ist.
 function mCalendarPanel() {
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth();
+  const today = now.getDate();
   const first = new Date(y, m, 1);
   const shift = (first.getDay() + 6) % 7;
-  const days = new Date(y, m + 1, 0).getDate();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
   const prevDays = new Date(y, m, 0).getDate();
+  const at = (offset) => {
+    const d = new Date(y, m, today + offset);
+    return d.getMonth() === m ? d.getDate() : null;
+  };
+  const ev = {};
+  const add = (offset, label) => { const d = at(offset); if (d) (ev[d] = ev[d] || []).push(label); };
+  add(-8, 'Hausaufgaben abgeben');
+  add(-1, 'Arbeitsblatt 4');
+  add(6, 'Kurztests');
+  add(12, 'Ankündigung');
+  const weeks = 5;
   const cells = [];
-  for (let i = 0; i < 35; i++) {
+  for (let i = 0; i < weeks * 7; i++) {
     const idx = i - shift + 1;
     let dd = idx, out = false;
     if (idx < 1) { dd = prevDays + idx; out = true; }
-    else if (idx > days) { dd = idx - days; out = true; }
-    const today = !out && dd === now.getDate();
-    cells.push(`<div style="padding:6px 8px;font-size:13px;color:${out ? '#adb3b9' : '#1d2125'};${today ? 'font-weight:700' : ''}">${dd}</div>`);
+    else if (idx > daysInMonth) { dd = idx - daysInMonth; out = true; }
+    const isToday = !out && dd === today;
+    const list = !out ? (ev[dd] || []) : [];
+    cells.push(`<div class="zbt-m-cell${out ? ' out' : ''}${isToday ? ' today' : ''}">
+      <span class="zbt-m-day">${dd}</span>
+      ${list.slice(0, 2).map((l) => `<span class="zbt-m-ev"><i></i>${esc2(l)}</span>`).join('')}
+    </div>`);
   }
   return `<div class="zbt-m-panel">
     <h2>Kalender</h2>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-      <select class="zbt-m-sel" style="height:38px;border:1px solid var(--m-border);border-radius:5px;padding:0 10px;font:14px system-ui,sans-serif;color:#1d2125;background:#fff"><option>Alle Kurse</option><option>Biologie</option><option>Mathematik</option></select>
-      <button type="button" class="zbt-m-btn" style="margin-left:auto" data-zbt2="ml-note" data-t="Termine lassen sich hier nur ansehen.">Neuer Termin</button>
+    <div class="zbt-m-calbar">
+      <select class="zbt-m-sel" aria-label="Kurse"><option>Alle Kurse</option><option>Biologie</option><option>Mathematik</option></select>
+      <button type="button" class="zbt-m-btn" data-zbt2="ml-note" data-t="Termine lassen sich hier nur ansehen.">Neuer Termin</button>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:15px">
-      <span style="color:var(--m-blue)">◀ ${MONATE[(m + 11) % 12]}</span>
-      <b>${MONATE[m]} ${y}</b>
-      <span style="color:var(--m-blue)">${MONATE[(m + 1) % 12]} ▶</span>
+    <div class="zbt-m-calnav">
+      <span class="zbt-m-calprev">◀ ${MONATE[(m + 11) % 12]}</span><b>${MONATE[m]} ${y}</b><span class="zbt-m-calnext">${MONATE[(m + 1) % 12]} ▶</span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--m-border);border-radius:5px;overflow:hidden">
-      ${DOW.map((d) => `<div style="padding:6px 8px;font-size:12px;font-weight:600;background:#f8f9fa;border-bottom:1px solid var(--m-border)">${d}</div>`).join('')}
+    <div class="zbt-m-grid">
+      ${DOW.map((d) => `<div class="zbt-m-dow">${d}</div>`).join('')}
       ${cells.join('')}
     </div>
   </div>`;
@@ -933,12 +949,12 @@ function mCalendarPanel() {
 function pageMoodleDash() {
   const inner = `<div class="zbt-m-main">
     <h1 class="zbt-m-h1">Dashboard</h1>
-    <p class="zbt-m-sub" style="font-size:25px;font-weight:600;margin:0 0 18px">Hallo, ${esc2(mHello())}! 👋</p>
+    <p class="zbt-m-hello">Hallo, ${esc2(mHello())}! 👋</p>
     <div class="zbt-m-panel">
       <h2>Zeitlinie</h2>
       <div class="zbt-m-filters">
-        <select><option>Nächste 7 Tage</option><option>Nächste 30 Tage</option><option>Alle</option></select>
-        <select><option>Sortiert nach Datum</option><option>Sortiert nach Kurs</option></select>
+        <select aria-label="Zeitraum"><option>Nächste 7 Tage</option><option>Nächste 30 Tage</option><option>Alle</option></select>
+        <select aria-label="Sortierung"><option>Sortiert nach Datum</option><option>Sortiert nach Kurs</option></select>
         <input type="search" placeholder="Suche nach Aktivitätstyp oder Aktivitätsname" aria-label="Aktivitäten suchen">
       </div>
       <div class="zbt-m-empty">${mIcon.empty}Keine Aktivität erfordert ein Handeln</div>
@@ -946,9 +962,16 @@ function pageMoodleDash() {
     ${mCalendarPanel()}
     <div class="zbt-m-panel">
       <h2>Kursübersicht</h2>
-      <div style="display:grid;gap:8px">
-        ${M_COURSES.slice(0, 4).map((c) => `<button type="button" class="zbt-m-act" style="border:0;background:none;cursor:pointer;text-align:left;width:100%" data-zbt2="ml-course" data-course="${c.id}">
-          ${mCover(c.cover, c.glyph, 'zbt-m-mini')} <span style="color:var(--m-blue)">${esc2(c.name)}</span><small>${esc2(c.teacher)}</small></button>`).join('')}
+      <div class="zbt-m-course-list">
+        ${M_COURSES.slice(0, 4).map((c) => `<button type="button" class="zbt-m-course-row" data-zbt2="ml-course" data-course="${c.id}">
+          ${mCover(c.cover, c.glyph, 'zbt-m-mini')}<span class="zbt-m-course-name">${esc2(c.name)}</span><small>${esc2(c.teacher)}</small></button>`).join('')}
+      </div>
+    </div>
+    <div class="zbt-m-panel">
+      <h2>Neueste Mitteilungen</h2>
+      <div class="zbt-m-news">
+        <div><b>Biologie · Hr. Dr. Manteniotis</b><span>Denkt an die Arbeitsblätter zur Photosynthese.</span><em>vor 2 Tagen</em></div>
+        <div><b>Mathematik · Hr. Roseneck</b><span>Die Ergebnisse der letzten Klassenarbeit sind online.</span><em>vor 5 Tagen</em></div>
       </div>
     </div>
   </div>`;
@@ -960,7 +983,7 @@ let mCourseFilter = '';
 function pageMoodleKurse() {
   const q = mCourseFilter.toLowerCase();
   const list = M_COURSES.filter((c) => !q || c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.teacher.toLowerCase().includes(q));
-  const inner = `<div class="zbt-m-main">
+  const inner = `<div class="zbt-m-main zbt-m-wide">
     <h1 class="zbt-m-h1">Meine Kurse</h1>
     <p class="zbt-m-sub">Kursübersicht</p>
     <div class="zbt-m-sep"></div>
@@ -988,7 +1011,7 @@ function pageMoodleKurs(courseId) {
   mCourseId = c.id;
   const sec = (title, rows) => `<div class="zbt-m-sec"><h2>${esc2(title)}</h2><div class="zbt-m-panel" style="padding:0">${rows}</div></div>`;
   const act = (icon, label, note) => `<div class="zbt-m-act">${icon}<span>${esc2(label)}</span><small>${esc2(note)}</small></div>`;
-  const inner = `<div class="zbt-m-main">
+  const inner = `<div class="zbt-m-main zbt-m-wide">
     <div class="zbt-m-crumb"><a href="#" data-zbt2="ml-go" data-page="kurse">Meine Kurse</a> · ${esc2(c.name)}</div>
     <div class="zbt-m-course-head">
       ${mCover(c.cover, c.glyph)}
@@ -1346,7 +1369,10 @@ function init() {
   window.addEventListener('zb-tarnung-stat', () => { if (ui) ui.render(); });
 
   const root = document.getElementById('zbTarnSettings');
-  if (root) mountAdvancedSettings(root);
+  if (root) {
+    mountAdvancedSettings(root);
+    window.addEventListener('zb:settings-opened', () => { if (lastSettingsRender) lastSettingsRender(); });
+  }
   window.zbTarnung = {
     show: showPanic, hide, preview: previewPage, get: getSettings, set: setSetting, setLook, isPanic,
     looks: () => LOOKS.map((l) => ({ id: l.id, label: l.label, title: l.title })),
@@ -2306,23 +2332,27 @@ function resetConfig() {
 // Erweiterte Einstellungs-Oberfläche
 // ---------------------------------------------------------------------------
 function mountAdvancedSettings(root) {
-  // Die Einstellungen stehen jetzt in einem breiten Pop-up (Startseite: #zbTarnDialog).
+  // Die Einstellungen stehen im Pop-up der Startseite (#zbTarnSettings).
+  // Aufbau bewusst schlicht: eine Spalte, feine Trennlinien, dieselben Bausteine
+  // wie der Rest der Seite (shared/ui.css + shared/home.css).
   if (!root) return;
 
-  const lookChip = (l) => {
+  const lookCard = (l) => {
     const on = S.look === l.id;
-    return `<button type="button" class="zx-look${on ? ' on' : ''}" role="radio" aria-checked="${on}" data-look="${l.id}" title="${esc(l.note)}">
-      <span class="zx-look-ic"><img src="${l.icon}" alt="" width="34" height="34"></span>
-      <span class="zx-look-tx"><b>${esc(l.label)}</b><small>${esc(l.note)}</small></span>
-      <span class="zx-look-tick" aria-hidden="true">✓</span>
+    return `<button type="button" class="pick${on ? ' on' : ''}" role="radio" aria-checked="${on}" data-look="${l.id}" title="${esc(l.note)}">
+      <span class="pick-ic"><img src="${l.icon}" alt="" width="22" height="22"></span>
+      <span class="pick-tx"><b>${esc(l.label)}</b><small>${esc(l.note)}</small></span>
+      <span class="pick-tick" aria-hidden="true">✓</span>
     </button>`;
   };
-  const pageChip = (p) => `<button type="button" class="zx-chip" role="radio" data-page="${p.id}" aria-checked="${S.page === p.id}">
-    ${p.icon ? `<img src="${p.icon}" alt="" width="16" height="16">` : ''}${esc(p.label)}</button>`;
+  const pageChip = (p) => `<button type="button" class="chip" role="radio" data-page="${p.id}" aria-checked="${S.page === p.id}" aria-pressed="${S.page === p.id}">
+    ${p.icon ? `<img src="${p.icon}" alt="" width="15" height="15">` : ''}${esc(p.label)}</button>`;
 
   const render = () => {
     const touch = isTouch();
-    const cur = pageById(S.page) || PAGES[0];
+    // Offene Aufklapper merken – das Fenster wird bei jeder Änderung neu gezeichnet.
+    const openFolds = new Set([...root.querySelectorAll('details.set-fold[open]')].map((d) => d.querySelector('summary')?.textContent.trim()));
+    const page = pageById(S.page) || PAGES[0];
     const look = lookById(S.look);
     const pages = visiblePages(S.look);
     const others = PAGES.filter((p) => !p.hidden && p.look !== S.look).length;
@@ -2333,113 +2363,127 @@ function mountAdvancedSettings(root) {
     const lastTxt = stats.last ? new Date(stats.last).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'noch nie';
     const armed = S.on && S.auto && withinSchedule();
     root.innerHTML = `
-      <div class="zx-set-row zx-set-row-lead">
-        <div class="zx-set-txt"><b>Tarnmodus</b><span>Titel &amp; Symbol im Tab, dazu eine echte Tarnseite als Vollbild – für Startseite und alle Spiele.</span></div>
-        <button type="button" class="zx-switch" role="switch" id="zbTarnOn" aria-checked="${S.on}" aria-label="Tarnmodus"><i></i></button>
+      <div class="opt">
+        <div class="opt-tx"><b>Tarnmodus</b><span>Titel und Symbol im Tab, dazu eine ganze Tarnseite im Vollbild – für die Startseite und alle Spiele.</span></div>
+        <div class="opt-side"><button type="button" class="sw" role="switch" id="zbTarnOn" aria-checked="${S.on}" aria-label="Tarnmodus"><i></i></button></div>
       </div>
 
-      <div class="zx-set-sub">Look · Titel, Symbol und Seite gehören zusammen</div>
-      <div class="zx-looks" role="radiogroup" aria-label="Look">${LOOKS.map(lookChip).join('')}</div>
-      <p class="zx-set-hint">Ein Look = ein Tab-Titel, ein Favicon und passende Seiten. Titel und Symbol einzeln zu wählen gibt es bewusst nicht mehr, damit nichts verrutscht. Standard: <b>Lernplattform</b>.</p>
+      <div class="set-sub">Look</div>
+      <p class="note">Ein Look = ein Tab-Titel, ein Favicon und passende Seiten. Standard: <b>Lernplattform</b>.</p>
+      <div class="picks" role="radiogroup" aria-label="Look">${LOOKS.map(lookCard).join('')}</div>
 
-      <div class="zx-tarn-opts${S.on ? '' : ' dim'}" id="zbTarnOpts">
-        <div class="zx-set-block">
-          <span class="zx-set-label">Seite in diesem Look <small>(${pages.length} Seiten${others ? ` · ${others} in anderen Looks` : ''})</small></span>
-          <div class="zx-chips" role="radiogroup" aria-label="Tarnseite">
-            ${pages.map(pageChip).join('')}
-            <button type="button" class="zx-chip zx-chip-dash" id="zbTarnPreview">Vorschau</button>
-          </div>
-          <p class="zx-set-hint">Im geöffneten Overlay: <b>Alt + 1 … ${pages.length}</b> wechselt die Seite, <b>Alt + Pfeil</b> blättert. Mit dem Look wechselt auch der Tab.</p>
-        </div>
+      <div class="set-sub">Seite in diesem Look <span style="text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(${pages.length}${others ? `, ${others} in anderen Looks` : ''})</span></div>
+      <div class="chips" role="radiogroup" aria-label="Tarnseite">
+        ${pages.map(pageChip).join('')}
+        <button type="button" class="chip" id="zbTarnPreview">Vorschau</button>
+      </div>
+      <p class="note">Im geöffneten Fenster: <b>Alt + 1 … ${pages.length}</b> wechselt die Seite, <b>Alt + Pfeil</b> blättert.</p>
 
-        <div class="zx-set-divider"></div>
-        <div class="zx-set-sub">Auslöser</div>
-        <div class="zx-set-block">
-          <span class="zx-set-label">Panik-Taste</span>
-          <div class="zx-set-key">
-            <kbd id="zbTarnKey">${esc(keyLabel2(S.key))}</kbd><span>${S.single ? '1× drücken' : '2× schnell drücken'}</span>
-            <button type="button" class="zx-chip" id="zbTarnKeyBtn">Ändern</button>
-          </div>
-          <p class="zx-set-hint">Auch Kombinationen wie <b>Ctrl + Shift + P</b> funktionieren.</p>
+      <div class="set-sub">Auslöser</div>
+      <div class="opt">
+        <div class="opt-tx"><b>Panik-Taste</b><span><kbd id="zbTarnKey">${esc(keyLabel2(S.key))}</kbd> · ${S.single ? 'einmal drücken' : 'zweimal schnell drücken'}</span></div>
+        <div class="opt-side"><button type="button" class="btn btn-sm" id="zbTarnKeyBtn">Ändern</button></div>
+      </div>
+      <div class="opt">
+        <div class="opt-tx"><b>Einmal drücken genügt</b><span>Sofortige Tarnung ohne Doppeldruck.</span></div>
+        <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="single" aria-checked="${S.single}" aria-label="Einmal drücken genügt"><i></i></button></div>
+      </div>
+      <div class="opt">
+        <div class="opt-tx"><b>Zeit für Doppeldruck</b></div>
+        <div class="opt-side">
+          <select class="inp inp-sm" data-num="delay" aria-label="Zeit für Doppeldruck" style="width:130px">
+            ${[[250, '250 ms'], [400, '400 ms'], [550, '550 ms (Standard)'], [750, '750 ms'], [1000, '1 Sekunde'], [1500, '1,5 Sekunden']].map(([n, l]) => `<option value="${n}"${S.delay === n ? ' selected' : ''}>${l}</option>`).join('')}
+          </select>
         </div>
-        <div class="zx-set-grid">
-          <div class="zx-field"><span>Einmal drücken genügt</span>
-            <div class="zx-set-actions"><button type="button" class="zx-switch" role="switch" data-sw="single" aria-checked="${S.single}" aria-label="Einmal drücken genügt"><i></i></button></div>
-            <small>Sofortige Tarnung ohne Doppeldruck.</small>
-          </div>
-          <div class="zx-field"><span>Zeit für Doppeldruck</span>
-            <select class="zx-select" data-num="delay" aria-label="Zeit für Doppeldruck">
-              ${[[250, '250 ms'], [400, '400 ms'], [550, '550 ms (Standard)'], [750, '750 ms'], [1000, '1 Sekunde'], [1500, '1,5 Sekunden']].map(([n, l]) => `<option value="${n}"${S.delay === n ? ' selected' : ''}>${l}</option>`).join('')}
-            </select>
-          </div>
-          <div class="zx-field"><span>Panik-Knopf unten links</span>
-            <div class="zx-set-actions"><button type="button" class="zx-switch" role="switch" data-sw="fab" aria-checked="${S.fab}" aria-label="Panik-Knopf"><i></i></button></div>
-            <small>${touch ? 'Sichtbar – führt direkt zurück ins Spiel.' : 'Erscheint auf Handy und Tablet.'}</small>
-          </div>
-        </div>
+      </div>
+      <div class="opt">
+        <div class="opt-tx"><b>Panik-Knopf unten links</b><span>${touch ? 'Sichtbar – führt direkt zurück ins Spiel.' : 'Erscheint auf Handy und Tablet.'}</span></div>
+        <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="fab" aria-checked="${S.fab}" aria-label="Panik-Knopf"><i></i></button></div>
+      </div>
 
-        <div class="zx-set-divider"></div>
-        <div class="zx-set-sub">Automatisch tarnen</div>
-        <div class="zx-set-row zx-set-row-sm">
-          <div class="zx-set-txt"><b>Bei Tab-Wechsel / Fokusverlust</b><span>Blendet die Tarnseite automatisch ein, wenn du den Tab verlässt. Das Spiel läuft weiter.</span></div>
-          <button type="button" class="zx-switch" role="switch" data-sw="auto" aria-checked="${S.auto}" aria-label="Auto-Tarnung"><i></i></button>
+      <details class="set-fold">
+        <summary>Automatisch tarnen</summary>
+        <div class="set-fold-b">
+          <div class="opt">
+        <div class="opt-tx"><b>Bei Tab-Wechsel oder Fokusverlust</b><span>Blendet die Tarnseite ein, wenn du den Tab verlässt. Das Spiel läuft weiter.</span></div>
+        <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="auto" aria-checked="${S.auto}" aria-label="Auto-Tarnung"><i></i></button></div>
+      </div>
+      <div class="opt">
+        <div class="opt-tx"><b>Verzögerung</b></div>
+        <div class="opt-side">
+          <select class="inp inp-sm" data-num="autoMs" aria-label="Verzögerung der Auto-Tarnung" style="width:110px">
+            ${[[0, 'sofort'], [300, '300 ms'], [800, '800 ms'], [1500, '1,5 s'], [3000, '3 s']].map(([n, l]) => `<option value="${n}"${S.autoMs === n ? ' selected' : ''}>${l}</option>`).join('')}
+          </select>
         </div>
-        <div class="zx-set-grid">
-          <div class="zx-field"><span>Verzögerung</span>
-            <select class="zx-select" data-num="autoMs" aria-label="Verzögerung der Auto-Tarnung">
-              ${[[0, 'sofort'], [300, '300 ms'], [800, '800 ms'], [1500, '1,5 s'], [3000, '3 s']].map(([n, l]) => `<option value="${n}"${S.autoMs === n ? ' selected' : ''}>${l}</option>`).join('')}
-            </select>
-          </div>
-          <div class="zx-field"><span>Nur in einem Zeitfenster</span>
-            <div class="zx-set-actions" style="gap:8px">
-              <button type="button" class="zx-switch" role="switch" data-sw="schedule" aria-checked="${S.schedule}" aria-label="Zeitfenster"><i></i></button>
-              <select class="zx-select" data-num="from" aria-label="Von Uhrzeit" style="width:88px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.from === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
-              <select class="zx-select" data-num="to" aria-label="Bis Uhrzeit" style="width:88px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.to === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
-            </div>
-            <small>${armed ? 'Gerade aktiv.' : S.schedule && S.on ? 'Außerhalb des Zeitfensters – gerade pausiert.' : 'Auto-Tarnung ist aus.'}</small>
-          </div>
+      </div>
+      <div class="opt">
+        <div class="opt-tx"><b>Nur in einem Zeitfenster</b><span>${armed ? 'Gerade aktiv.' : S.schedule && S.on ? 'Außerhalb des Zeitfensters – gerade pausiert.' : 'Auto-Tarnung ist aus.'}</span></div>
+        <div class="opt-side">
+          <button type="button" class="sw" role="switch" data-sw="schedule" aria-checked="${S.schedule}" aria-label="Zeitfenster"><i></i></button>
+          <select class="inp inp-sm" data-num="from" aria-label="Von Uhrzeit" style="width:82px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.from === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
+          <select class="inp inp-sm" data-num="to" aria-label="Bis Uhrzeit" style="width:82px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.to === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
         </div>
+      </div>
 
-        <div class="zx-set-divider"></div>
-        <div class="zx-set-sub">Inhalt der Tarnseiten</div>
-        <div class="zx-set-grid">
-          <div class="zx-field"><span>Name im Dashboard</span><input class="zx-input-sm" data-txt="term" value="${esc(S.term)}" maxlength="60" aria-label="Standard-Suchbegriff"><small>Wird für Suche und Begrüßung genutzt.</small></div>
-          <div class="zx-field"><span>Name des Dokuments</span><input class="zx-input-sm" data-txt="docName" value="${esc(S.docName)}" maxlength="40" aria-label="Name des Dokuments"></div>
-          <div class="zx-field"><span>Medien stummschalten</span>
-            <div class="zx-set-actions"><button type="button" class="zx-switch" role="switch" data-sw="media" aria-checked="${S.media}" aria-label="Medien stummschalten"><i></i></button></div>
-            <small>Ton von Audio/Video während der Tarnung.</small>
-          </div>
         </div>
+      </details>
 
-        <div class="zx-set-divider"></div>
-        <div class="zx-set-sub">Tasten &amp; Verlauf</div>
-        <ul class="zx-set-list">
-          <li><kbd>${esc(keyLabel2(S.key))}</kbd><span>${S.single ? 'Tarnseite ein-/ausblenden' : 'zweimal: Tarnseite ein-/ausblenden'}</span></li>
-          <li><kbd>Alt + 1…${pages.length}</kbd><span>Seite direkt öffnen / wechseln</span></li>
-          <li><kbd>Alt + Pfeil</kbd><span>Nächste / vorherige Seite</span></li>
-          <li><kbd>Ctrl + P</kbd><span>Nur die Tarnseite drucken</span></li>
-          <li><kbd>2× Ecke</kbd><span>Oben links doppelt antippen = zurück</span></li>
-        </ul>
+      <details class="set-fold">
+        <summary>Inhalt der Tarnseiten</summary>
+        <div class="set-fold-b">
+          <div class="opt">
+        <div class="opt-tx"><b>Name im Dashboard</b></div>
+        <div class="opt-side"><input class="inp inp-sm" data-txt="term" value="${esc(S.term)}" maxlength="60" aria-label="Name im Dashboard" style="width:170px"></div>
+      </div>
+      <div class="opt">
+        <div class="opt-tx"><b>Name des Dokuments</b></div>
+        <div class="opt-side"><input class="inp inp-sm" data-txt="docName" value="${esc(S.docName)}" maxlength="40" aria-label="Name des Dokuments" style="width:170px"></div>
+      </div>
+      <div class="opt">
+        <div class="opt-tx"><b>Medien stummschalten</b><span>Ton von Audio und Video während der Tarnung.</span></div>
+        <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="media" aria-checked="${S.media}" aria-label="Medien stummschalten"><i></i></button></div>
+      </div>
 
-        <div class="zx-set-divider"></div>
-        <div class="zx-set-sub">Statistik &amp; Werkzeuge</div>
-        <div class="zx-set-stats">
-          <div><b>${stats.count}</b><span>Auslösungen</span></div>
-          <div><b>${esc(lastTxt)}</b><span>Zuletzt</span></div>
-          <div><b>${pages.length}</b><span>Seiten</span></div>
-          <div><b>${S.on ? 'an' : 'aus'}</b><span>Status</span></div>
         </div>
-        <div class="zx-set-actions">
-          <button type="button" class="zx-btn-sm zx-btn-sm-zb" data-act="preview">Testlauf starten</button>
-          <button type="button" class="zx-btn-sm" data-act="export">Exportieren</button>
-          <button type="button" class="zx-btn-sm" data-act="import">Importieren</button>
-          <button type="button" class="zx-btn-sm" data-act="copy">Kopieren</button>
-          <button type="button" class="zx-btn-sm" data-act="reset">Zurücksetzen</button>
+      </details>
+
+      <details class="set-fold">
+        <summary>Tasten und Werkzeuge</summary>
+        <div class="set-fold-b">
+          <ul>
+        <li><kbd>${esc(keyLabel2(S.key))}</kbd><span>${S.single ? 'ein-/ausblenden' : 'zweimal: ein-/ausblenden'}</span></li>
+        <li><kbd>Alt + 1…${pages.length}</kbd><span>Seite direkt öffnen</span></li>
+        <li><kbd>Alt + ←/→</kbd><span>Blättern</span></li>
+        <li><kbd>2× Ecke</kbd><span>Oben links tippen = zurück</span></li>
+      </ul>
+
+      <div class="set-sub">Statistik und Werkzeuge</div>
+      <div class="stats-strip plain" style="border:1px solid var(--line);border-radius:var(--r-sm)">
+        <div class="stat-cell"><b>${stats.count}</b><span>Auslösungen</span></div>
+        <div class="stat-cell"><b style="font-size:14px;letter-spacing:0">${esc(lastTxt)}</b><span>Zuletzt</span></div>
+        <div class="stat-cell"><b>${pages.length}</b><span>Seiten</span></div>
+        <div class="stat-cell"><b>${S.on ? 'an' : 'aus'}</b><span>Status</span></div>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn-sm" data-act="preview">Testlauf</button>
+        <button type="button" class="btn btn-sm" data-act="export">Exportieren</button>
+        <button type="button" class="btn btn-sm" data-act="import">Importieren</button>
+        <button type="button" class="btn btn-sm" data-act="copy">Kopieren</button>
+        <button type="button" class="btn btn-sm btn-danger" data-act="reset">Zurücksetzen</button>
+      </div>
+      <textarea class="inp" id="zbTarnJson" rows="4" placeholder="JSON für Import hier einfügen …" aria-label="Einstellungen als JSON" style="font:11.5px/1.5 ui-monospace,monospace"></textarea>
         </div>
-        <textarea class="zx-input-sm" id="zbTarnJson" rows="4" placeholder="JSON für Import hier einfügen …" aria-label="Einstellungen als JSON" style="height:auto;padding:9px;font:11px/1.5 ui-monospace,monospace"></textarea>
-        <p class="zx-set-note">Zurück zum Spiel: dieselbe Taste ${S.single ? 'einmal' : 'zweimal'} drücken, oben links 2× antippen – auf dem Handy auch der kleine Knopf unten links. Das Spiel läuft im Hintergrund weiter.</p>
-        <p class="zx-set-note"><span class="zx-set-badge">Hinweis</span> Die Looks sind eigene Nachbauten: keine echten Logos, Markennamen oder Schriftzüge – sonst könnte das Repo als Phishing gelten. Aktuell: <b>${esc(look.label)}</b>.</p>
-      </div>`;
+      </details>
+
+      <p class="note">Zurück zum Spiel: dieselbe Taste ${S.single ? 'einmal' : 'zweimal'} drücken, oben links 2× tippen – auf dem Handy auch der kleine Knopf unten links. Das Spiel läuft im Hintergrund weiter.</p>
+
+      <div class="note">Die Looks sind eigene Nachbauten: keine echten Logos, Markennamen oder Schriftzüge. Aktuell: <b>${esc(look.label)}</b> · Seite: <b>${esc(page.label)}</b>.</div>`;
+
+    if (openFolds.size) {
+      root.querySelectorAll('details.set-fold').forEach((d) => {
+        if (openFolds.has(d.querySelector('summary')?.textContent.trim())) d.open = true;
+      });
+    }
   };
 
   // Delegierte Events: überleben das Neuzeichnen der Oberfläche.
@@ -2472,7 +2516,8 @@ function mountAdvancedSettings(root) {
       toastMsg('Einstellungen als JSON erzeugt'); return;
     }
     if (act === 'copy') {
-      const txt = root.querySelector('#zbTarnJson').value || exportConfig();
+      const ta = root.querySelector('#zbTarnJson');
+      const txt = (ta && ta.value) || exportConfig();
       try { navigator.clipboard.writeText(txt).then(() => toastMsg('Kopiert'), () => toastMsg('Kopieren nicht möglich')); }
       catch (err) { toastMsg('Kopieren nicht möglich'); }
       return;
@@ -2501,4 +2546,6 @@ function mountAdvancedSettings(root) {
 
   ui = { render };
   render();
+  lastSettingsRender = render;
 }
+let lastSettingsRender = null;

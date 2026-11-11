@@ -25,16 +25,16 @@ Kein Konto, kein Download, keine Werbung von Dritten – und eine Statistik, die
 
 - **Ein Profil für alle Spiele:** Name und Emoji-Avatar stellst du auf der Startseite unter „Dein Profil“ ein. Gespeichert wird nur in deinem Browser (`localStorage`: `ph_name`, `ph_avatar`).
 - **Mit Code beitreten:** Code im Pop-up auf der Startseite eintippen (Chat-Karte → *Mit Code beitreten*) – die Zockbox sucht automatisch, in welchem Spiel die Lobby offen ist, und leitet dich hin (`games/<spiel>/?code=ABCD`). Klappt die Suche nicht, einfach das Spiel antippen.
-- **Startseite in zwei Spalten:** links die Begrüßung, rechts eine Chat-Karte („Hallo, ich bin …“ mit Avatar und Name aus dem Profil, direkt bearbeitbar) und ein gezeichnetes Bild. So sind Profil und Beitreten auf dem Handy sofort sichtbar, ohne Scrollen.
+- **Profil direkt auf der Startseite:** Karte *Dein Profil* mit Avatar-Raster und Namen (auch im Einstellungs-Pop-up). Der Name erscheint in der Begrüßung und im Profilknopf oben.
 - **Einladungs-Link:** `https://oskar26.github.io/zockbox/?join=ABCD` füllt den Code auf der Startseite schon aus.
-- **Einstellungen als Pop-up:** Profil, Hain-Hinweis und Tarnmodus stecken in einem breiten Dialog (zwei Spalten, eigenes Scrollen, `Esc` schließt). Auf iPhone/iPad bleibt unten eine feste Leiste mit *Spiele · Einstellungen · Statistik* – die Einstellungen sind also immer erreichbar, nicht mehr in einem Ausklappbereich links versteckt.
-- **Illustrierte Spielkarten:** Jede Karte zeigt statt eines einzelnen Symbols eine kleine Szene im Look der Seite (Meme-Vorlage mit Captions, Artikel mit Inhaltsverzeichnis, Zeichenfläche mit Wort-Maske, Notizblock → Bild). Gleiche Linien, gleiche Farben, gleiche Typografie wie der Rest der Startseite.
-- **Ruhiges Startseiten-Design:** Die Startseite ist bewusst minimalistisch und zurückhaltend – helles Papier, feine Linien, eine gedeckte Akzentfarbe, klare Typografie, keine harten Schatten oder schrägen Stempel. **Nur die Startseite** (und die Fehlerseite, die dasselbe Stylesheet nutzt) sieht so aus; die Spiele behalten ihr gewohntes Aussehen. Das frühere „psst…“-Flüster-Intro und sein Schalter sind dafür entfallen (der veraltete localStorage-Key `zb_intro` wird nicht mehr verwendet).
-- **Neues Favicon / App-Icon:** Schlichtes dunkles „Z“ auf abgerundeter Kachel, als SVG (`assets/favicon.svg`) und als PNG-Set in `assets/` (32/192/512, maskable, Apple Touch). `manifest.webmanifest` und die `theme-color`-Angaben sind darauf abgestimmt.
+- **Einstellungen als Pop-up:** Tarnmodus mit Look-Auswahl, Auslöser, Zeitfenster und Werkzeugen, dazu Profil und Hain-Hinweis. Auf großen Bildschirmen zwei Spalten, auf dem Handy eine Spalte; `Esc` schließt.
+- **Schlichte Startseite (neu):** Helles Papier, ein hellgrauer Grund, Karten mit 1px-Linie, EINE Blaufarbe als Akzent, klare Systemschrift – Vorbild ist die Oberfläche einer Lernplattform (Anmeldung, Dashboard, Kalender). Oben eine Leiste mit *Spiele · Statistik* und dem Profilknopf, darunter Begrüßung, ein Kästchen *Mit Code beitreten*, die Spiele als Raster, Profil, *So geht's*, Zahlen, Einstellungen, Hain-Karte und FAQ. Keine Stempel, keine Muster, keine Schatten.
+- **Spielkarten im Look der Spiele:** Jede Karte zeigt eine selbst gezeichnete Szene in den Farben und mit der Schrift des jeweiligen Spiels, dazu das Logo des Spiels im Bild – Mach's Meme (lila, Bangers, Meme mit Caption), Wikirennen (Enzyklopädie-Artikel, Puzzle-Kugel mit Zielflagge, Libertinus), Kritzel-Duell (Collegeblock, Kugelschreiber, Marker-Schrift), Krakelpost (Papier, Luftpost-Rand, Kalam) und *Wer lügt?* als gestrichelte „in Arbeit“-Karte. Logos und Szenen liegen als SVG in `shared/game-art.js`; dieselben Logos nutzt die Statistik. Die Spiele selbst sehen unverändert aus.
+- **Statistik neu (`statistik.html`):** gleiche schlichte Sprache – vier Kennzahlen, eine Tabelle *Pro Spiel* (Partien, Siege, Quote mit Balken, Ø Platz, Ø Punkte), Balken der letzten 14 Tage, *Wer gewinnt* und der Verlauf. Export und Zurücksetzen unten. Kein Netzwerk, alles aus `localStorage`.
 - **Hain-Hinweis (Eigenwerbung, nicht abschaltbar):** Ein ruhiger Hinweis auf [Hain](https://oskar26.github.io/hain/) (private, lokale KI für Android) mit echten Screenshots aus dem [Hain-Repo](https://github.com/oskar26/hain) in `assets/promo/`. Platzierungen: eine Inline-Karte unter den Spielen, ein Banner direkt vor dem Footer und ein später, kleiner Chip in den Spielen (lässt sich nur für die laufende Sitzung wegtippen). **Keine Pop-ups mehr, kein GitHub-Hinweis mehr.** Der Hinweis gehört zur Zockbox und lässt sich bewusst nicht abschalten – der Schalter in den Einstellungen ist gesperrt und erklärt das. Bei aktivem Tarnmodus wird alles sofort ausgeblendet. Keine Tracker, keine externen Werbe-Skripte, keine Requests zu Werbeservern.
 - **Tarnmodus (erweitert, standardmäßig aus):** Unter *Einstellungen* (Pop-up) einschaltbar, gilt für die Startseite und alle Spiele, die `shared/tarnung.js` einbinden. Reine Oberflächen-Tarnung – das Spiel und die WebRTC-Verbindung laufen darunter weiter.
   - **Drei Looks – Titel, Favicon und Seiten gehören zusammen.** Statt Titel und Symbol getrennt zu wählen, gibt es genau drei Looks; ein Look liefert Tab-Titel, Symbol und die passenden Seiten:
-    - **Lernplattform (Standard)** – Nachbau einer Schul-Lernplattform: **Anmeldung** (Anmeldename/Kennwort, Sprache, Cookie-Hinweis, Hilfe-Knopf), **Dashboard** (Zeitlinie, Kalender mit echtem Monat, Kursübersicht), **Meine Kurse** (acht Kurskacheln mit eigenen Covern, Suche, Filter) und **Kursseite** (Brotkrümelnavigation, Tabs, Wochenblöcke, Lernfortschritt). Anmeldung prüft nur, ob etwas eingetragen ist – nichts wird gesendet.
+    - **Lernplattform (Standard)** – Nachbau einer Schul-Lernplattform im Stil der Screenshots: **Anmeldung** (hellblauer Grund, weiße Karte mit Marke, Anmeldename/Kennwort, „Kennwort vergessen?“, Sprache, Cookie-Hinweis, Hilfe-Knopf unten rechts), **Dashboard** (Begrüßung, Zeitlinie mit Filtern und leerem Zustand, Monatskalender mit heutigem Tag und ein paar Terminen, Kursübersicht, Mitteilungen), **Meine Kurse** (acht Kurskacheln mit eigenen Covern, Suche, Filter) und **Kursseite** (Brotkrümelnavigation, Tabs, Wochenblöcke, Lernfortschritt). Anmeldung prüft nur, ob etwas eingetragen ist – nichts wird gesendet.
     - **Zockbox** – der Look dieser Seite: Startseite mit Spielekarten sowie Dokument, Notizen, Kalender, Editor, Tabelle und Taschenrechner.
     - **Lexikon** – Nachschlagewerk mit Artikel (Photosynthese, Zellatmung, Mitose, Osmose), Inhaltsverzeichnis, Artikelsuche und Suchseite.
   - **Favicon folgt automatisch:** jedes Look-Symbol ist selbst gezeichnet (Buch mit Lichtstrahlen bzw. „Z“ im dunklen Quadrat) und wird als `data:`-SVG gesetzt; das `theme-color` der Statusleiste wechselt mit. Beim Ausschalten kommt das Original zurück.
@@ -47,12 +47,12 @@ Kein Konto, kein Download, keine Werbung von Dritten – und eine Statistik, die
     `<script type="module" src="../../shared/tarnung.js"></script>` und `<script type="module" src="../../shared/promo.js"></script>`
     Optional im Spiel: `window.addEventListener('zb-tarnung', e => …e.detail.active…)`, z. B. um Sounds stummzuschalten. Programmatisch: `window.zbTarnung.show() / hide() / preview() / switchTo(id) / get() / set() / setLook(id) / look() / looks() / pages() / settings() / reset() / count()`.
 - **Statistik (`statistik.html`):** Wie oft du gewonnen hast, wie du im Schnitt abschneidest – auf einer eigenen Seite. Die Spiele melden das Ende einer Partie per Ereignis (`window.dispatchEvent(new CustomEvent('zb:game', { detail: { game, mode, players } }))`), `shared/stats.js` zählt lokal mit:
-  - **Pro Spiel:** Partien, Siege, Siegquote, Ø Platz, Ø Punkte, beste Serie.
+  - **Pro Spiel:** eine Tabelle mit Partien, Siegen, Siegquote (mit Balken), Ø Platz und Ø Punkten – jeweils mit dem Logo des Spiels.
   - **Wer wie oft gewinnt:** alle Namen aus Lobbys auf diesem Gerät, mit Siegen und Quote (die eigene Zeile ist hervorgehoben).
   - **Letzte 14 Tage** als kleine Balkenreihe, dazu ein Verlauf der letzten Partien.
-  - Export als JSON, Zurücksetzen. Auf der Startseite zeigen die Spielkarten eine kleine Sieg-Marke (`1/3 Siege`) und das Einstellungs-Pop-up eine Kurzfassung.
+  - Export als JSON, Zurücksetzen. Auf der Startseite zeigen die Spielkarten eine kleine Marke (`2/3 Siege`), die Karte *Deine Zahlen* und das Einstellungs-Pop-up eine Kurzfassung.
   - Doppelte Meldungen derselben Endansicht werden erkannt und nicht doppelt gezählt. Gespeichert in `localStorage`: `zb_stats_v1`. Nichts verlässt das Gerät.
-- **Startet auch ohne Netz (`sw.js`):** Ein Service Worker legt Startseite, Statistik, Styles, Skripte und Schriften beim ersten Besuch ab. Ist das WLAN weg, startet die Zockbox trotzdem – Lobbys brauchen natürlich weiter eine Verbindung. „Seiten“ kommen erst aus dem Netz (frisch), sonst aus dem Cache; Dateien aus dem Cache mit stiller Aktualisierung. Spiele, PeerJS und fremde Hosts werden nie zwischengespeichert oder umgeleitet. Der Cache heißt `zockbox-v3`; bei Änderungen an Kern-Dateien die Version in `sw.js` erhöhen.
+- **Startet auch ohne Netz (`sw.js`):** Ein Service Worker legt Startseite, Statistik, Styles, Skripte und Schriften beim ersten Besuch ab. Ist das WLAN weg, startet die Zockbox trotzdem – Lobbys brauchen natürlich weiter eine Verbindung. „Seiten“ kommen erst aus dem Netz (frisch), sonst aus dem Cache; Dateien aus dem Cache mit stiller Aktualisierung. Spiele, PeerJS und fremde Hosts werden nie zwischengespeichert oder umgeleitet. Der Cache heißt `zockbox-v5`; bei Änderungen an Kern-Dateien die Version in `sw.js` erhöhen.
 - **Gruppengröße nach Gefühl statt nach Zahl:** Kein hartes Limit. Die Startseite berechnet aus deinem Gerät und der Spieldynamik, was flüssig läuft und wo der meiste Spaß entsteht; der Host entscheidet am Ende selbst.
 - **Wie eine App:** Auf iPhone/iPad in Safari *Teilen → Zum Home-Bildschirm*. Dann hat die Zockbox ihr eigenes Icon und startet im Vollbild.
 
@@ -72,13 +72,20 @@ Die gemeinsame Netzwerk-Logik für alle Spiele steckt in `shared/net.js` (Klasse
 ## 📁 Aufbau
 
 ```
-index.html             Startseite: Spiele mit illustrierten Karten, Profil, Code beitreten, Hain-Hinweis, Einstellungs-Pop-up
-statistik.html         Statistikseite: Siege, Quoten, Plätze, wer wie oft gewinnt
-404.html               Fehlerseite (nutzt dasselbe ruhige body.zx-Design)
+index.html             Startseite: Begrüßung, Code beitreten, Spiele, Profil, Zahlen, Einstellungen, Hain, FAQ
+statistik.html         Statistikseite: Kennzahlen, Tabelle je Spiel, 14 Tage, wer gewinnt, Verlauf
+404.html               Fehlerseite (gleiche schlichte Sprache)
 manifest.webmanifest   App-Infos für „Zum Home-Bildschirm“
 assets/                Favicon/App-Icons (SVG + PNG), assets/fonts/, assets/promo/ (Hain-Screenshots)
-shared/zockbox.css     Teil A: Basis für Spiele (Reset, Schriften, alte zb-*-Bausteine, unverändert) · Teil B: Startseite (body.zx, zx-*-Klassen)
-shared/fonts/          Schriften (lokal, SIL Open Font License)
+shared/ui.css          Oberfläche für Startseite, Statistik, 404: Farben, Kopfleiste, Karten, Formulare, Tabellen
+shared/fonts.css       @font-face für ui.css (Inter + Look der Spiele: ZB Bangers, ZB Patrick, ZB Marker, ZB Gochi, ZB Kalam, ZB Libre)
+shared/home.css        Startseite: Beitreten, Profil, So geht's, Zahlen, Hain, FAQ, Einstellungsfenster
+shared/games.css       Spielkarten-Raster (Startseite + Statistik)
+shared/statistik.css   Statistikseite: Tabellen, Tagesbalken, Verlauf
+shared/game-art.js     Spielkarten-Szenen und Spiel-Logos als SVG (Look der Spiele)
+shared/zockbox.css     Spiel-Basis (Reset, Variablen, alte zb-*-Bausteine) – Startseite/Statistik laden sie nicht mehr
+shared/spiel-fonts.css @font-face für die Spiel-Basis (Unbounded, Inter, Anton)
+shared/fonts/          Schriften (lokal, SIL Open Font License bzw. Apache 2.0)
 shared/hub.js          Logik der Startseite (Profil, Einstellungen, Code-Suche, Install-Tipp)
 shared/capacity.js     Gerätabhängige Spielerzahlen & Spieldynamik (Startseite und alle Spiele)
 shared/tarnung.js      Tarnmodus (3 Looks, 13 Tarnseiten, Auslöser, Einstellungen), für Startseite und Spiele
@@ -123,7 +130,7 @@ python3 -m http.server 8000
 - [PeerJS](https://github.com/peers/peerjs) – MIT-Lizenz, inklusive des kostenlosen PeerJS-Cloud-Servers fürs Signaling
 - Meme-Vorlagen über die [imgflip](https://imgflip.com/)-API und [memegen.link](https://memegen.link/)
 - Artikel aus der [Wikipedia](https://de.wikipedia.org/) – Texte unter [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de)
-- Schriften: Inter (Startseite) sowie Anton und Unbounded (Spiel-Basis), SIL Open Font License, `shared/fonts/`; Permanent Marker liegt weiter in `assets/fonts/` (Apache License 2.0), wird von der neuen Startseite aber nicht mehr aktiv genutzt. Dazu die Schriften in den Spiel-Ordnern – alles lokal, nichts von fremden Servern
+- Schriften: Inter (Oberfläche) sowie Anton und Unbounded (Spiel-Basis), SIL Open Font License; für die Spielkarten zusätzlich Bangers, Patrick Hand, Permanent Marker, Gochi Hand, Kalam (SIL OFL bzw. Apache 2.0) und Libertinus Serif (SIL OFL) – alle lokal in `shared/fonts/`, nichts von fremden Servern
 - Emojis: die Emoji-Schrift deines Geräts
 - Icons und Spiel-Cover: selbst gemacht (CSS/SVG)
 - Screenshots und App-Icon in `assets/promo/`: aus dem [Hain-Repo](https://github.com/oskar26/hain) (Website-Screenshots, self-hosted, damit keine externen Requests nötig sind)

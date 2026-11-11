@@ -1,142 +1,140 @@
-// Zockbox – Startseite (Bibliothek): Profil, Einstellungen, "Mit Code beitreten", iPhone-Installationshinweis.
-// made by Oskar
+// Zockbox – Startseite: Profil, "Mit Code beitreten", Zahlen, Einstellungen. made by Oskar
+//
+// Die Seite ist bewusst schlicht: eine Spalte, Karten mit feinen Linien.
+// Alles, was hier passiert, bleibt im Browser (localStorage).
 import { AVATARS, getProfile, setName, setAvatar, randomName, NAME_MAX } from './profile.js';
-import { t, locale } from './i18n.js';
+import { t, locale, retranslate } from './i18n.js';
 import { capacity, capacityHint } from './capacity.js';
 import { summary, statsFor } from './stats.js';
+import { gameArt } from './game-art.js';
 
 // Spiele, die per Code beitreten können.
-// id = interner Schlüssel für die Auswahl-Chips (data-game in index.html).
-// peerPrefixes = mögliche Peer-ID-Präfixe (aus shared/net.js: `zockbox-${GAME_ID}-p-CODE`).
-// Wenn ein Spiel seine GAME_ID ändert, hier anpassen.
+// id = interner Schlüssel (data-game in index.html), peerPrefixes wie in shared/net.js.
 const GAMES = [
-  { id: 'machs-meme', name: "Mach's Meme", icon: '😂', path: 'games/machs-meme/', peerPrefixes: ['zockbox-machs-meme-v1-'] },
-  { id: 'wikirennen', name: 'Wikirennen', icon: '🏁', path: 'games/wikirennen/', peerPrefixes: ['zockbox-wikirennen-v1-'] },
-  { id: 'kritzel-duell', name: 'Kritzel-Duell', icon: '✏️', path: 'games/kritzel-duell/', peerPrefixes: ['zockbox-kritzel-duell-v1-'] }, // GAME_ID 'kritzel-duell-v1'
-  { id: 'krakelpost', name: 'Krakelpost', icon: '✉️', path: 'games/krakelpost/', peerPrefixes: ['zockbox-krakelpost-v1-'] }, // GAME_ID 'krakelpost-v1'
+  { id: 'machs-meme', name: "Mach's Meme", path: 'games/machs-meme/', peerPrefixes: ['zockbox-machs-meme-v1-'] },
+  { id: 'wikirennen', name: 'Wikirennen', path: 'games/wikirennen/', peerPrefixes: ['zockbox-wikirennen-v1-'] },
+  { id: 'kritzel-duell', name: 'Kritzel-Duell', path: 'games/kritzel-duell/', peerPrefixes: ['zockbox-kritzel-duell-v1-'] },
+  { id: 'krakelpost', name: 'Krakelpost', path: 'games/krakelpost/', peerPrefixes: ['zockbox-krakelpost-v1-'] },
 ];
 const PEERJS_URL = new URL('./vendor/peerjs.min.js', import.meta.url).href;
 
 const $ = (id) => document.getElementById(id);
+const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
 function toast(msg, ms = 2600) {
-  const t = document.createElement('div');
-  t.className = 'toast'; t.textContent = msg; t.setAttribute('role', 'status');
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), ms);
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  el.setAttribute('role', 'status');
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), ms);
 }
 
 // ---------------------------------------------------------------------------
-// Profil
+// Spielkarten: Bilder aus shared/game-art.js (Look der Spiele)
+// ---------------------------------------------------------------------------
+function paintArt() {
+  document.querySelectorAll('[data-art]').forEach((box) => {
+    const id = box.dataset.art;
+    if (!id || box.firstElementChild) return;
+    box.innerHTML = gameArt(id);
+  });
+  // Sprache da, wo Text in den Bildern steckt (aria-label) – einmal nachziehen.
+  retranslate();
+}
+
+// ---------------------------------------------------------------------------
+// Profil (Startseite + Pop-up)
 // ---------------------------------------------------------------------------
 function initProfile() {
-  const prof = getProfile();
   const nameIn = $('phName'), avBtn = $('phAvatar'), grid = $('phAvatarGrid');
-  // Dieselben Felder gibt es noch einmal im Einstellungs-Pop-up.
-  const nameIn2 = $('phName2'), avBtn2 = $('phAvatar2'), grid2 = $('phAvatarGrid2');
+  // Dieselben Felder stehen auch im Einstellungs-Pop-up. Das wird erst später
+  // aufgebaut (tarnung.js) – deshalb jedes Mal frisch suchen.
+  const pop = () => ({
+    name: $('phName2'), av: $('phAvatar2'), grid: $('phAvatarGrid2'), dice: $('phDice2'),
+  });
 
   const paintAll = () => {
     const p = getProfile();
-    if (nameIn) nameIn.value = p.name;
-    if (nameIn2) nameIn2.value = p.name;
+    const el = pop();
+    if (nameIn && nameIn !== document.activeElement) nameIn.value = p.name;
+    if (el.name && el.name !== document.activeElement) el.name.value = p.name;
     if (avBtn) avBtn.textContent = p.avatar;
-    if (avBtn2) avBtn2.textContent = p.avatar;
+    if (el.av) el.av.textContent = p.avatar;
     const av = $('zbMeAv'), nm = $('zbMeName');
     if (av) av.textContent = p.avatar;
     if (nm) nm.textContent = p.name || t('Profil');
-    paintChat(p);
+    const hello = $('zbHello');
+    if (hello) hello.textContent = p.name ? `, ${p.name}!` : '!';
+    document.querySelectorAll('.prof-grid button').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.textContent === p.avatar));
+    });
   };
 
-  // Die Sprechblase im Hero grüßt mit dem eigenen Namen.
-  function paintChat(p) {
-    const chatAv = document.querySelector('.zx-chat-av');
-    if (chatAv) chatAv.textContent = p.avatar;
-    const name = p.name || 'Zockbox';
-    const a = $('zbChatName'), b = $('zbChatName2'), hi = $('zbChatHi'), hi2 = $('zbChatHi2');
-    if (a) a.textContent = name;
-    if (b) b.textContent = name;
-    if (hi) hi.textContent = p.name ? t('das bist du') : t('sagt hallo');
-    if (hi2) hi2.textContent = p.name ? t('Hallo, ich bin') : t('Hallo, hier ist');
-    const card = $('phAvatar');
-    if (card) card.setAttribute('aria-label', p.name ? `${t('Avatar auswählen')} · ${p.name}` : t('Avatar auswählen'));
-  }
-
-  let timer;
   const saved = () => {
     paintAll();
-    document.querySelectorAll('#phSaved').forEach((s) => {
-      s.classList.add('on'); clearTimeout(timer);
-      timer = setTimeout(() => s.classList.remove('on'), 1400);
-    });
     syncMinis();
+    paintSetSummary();
     window.dispatchEvent(new CustomEvent('zb:profile-changed'));
   };
 
   if (nameIn) nameIn.maxLength = NAME_MAX;
-  if (nameIn2) nameIn2.maxLength = NAME_MAX;
 
-  // Avatar-Raster (einmal für beide Stellen aufbauen)
-  const buildGrid = (box, onPick) => {
+  // Avatar-Raster: im Pop-up wird es erst gebaut, wenn das Pop-up offen ist.
+  const buildGrid = (box, btn) => {
     if (!box) return;
     box.innerHTML = '';
     for (const a of AVATARS) {
       const b = document.createElement('button');
-      b.type = 'button'; b.className = 'ph-avatar-opt'; b.textContent = a;
+      b.type = 'button';
+      b.textContent = a;
       b.setAttribute('aria-label', t('Avatar auswählen') + ' ' + a);
-      if (a === getProfile().avatar) b.setAttribute('aria-pressed', 'true');
-      b.onclick = () => {
-        setAvatar(a);
-        paintAll();
-        document.querySelectorAll('.zx-avatar-grid button').forEach((x) => {
-          if (x.textContent === a) x.setAttribute('aria-pressed', 'true'); else x.removeAttribute('aria-pressed');
-        });
-        onPick && onPick();
-        saved();
-      };
+      b.onclick = () => { setAvatar(a); saved(); };
       box.appendChild(b);
     }
+    if (btn) btn.onclick = () => {
+      const open = box.classList.toggle('hidden');
+      btn.setAttribute('aria-expanded', String(!open));
+    };
   };
-  buildGrid(grid, () => toggleGrid(grid, avBtn, false));
-  buildGrid(grid2, () => toggleGrid(grid2, avBtn2, false));
+  buildGrid(grid, avBtn);
 
-  function toggleGrid(box, btn, open) {
-    if (!box) return;
-    const next = open === undefined ? box.classList.contains('hidden') : open;
-    box.classList.toggle('hidden', !next);
-    if (btn) btn.setAttribute('aria-expanded', String(next));
-  }
-  if (avBtn) avBtn.onclick = () => toggleGrid(grid, avBtn);
-  if (avBtn2) avBtn2.onclick = () => toggleGrid(grid2, avBtn2);
-
-  [[nameIn, 'phName'], [nameIn2, 'phName2']].forEach(([input, who]) => {
+  const bindName = (input) => {
     if (!input) return;
-    input.addEventListener('input', () => { setName(input.value); syncMeOnly(); syncMinis(); });
+    input.maxLength = NAME_MAX;
+    input.addEventListener('input', () => {
+      setName(input.value);
+      paintAll();
+      syncMinis();
+    });
     input.addEventListener('blur', () => { input.value = setName(input.value); paintAll(); });
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
-    const others = document.querySelectorAll(who === 'phName' ? '#phName2' : '#phName');
-    input.addEventListener('input', () => others.forEach((o) => { o.value = input.value; }));
-  });
-
-  const syncMeOnly = () => {
-    const p = getProfile();
-    paintChat(p);
-    const av = $('zbMeAv'), nm = $('zbMeName');
-    if (av) av.textContent = p.avatar;
-    if (nm) nm.textContent = p.name || t('Profil');
   };
+  bindName(nameIn);
 
   const dice = () => {
-    const n = setName(randomName());
-    const a = AVATARS[Math.floor(Math.random() * AVATARS.length)];
-    setAvatar(a);
-    paintAll();
+    setName(randomName());
+    setAvatar(AVATARS[Math.floor(Math.random() * AVATARS.length)]);
     saved();
-    return n;
   };
-  [$('phDice'), $('phDice2')].forEach((b) => { if (b) b.onclick = dice; });
+  if ($('phDice')) $('phDice').onclick = dice;
+
+  // Pop-up ist offen: Felder füllen, Raster und Würfel verkabeln (einmalig).
+  // Der Timer ist Absicht: tarnung.js zeichnet den Tarn-Bereich beim Öffnen neu,
+  // danach kommen Profil-Raster und Würfel dran.
+  window.addEventListener('zb:settings-opened', () => setTimeout(() => {
+    const el = pop();
+    if (el.grid && !el.grid.children.length) buildGrid(el.grid, el.av);
+    if (el.name && !el.name.dataset.bound) {
+      el.name.dataset.bound = '1';
+      bindName(el.name);
+    }
+    if (el.dice && !el.dice.onclick) el.dice.onclick = dice;
+    paintAll();
+  }, 0));
 
   paintAll();
-  return { saved };
+  return { paintAll };
 }
 
 // ---------------------------------------------------------------------------
@@ -160,7 +158,9 @@ function loadPeerJS() {
   if (window.Peer) return Promise.resolve();
   return new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = PEERJS_URL; s.onload = () => res(); s.onerror = () => rej(new Error('peerjs'));
+    s.src = PEERJS_URL;
+    s.onload = () => res();
+    s.onerror = () => rej(new Error('peerjs'));
     document.head.appendChild(s);
   });
 }
@@ -171,9 +171,9 @@ async function findGame(code) {
   await loadPeerJS();
   const peer = await new Promise((resolve, reject) => {
     const p = new window.Peer({ debug: 0 });
-    const t = setTimeout(() => { try { p.destroy(); } catch (e) {} reject(new Error('timeout')); }, 9000);
-    p.on('open', () => { clearTimeout(t); resolve(p); });
-    p.on('error', (err) => { if (!p.open) { clearTimeout(t); try { p.destroy(); } catch (e) {} reject(err); } });
+    const timer = setTimeout(() => { try { p.destroy(); } catch (e) {} reject(new Error('timeout')); }, 9000);
+    p.on('open', () => { clearTimeout(timer); resolve(p); });
+    p.on('error', (err) => { if (!p.open) { clearTimeout(timer); try { p.destroy(); } catch (e) {} reject(err); } });
   });
   const pub = /^Ö(\d)$/.exec(code);
   const suffix = pub ? `pub-${pub[1]}` : `p-${code}`;
@@ -186,7 +186,7 @@ async function findGame(code) {
     const conn = peer.connect(targetId, { reliable: true });
     conn.on('open', () => { finish(true); setTimeout(() => { try { conn.close(); } catch (e) {} }, 50); });
     conn.on('error', () => finish(false));
-    setTimeout(() => { try { if (!done) conn.close(); } catch (e) {} finish(false); }, 6000);
+    setTimeout(() => { if (!done) { try { conn.close(); } catch (e) {} } finish(false); }, 6000);
   });
 
   const found = [];
@@ -200,48 +200,46 @@ async function findGame(code) {
 
 function setStatus(msg, kind = '') {
   const s = $('joinStatus');
-  s.textContent = msg; s.dataset.kind = kind;
+  if (!s) return;
+  s.textContent = msg;
+  s.dataset.kind = kind;
   s.classList.toggle('hidden', !msg);
+  retranslate();
 }
 
 function initJoin() {
-  const input = $('joinCode'), btn = $('joinGo');
+  const input = $('joinCode'), btn = $('joinGo'), form = $('joinForm');
+  if (!input || !form || !btn) return;
+
   const chips = document.querySelectorAll('#joinGame [data-game]');
   const pick = (id) => {
     selected = id;
-    chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.game === id)));
+    chips.forEach((c) => {
+      const on = c.dataset.game === id;
+      c.setAttribute('aria-pressed', String(on));
+      c.classList.toggle('on', on);
+    });
   };
   chips.forEach((c) => c.addEventListener('click', () => { pick(c.dataset.game); setStatus(''); }));
   pick('auto');
 
-  // Vier Buchstaben-Kacheln zeigen, was im (unsichtbaren) Eingabefeld steht.
-  const tilesBox = input.closest('.zx-tiles');
-  const tiles = tilesBox ? [...tilesBox.querySelectorAll('.zx-tile')] : [];
-  const paint = () => {
-    const chars = [...input.value];
-    tiles.forEach((t, i) => {
-      t.textContent = chars[i] || '';
-      t.classList.toggle('cur', i === Math.min(chars.length, tiles.length - 1));
-    });
-  };
-  if (tilesBox) {
-    input.addEventListener('focus', () => { tilesBox.classList.add('focus'); paint(); });
-    input.addEventListener('blur', () => tilesBox.classList.remove('focus'));
-    // Cursor immer ans Ende, damit Tippen/Löschen zu den Kacheln passt
-    const toEnd = () => { try { const n = input.value.length; input.setSelectionRange(n, n); } catch (e) {} };
-    input.addEventListener('click', toEnd);
-    input.addEventListener('keyup', toEnd);
-  }
-
   input.addEventListener('input', () => {
     const v = cleanCode(input.value);
     if (v !== input.value) input.value = v;
-    paint();
     setStatus('');
   });
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') btn.click(); });
 
-  $('joinForm').addEventListener('submit', async (e) => {
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); btn.click(); }
+  });
+
+  function openSettingsIfHash() {
+    const id = (location.hash || '').replace('#', '');
+    if (id === 'einstellungen' || id === 'settings') openSettings();
+  }
+  window.addEventListener('hashchange', openSettingsIfHash);
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const code = cleanCode(input.value);
     const valid = /^[A-Z]{4}$/.test(code) || /^Ö\d$/.test(code);
@@ -257,28 +255,28 @@ function initJoin() {
     setStatus(t('Ich suche die Lobby in allen Spielen …'), 'wait');
     try {
       const found = await findGame(code);
-      if (found.length === 1) { setStatus(`Gefunden: ${found[0].icon} ${found[0].name}!`, 'ok'); go(found[0], code); return; }
+      if (found.length === 1) { setStatus(`Gefunden: ${found[0].name}!`, 'ok'); go(found[0], code); return; }
       if (found.length > 1) setStatus(t('Den Code gibt es in mehreren Spielen. Tipp unten auf das richtige Spiel.'), 'err');
       else setStatus(t('Keine offene Lobby mit diesem Code gefunden. Stimmt der Code? Oder wähl das Spiel unten aus.'), 'err');
     } catch (err) {
       setStatus(t('Konnte nicht automatisch suchen. Wähl bitte unten das Spiel aus.'), 'err');
     } finally {
-      btn.removeAttribute('aria-busy'); btn.textContent = old;
+      btn.removeAttribute('aria-busy');
+      btn.textContent = old;
     }
   });
 
-  // ?join=ABCD in der Hub-URL füllt das Feld vor
+  // ?join=ABCD in der URL füllt das Feld vor
   const pre = new URLSearchParams(location.search).get('join');
   if (pre) {
     input.value = cleanCode(pre);
-    paint();
     setStatus(t('Code eingetragen – tipp auf „Los“, um beizutreten.'), 'ok');
   }
+  openSettingsIfHash();
 }
 
 // ---------------------------------------------------------------------------
 // Spielerzahlen: keine feste Grenze, sondern Gerät + Spieldynamik.
-// Die Zahlen auf den Karten und im Hero werden zur Laufzeit berechnet.
 // ---------------------------------------------------------------------------
 function initCapacity() {
   const cards = Array.from(document.querySelectorAll('[data-cap-game]'));
@@ -295,18 +293,15 @@ function initCapacity() {
   const idealMin = Math.min(...values.map((c) => c.idealMin));
   const idealMax = Math.max(...values.map((c) => c.idealMax));
   const d = values[0];
-  const hero = $('zbCapacity');
-  if (hero) {
-    hero.textContent = `2–${technical}`;
-    const fact = $('zbCapacityFact');
-    if (fact) fact.title = locale() === 'en'
-        ? `Estimated from ${d.cores} CPU cores, ~${d.ram} GB RAM and ~${d.downlink} Mbit/s. No fixed limit – the host decides.`
-        : `Geschätzt aus ${d.cores} CPU-Kernen, ~${d.ram} GB RAM und ~${d.downlink} Mbit/s Verbindung. Kein festes Limit – der Host entscheidet.`;
-  }
   const note = $('zbCapacityNote');
-  if (note) note.textContent = locale() === 'en'
-    ? `Ideal per game ${idealMin}–${idealMax} · smooth up to ~${technical} on this device · host decides`
-    : `Ideal je Spiel ${idealMin}–${idealMax} · auf diesem Gerät bis ~${technical} flüssig · Host entscheidet`;
+  if (note) {
+    note.textContent = locale() === 'en'
+      ? `Ideal per game ${idealMin}–${idealMax} · smooth up to ~${technical} on this device`
+      : `Ideal je Spiel ${idealMin}–${idealMax} · auf diesem Gerät bis ~${technical} flüssig`;
+    note.title = locale() === 'en'
+      ? `Estimated from ${d.cores} CPU cores, ~${d.ram} GB RAM and ~${d.downlink} Mbit/s. No fixed limit – the host decides.`
+      : `Geschätzt aus ${d.cores} CPU-Kernen, ~${d.ram} GB RAM und ~${d.downlink} Mbit/s Verbindung. Kein festes Limit – der Host entscheidet.`;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -320,14 +315,15 @@ function initInstallHint() {
   let dismissed = false;
   try { dismissed = localStorage.getItem('ph_install_hint') === 'off'; } catch (e) {}
   if (ios && !standalone && !dismissed) box.classList.remove('hidden');
-  $('installClose').onclick = () => {
+  const close = $('installClose');
+  if (close) close.onclick = () => {
     box.classList.add('hidden');
     try { localStorage.setItem('ph_install_hint', 'off'); } catch (e) {}
   };
 }
 
 // ---------------------------------------------------------------------------
-// Einstellungen als breites Pop-up
+// Einstellungen (ein Fenster; Inhalt der Tarn-Optionen kommt aus tarnung.js)
 // ---------------------------------------------------------------------------
 let lastFocusEl = null;
 
@@ -337,9 +333,11 @@ function openSettings() {
   lastFocusEl = document.activeElement;
   m.classList.remove('hidden');
   document.documentElement.style.overflow = 'hidden';
-  const first = m.querySelector('button, input, select, a');
-  if (first) setTimeout(() => { try { first.focus({ preventScroll: true }); } catch (e) {} }, 40);
   window.dispatchEvent(new CustomEvent('zb:settings-opened'));
+  setTimeout(() => {
+    const first = m.querySelector('button, input, select, a');
+    if (first) { try { first.focus({ preventScroll: true }); } catch (e) {} }
+  }, 40);
 }
 
 function closeSettings() {
@@ -351,10 +349,11 @@ function closeSettings() {
 }
 
 function initSettings() {
-  const open = $('zbOpenSettings'), close = $('zbCloseSettings'), modal = $('zbSettingsModal');
-  if (open) open.onclick = openSettings;
-  const dock = $('zbDockSettings');
-  if (dock) dock.onclick = openSettings;
+  [$('zbOpenSettings'), $('zbOpenSettings2'), $('zbMe')].forEach((b) => {
+    if (!b) return;
+    b.onclick = (e) => { e.preventDefault(); openSettings(); };
+  });
+  const close = $('zbCloseSettings'), modal = $('zbSettingsModal');
   if (close) close.onclick = closeSettings;
   if (modal) {
     modal.addEventListener('click', (e) => { if (e.target === modal) closeSettings(); });
@@ -362,91 +361,59 @@ function initSettings() {
       if (e.key === 'Escape' && !modal.classList.contains('hidden')) { e.stopPropagation(); closeSettings(); }
     }, true);
   }
-  const hash = location.hash;
-  if (hash === '#einstellungen' || hash === '#settings') openSettings();
+}
+
+// Kurzfassung in der Einstellungen-Karte
+function paintSetSummary() {
+  const el = $('zbSetSummary');
+  if (!el) return;
+  let on = false;
+  try { on = localStorage.getItem('zb_tarn_on') === '1'; } catch (e) {}
+  el.textContent = on
+    ? t('Tarnmodus ist an – Titel, Symbol und Tarnseite sind gesetzt.')
+    : t('Titel, Symbol und Tarnseite für den Fall der Fälle');
 }
 
 // ---------------------------------------------------------------------------
-// Zahlen auf der Startseite: Mini-Statistik im Pop-up und Siege auf den Karten
+// Zahlen auf der Startseite (Mini-Statistik + Siege auf den Karten)
 // ---------------------------------------------------------------------------
-function tStats(g) {
-  return locale() === 'en'
-    ? `${g.name}: won ${g.won} of ${g.played}`
-    : `${g.name}: ${g.won} von ${g.played} gewonnen`;
-}
-
-function syncMinis() {
-  const box = $('zbMiniStats');
+function paintNumbers() {
   const s = summary();
   const decided = s.tot.won + s.tot.lost;
-  if (box) {
-    if (!s.tot.played) {
-      box.innerHTML = `<div><b>0</b><span>${t('Partien')}</span></div><div><b>–</b><span>${t('Siege')}</span></div><div><b>–</b><span>${t('Siegquote')}</span></div>`;
-    } else {
-      box.innerHTML = `<div><b>${s.tot.played}</b><span>${t('Partien')}</span></div>
-        <div><b>${s.tot.won}</b><span>${t('Siege')}</span></div>
-        <div><b>${decided ? Math.round((s.tot.won / decided) * 100) + ' %' : '–'}</b><span>${t('Siegquote')}</span></div>`;
-    }
-  }
-  // Kleine Sieg-Marke auf den Spielkarten (links neben „Öffnen“, nicht darin)
+  const cells = !s.tot.played
+    ? [['0', t('Partien')], ['–', t('Siege')], ['–', t('Siegquote')]]
+    : [[s.tot.played, t('Partien')], [s.tot.won, t('Siege')], [decided ? Math.round((s.tot.won / decided) * 100) + ' %' : '–', t('Siegquote')]];
+  const html = cells.map(([v, l]) => `<div class="stat-cell"><b>${v}</b><span>${l}</span></div>`).join('');
+  ['zbMiniStats', 'zbMiniStats2'].forEach((id) => {
+    const box = $(id);
+    if (box) box.innerHTML = html;
+  });
+
+  // Sieg-Marke auf den Spielkarten
   document.querySelectorAll('[data-stat]').forEach((el) => {
-    const id = el.dataset.stat;
-    const g = statsFor(id);
-    const foot = el.parentElement;
-    document.querySelectorAll(`.zx-win-badge[data-for="${id}"]`).forEach((x) => x.remove());
-    if (!foot || !g.played) return;
-    const b = document.createElement('span');
-    b.className = 'zx-win-badge';
-    b.dataset.for = id;
-    b.textContent = `${g.won}/${g.played}`;
-    b.title = locale() === 'en'
-      ? `${g.name}: ${g.played} matches, ${g.won} wins, avg. place ${g.avgPlace ? g.avgPlace.toFixed(1) : '–'}`
-      : `${g.name}: ${g.played} Partien, ${g.won} Siege, Ø Platz ${g.avgPlace ? g.avgPlace.toFixed(1) : '–'}`;
-    b.setAttribute('aria-label', tStats(g));
-    foot.insertBefore(b, el);
+    const g = statsFor(el.dataset.stat);
+    if (!g.played) { el.textContent = ''; el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    el.textContent = locale() === 'en' ? `${g.won}/${g.played} won` : `${g.won}/${g.played} Siege`;
+    el.title = locale() === 'en'
+      ? `${g.name}: ${g.played} matches, ${g.won} wins`
+      : `${g.name}: ${g.played} Partien, ${g.won} Siege`;
   });
 }
+function syncMinis() { paintNumbers(); }
 
 function initStatsLinks() {
-  syncMinis();
-  window.addEventListener('zb:stats-changed', syncMinis);
-  window.addEventListener('zb:profile-changed', syncMinis);
-  window.addEventListener('storage', (e) => { if (e.key === 'zb_stats_v1') syncMinis(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) syncMinis(); });
-}
-
-// ---------------------------------------------------------------------------
-// „Mit Code beitreten“ als eigenes Pop-up – im Hero. Der Chat links
-// („Hallo, ich bin …“) ist damit auch auf dem Handy sofort sichtbar.
-// ---------------------------------------------------------------------------
-function initJoinModal() {
-  const modal = $('zbJoinModal'), openBtn = $('zbOpenJoin'), closeBtn = $('zbCloseJoin');
-  let lastFocus = null;
-  const open = () => {
-    if (!modal) return;
-    lastFocus = document.activeElement;
-    modal.classList.remove('hidden');
-    document.documentElement.style.overflow = 'hidden';
-    const i = $('joinCode');
-    // Betreten/Verlassen der Lobby: Neu-Aufbau der Kacheln anstoßen
-    window.dispatchEvent(new CustomEvent('zb:join-opened'));
-    if (i) setTimeout(() => { try { i.focus({ preventScroll: true }); } catch (e) {} }, 60);
-  };
-  const close = () => {
-    if (!modal) return;
-    modal.classList.add('hidden');
-    document.documentElement.style.overflow = '';
-    try { if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true }); } catch (e) {}
-  };
-  if (openBtn) openBtn.onclick = open;
-  if (closeBtn) closeBtn.onclick = close;
-  if (modal) {
-    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.classList.contains('hidden')) { e.stopPropagation(); close(); }
-    }, true);
-  }
-  window.zbJoinModal = { open, close };
+  paintNumbers();
+  window.addEventListener('zb:stats-changed', paintNumbers);
+  window.addEventListener('zb:profile-changed', paintNumbers);
+  window.addEventListener('zb:lang-changed', () => { paintNumbers(); paintSetSummary(); });
+  window.addEventListener('zb:geo-lang', () => { paintNumbers(); paintSetSummary(); });
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'zb_stats_v1') paintNumbers();
+    if (e.key === 'zb_tarn_on') paintSetSummary();
+  });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) paintNumbers(); });
+  window.addEventListener('zb-tarnung-config', paintSetSummary);
 }
 
 // ---------------------------------------------------------------------------
@@ -459,15 +426,17 @@ function initOffline() {
   } catch (e) {}
 }
 
+paintArt();
 initOffline();
-initJoinModal();
 initSettings();
 initStatsLinks();
 initCapacity();
 initProfile();
 initJoin();
 initInstallHint();
+paintSetSummary();
 window.phToast = toast;
 window.zbToast = toast;
 window.zbCapacity = { capacity, capacityHint };
 window.zbHub = { openSettings, closeSettings };
+window.addEventListener('zb:lang-changed', paintArt);

@@ -125,7 +125,7 @@ export const STRINGS = {
       'Data travels directly between your devices (WebRTC). No Zockbox server reads along.',
 
     // Fuß
-    'made by': 'made by',
+    'von': 'by',
     'Zum Spaß mit Freunden. Bitte halte dich an die Regeln deiner Schule.':
       'For fun with friends. Please follow your school’s rules.',
     'Zockbox · Verbindung über PeerJS · Memes über imgflip & memegen.link · Texte aus Wikipedia (CC BY-SA 4.0)':
@@ -240,6 +240,105 @@ export const STRINGS = {
     'Nichts. Alle vier Spiele sind kostenlos und werbefrei; es gibt keine Konten und keine Bezahlschranke.':
       'Nothing. All four games are free and ad-free; there are no accounts and no paywall.',
     'Kurz beantwortet · FAQ': 'Quick answers · FAQ',
+
+    // Startseite (neu)
+    'Lobby aufmachen, Code teilen, losspielen. Kein Konto, kein Download – die Verbindung läuft direkt zwischen euren Geräten.':
+      'Open a lobby, share the code, start playing. No account, no download – the connection runs directly between your devices.',
+    'Spielen →': 'Play →',
+    'Spiel': 'Game',
+    'Name und Avatar für alle Spiele': 'Name and avatar for every game',
+    'Gilt für alle Spiele und wird nur in diesem Browser gespeichert.':
+      'Used in every game and stored only in this browser.',
+    'Deine Zahlen': 'Your numbers',
+    'Tarnmodus & Auslöser': 'Disguise mode & trigger',
+    'Tarnmodus ist an – Titel, Symbol und Tarnseite sind gesetzt.':
+      'Disguise mode is on – tab title, icon and page are set.',
+    'Titel, Symbol und Tarnseite für den Fall der Fälle':
+      'Tab title, icon and disguise page for when you need them',
+    'Alles bleibt auf diesem Gerät': 'Everything stays on this device',
+    'Statistik, Profil und Tarn-Einstellungen liegen nur im Browser.':
+      'Stats, profile and disguise settings live only in the browser.',
+    'Ausführlich unter': 'In detail under',
+    'Tarnmodus, Auslöser und Hinweise – alles bleibt auf diesem Gerät.':
+      'Disguise mode, trigger and notices – all stored on this device.',
+    'Ein kleiner KI-Assistent, der komplett auf dem Gerät läuft – ohne Konto, ohne Cloud, ohne Werbung. Kostenlos und Open Source.':
+      'A small AI assistant that runs entirely on your device – no account, no cloud, no ads. Free and open source.',
+    'APK laden': 'Get the APK',
+    'Jeder Name zählt nur auf diesem Gerät.': 'Every name counts only on this device.',
+    'Noch keine Partie gespielt.': 'No match played yet.',
+    'Seite in diesem Look': 'Page in this look',
+    'Auslöser': 'Trigger',
+    'Automatisch tarnen': 'Auto disguise',
+    'Inhalt der Tarnseiten': 'Disguise page content',
+    'Tasten': 'Keys',
+    'Deine Statistik': 'Your stats',
+    'Siege, Plätze und Punkte – gezählt in diesem Browser. Keine Anmeldung, kein Server, nichts wird übertragen.':
+      'Wins, placements and points – counted in this browser. No sign-up, no server, nothing transmitted.',
+    'Partien und Siege pro Tag': 'Matches and wins per day',
+    'Wer gewinnt': 'Who wins',
+    '1 Partie': '1 match',
+    'Serie': 'streak',
+    'Statistik und Werkzeuge': 'Stats and tools',
+    'Panik-Knopf unten links': 'Panic button, bottom left',
+    'Einmal drücken genügt': 'One press is enough',
+    'Zeit für Doppeldruck': 'Double-press window',
+    'Sofortige Tarnung ohne Doppeldruck.': 'Instant disguise, no double press.',
+    'Bei Tab-Wechsel oder Fokusverlust': 'On tab switch or lost focus',
+    'Blendet die Tarnseite ein, wenn du den Tab verlässt. Das Spiel läuft weiter.':
+      'Shows the disguise page when you leave the tab. The game keeps running.',
+    'Verzögerung': 'Delay',
+    'Nur in einem Zeitfenster': 'Only within a time window',
+    'Gerade aktiv.': 'Active right now.',
+    'Außerhalb des Zeitfensters – gerade pausiert.': 'Outside the window – paused for now.',
+    'Auto-Tarnung ist aus.': 'Auto disguise is off.',
+    'Name im Dashboard': 'Name on the dashboard',
+    'Name des Dokuments': 'Document name',
+    'Medien stummschalten': 'Mute media',
+    'Ton von Audio und Video während der Tarnung.': 'Audio and video sound while disguised.',
+    'Auslösungen': 'Triggers',
+    'Zuletzt': 'Last',
+    'Seiten': 'Pages',
+    'Status': 'Status',
+    'Testlauf': 'Test run',
+    'Exportieren': 'Export',
+    'Importieren': 'Import',
+    'Kopieren': 'Copy',
+    'Vorschau': 'Preview',
+    'Tarnmodus': 'Disguise mode',
+    'Titel und Symbol im Tab, dazu eine ganze Tarnseite im Vollbild – für die Startseite und alle Spiele.':
+      'Tab title and icon plus a full disguise page – on the home page and in every game.',
+    'Ein Look = ein Tab-Titel, ein Favicon und passende Seiten. Standard: Lernplattform.':
+      'One look = one tab title, one favicon and matching pages. Default: learning platform.',
+    'Name und Avatar wählen – kein Konto nötig.': 'Pick a name and avatar – no account needed.',
+    'Spiel wählen': 'Pick a game',
+    'Eine Person erstellt die Lobby und bekommt einen Code.': 'One person opens the lobby and gets a code.',
+    'Die anderen tippen die vier Buchstaben oben ein.': 'Everyone else types those four letters above.',
+    'Die Daten laufen direkt zwischen euren Geräten (WebRTC).': 'The data runs directly between your devices (WebRTC).',
+    'Statistik →': 'Stats →',
+    '· zum Spaß mit Freunden': '· for fun with friends',
+    'Hauptmenü': 'Main menu',
+    'Partien der letzten 14 Tage': 'Matches of the last 14 days',
+    'Fehler 404': 'Error 404',
+    'Diese Seite gibt es nicht.': 'This page does not exist.',
+    'Vielleicht ein Tippfehler im Link. Du wolltest einer Lobby beitreten? Gib den Code auf der Startseite ein.':
+      'Maybe a typo in the link. Trying to join a lobby? Enter the code on the home page.',
+    'Zur Startseite': 'Back to home',
+    'GitHub @oskar26': 'GitHub @oskar26',
+    'Quote': 'Rate',
+    'Ø Platz': 'Ø place',
+    'Ø Punkte': 'Ø points',
+    'Name': 'Name',
+    'Gezählt wird, sobald eine Partie zu Ende ist – auf dem Gerät, auf dem du gespielt hast. Wer den Browser-Speicher löscht, setzt die Statistik zurück. Die Liste „Wer gewinnt“ enthält nur Namen, die in Lobbys auf diesem Gerät vorkamen.':
+      'Counted as soon as a match ends – on the device you played on. Clearing browser storage resets the stats. The "Who wins" list only holds names that appeared in lobbies on this device.',
+    'Hallo': 'Hi',
+    'Die Zockbox zeigt einen dezenten Hinweis auf': 'Zockbox shows a subtle hint for',
+    '– ohne Pop-ups, ohne Werbenetzwerke. Im Tarnmodus verschwindet er.':
+      '– no pop-ups, no ad networks. It disappears in disguise mode.',
+    'Zockbox · Verbindung über PeerJS · Memes über imgflip & memegen.link · Texte aus Wikipedia (CC BY-SA 4.0). Bitte halte dich an die Regeln deiner Schule.':
+      'Zockbox · connection via PeerJS · memes via imgflip & memegen.link · texts from Wikipedia (CC BY-SA 4.0). Please follow your school rules.',
+    'Im geöffneten Fenster:': 'In the open window:',
+    'wechselt die Seite,': 'switches the page,',
+    'blättert.': 'flips through pages.',
   },
 };
 
@@ -247,19 +346,6 @@ export const STRINGS = {
 // Umschalter: zwei kleine Kürzel (DE / EN) oben rechts, im Footer verlinkt.
 // Ohne Klick entscheidet der Standort; ein Klick gilt dauerhaft für das Gerät.
 // ---------------------------------------------------------------------------
-const CSS = `
-.zb-lang{display:inline-flex;align-items:center;gap:2px;padding:2px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface)}
-.zb-lang button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 10.5px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;padding:5px 7px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s}
-.zb-lang button:hover{color:var(--ink)}
-.zb-lang button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
-.zx-top .zb-lang{margin-left:2px}
-@media (max-width:900px){.zx-top .zb-lang{display:none}}
-.zx-foot-links .zb-lang{vertical-align:middle}
-.zb-lang-floating{position:fixed;right:14px;bottom:14px;z-index:60;box-shadow:0 6px 20px rgba(25,27,30,.10)}
-.zb-lang-floating button{padding:6px 9px;font-size:11px}
-@media (max-width:520px){.zb-lang button{padding:5px 6px}}
-`;
-
 function langBox() {
   const box = document.createElement('div');
   box.className = 'zb-lang';
@@ -279,14 +365,9 @@ function langBox() {
 
 function mountSwitch() {
   if (document.querySelector('.zb-lang')) return;
-  const st = document.createElement('style');
-  st.id = 'zb-lang-css';
-  st.textContent = CSS;
-  document.head.appendChild(st);
-
-  const top = document.querySelector('.zx-top-right');
-  const foot = document.querySelector('.zx-foot-links');
-  if (top) top.appendChild(langBox());            // oben rechts (ab 900px sichtbar)
+  const top = document.querySelector('.top-right');
+  const foot = document.querySelector('.foot-links');
+  if (top) top.appendChild(langBox());            // oben rechts
   if (foot) foot.appendChild(langBox());          // im Footer, immer sichtbar
   if (!top && !foot) {                            // Spiele ohne Kopfleiste/Footer
     const box = langBox();

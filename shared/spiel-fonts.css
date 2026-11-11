@@ -1,0 +1,11 @@
+/* =========================================================================
+   Zockbox – Schriften für die Spiele (nur @font-face). made by Oskar
+
+   Wird von shared/zockbox.css eingebunden. Die Spiele laden ihre eigenen
+   Schriften zusätzlich selbst; hier stehen die gemeinsamen, die die
+   Spiel-Basis (Legacy) schon immer bereitgestellt hat.
+   ========================================================================= */
+
+@font-face { font-family: 'Unbounded'; src: url('fonts/Unbounded-Variable.woff2') format('woff2'); font-weight: 200 900; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('fonts/Inter-Variable.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: 'Anton'; src: url('fonts/Anton-Regular.woff2') format('woff2'); font-display: swap; }
