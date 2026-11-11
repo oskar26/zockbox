@@ -1,0 +1,55 @@
+/* =========================================================================
+   Zockbox – Statistikseite (ergänzt shared/ui.css und shared/games.css)
+   ========================================================================= */
+
+.st-g { display: inline-flex; align-items: center; gap: 9px; font-weight: 500; white-space: nowrap; }
+.st-g .gm-ic { width: 22px; height: 22px; flex: none; display: block; }
+.st-g small { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; }
+
+.tbl td.st-bar-cell { width: 34%; min-width: 110px; }
+.st-rate { display: flex; align-items: center; gap: 9px; justify-content: flex-end; }
+.st-rate .bar { width: 56px; flex: none; }
+.st-rate b { font-weight: 500; font-variant-numeric: tabular-nums; }
+
+.tbl .rank { width: 34px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+/* Zwei Spalten ab Tablet */
+.lower2 { display: grid; gap: 0 26px; grid-template-columns: 1fr; }
+@media (min-width: 820px) { .lower2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Tagesbalken */
+.days { display: flex; align-items: flex-end; gap: 5px; height: 120px; padding: 16px 20px 10px; }
+.days .d {
+  flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 5px;
+  min-width: 0;
+}
+.days .d i { width: 100%; max-width: 28px; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 3px; opacity: .85; }
+.days .d.zero i { background: var(--line); opacity: 1; }
+.days .d span { font-size: 10.5px; color: var(--faint); letter-spacing: .02em; white-space: nowrap; }
+.days .d b { font-size: 10.5px; color: var(--ink-2); font-weight: 500; height: 13px; }
+
+/* Verlauf */
+.hist { list-style: none; margin: 0; padding: 0; }
+.hist li { display: flex; align-items: center; gap: 11px; padding: 10px 20px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.hist li:last-child { border-bottom: 0; }
+.hist .gm-ic { width: 20px; height: 20px; flex: none; }
+.hist .h-tx { min-width: 0; }
+.hist .h-tx b { display: block; font-weight: 500; }
+.hist .h-tx small { color: var(--muted); font-size: 11.5px; }
+.hist .h-when { margin-left: auto; color: var(--faint); font-size: 11.5px; white-space: nowrap; text-align: right; }
+.hist .h-win { color: var(--ok); }
+.hist .h-place { color: var(--muted); }
+
+.tbl td.rank + td { min-width: 0; }
+.st-g + .num { white-space: nowrap; }
+.tbl { table-layout: auto; }
+@media (max-width: 780px) {
+  /* Fünf Spalten sind auf dem Handy zu viel: Partien/Quote reichen */
+  .st-g small { display: none; }
+}
+@media (max-width: 640px) {
+  .hide-sm { display: none; }
+  .days { padding: 14px 12px 8px; gap: 3px; }
+  .days .d b { display: none; }
+  .hist li { padding-left: 15px; padding-right: 15px; }
+}

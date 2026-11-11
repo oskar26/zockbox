@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>404 – Level nicht gefunden · Zockbox</title>
-  <meta name="theme-color" content="#f7f7f5">
+  <title>404 – Seite nicht gefunden · Zockbox</title>
+  <meta name="theme-color" content="#ffffff">
   <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex">
   <script>
@@ -20,37 +20,43 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="shared/zockbox.css">
+  <link rel="stylesheet" href="shared/ui.css">
+  <style>
+    .nf { min-height: calc(100vh - 200px); min-height: calc(100dvh - 200px); display: grid; place-items: center; padding: 40px 0; }
+    .nf-box { max-width: 430px; text-align: center; }
+    .nf-code { font-size: 13px; font-weight: 600; letter-spacing: .16em; color: var(--faint); text-transform: uppercase; }
+    .nf-box h1 { font-size: clamp(23px, 4vw, 30px); margin: 10px 0 8px; letter-spacing: -.03em; }
+    .nf-box p { color: var(--muted); font-size: 14px; max-width: 32em; margin: 0 auto 20px; }
+  </style>
 </head>
-<body class="zx">
-  <header class="zx-top">
-    <div class="zx-wrap zx-top-in">
-      <a class="zx-brand" href="./" aria-label="Zockbox Startseite">
-        <span class="zx-logo" aria-hidden="true">Z</span>
-        <span class="zx-brand-txt">Zockbox</span>
+<body>
+  <header class="top">
+    <div class="wrap top-in">
+      <a class="brand" href="./" aria-label="Zockbox Startseite">
+        <span class="brand-mark" aria-hidden="true">Z</span>
+        <span>Zockbox</span>
       </a>
     </div>
   </header>
 
-  <main class="zx-wrap zx-404">
-    <div>
-      <div class="zx-404-big" aria-hidden="true">404</div>
-      <h1>Level nicht gefunden</h1>
-      <p>Diese Seite gibt es nicht – vielleicht ein Tippfehler im Link. Du wolltest einer Lobby beitreten? Gib den Code auf der Startseite ein.</p>
-      <a class="zx-btn" href="./">Zur Zockbox</a>
-      <p class="zx-foot-small" style="margin-top:14px"><a href="statistik.html" style="border-bottom:1px solid #d2d4cf">Deine Statistik</a></p>
+  <main class="wrap nf">
+    <div class="nf-box">
+      <div class="nf-code">Fehler 404</div>
+      <h1>Diese Seite gibt es nicht.</h1>
+      <p>Vielleicht ein Tippfehler im Link. Du wolltest einer Lobby beitreten? Gib den Code auf der Startseite ein.</p>
+      <a class="btn btn-primary" href="./">Zur Startseite</a>
+      <p class="foot-small" style="margin-top:16px"><a href="statistik.html">Deine Statistik</a></p>
     </div>
   </main>
 
-  <footer class="zx-foot">
-    <div class="zx-wrap zx-foot-in">
-      <div>
-        <div class="zx-sig">made by <b>Oskar</b></div>
-        <p class="zx-foot-note">Zum Spaß mit Freunden. Bitte halte dich an die Regeln deiner Schule.</p>
-      </div>
-      <div class="zx-foot-links">
-        <a href="https://github.com/oskar26" target="_blank" rel="noopener noreferrer">GitHub @oskar26</a>
-        <a href="https://github.com/oskar26/hain" target="_blank" rel="noopener noreferrer">Hain</a>
+  <footer class="foot">
+    <div class="wrap">
+      <div class="foot-in">
+        <span>von <b>Oskar</b> · zum Spaß mit Freunden</span>
+        <div class="foot-links">
+          <a href="https://github.com/oskar26" target="_blank" rel="noopener noreferrer">GitHub @oskar26</a>
+          <a href="https://oskar26.github.io/hain/" target="_blank" rel="noopener noreferrer">Hain</a>
+        </div>
       </div>
     </div>
   </footer>

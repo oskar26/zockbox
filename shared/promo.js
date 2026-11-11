@@ -34,7 +34,7 @@ const ss = {
 
 const CSS = `
 .zb-ads-hidden .zx-promo-inline,.zb-ads-hidden .zx-promo-band,.zb-ads-hidden .zx-ads,
-.zb-ads-hidden #zbPromoModal,.zb-ads-hidden #zbPromoChip{display:none!important}
+.zb-ads-hidden .hain,.zb-ads-hidden #zbPromoModal,.zb-ads-hidden #zbPromoChip{display:none!important}
 #zbPromoChip .zb-pc-gh{display:none}
 #zbPromoChip{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));
   z-index:60;display:flex;align-items:center;gap:9px;padding:7px 8px 7px 7px;max-width:calc(100vw - 28px);
@@ -100,7 +100,7 @@ function removeChip(permanent = false) {
 
 function showChip() {
   if (chipEl || !chipAllowed() || tarnActive()) return;
-  if (document.body.classList.contains('zx')) return;
+  if (document.querySelector('.page, .nf')) return;   // Startseite, Statistik, 404: nur die Inline-Karte
   if (document.hidden) { timers.push(setTimeout(showChip, 10000)); return; }
   injectCSS();
   chipEl = document.createElement('div');
@@ -119,23 +119,9 @@ function showChip() {
 // ---------------------------------------------------------------------------
 // Einstellungen / Ereignisse
 // ---------------------------------------------------------------------------
-function mountAdsSwitch() {
-  // Der Schalter in den Einstellungen ist absichtlich gesperrt.
-  const sw = document.getElementById('zbAdsOn');
-  if (!sw) return;
-  sw.setAttribute('aria-checked', 'true');
-  sw.setAttribute('aria-disabled', 'true');
-  sw.disabled = true;
-  sw.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (window.phToast) window.phToast(t('Der Hain-Hinweis gehört zur Zockbox und bleibt an.'));
-  });
-}
-
 function init() {
   injectCSS();
   syncVisibility();
-  mountAdsSwitch();
 
   // Nur auf Seiten, die keine Einladung / laufende Lobby im Link haben.
   const invite = /[?&](code|join|pub)=/.test(location.search);

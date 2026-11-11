@@ -1,0 +1,173 @@
+/* =========================================================================
+   Zockbox – Startseite (ergänzt shared/ui.css). made by Oskar
+   Nur die Bausteine, die es nur hier gibt: Beitreten, Profil, „So geht's“,
+   Zahlen, Hain-Karte, FAQ.
+   ========================================================================= */
+
+/* ---------- Beitreten ---------- */
+.join { margin-bottom: 4px; }
+.join-form { display: grid; gap: 16px; padding: 16px 20px 18px; }
+.join-main { min-width: 0; }
+.join-row { display: flex; gap: 8px; }
+.join-code {
+  height: 46px; max-width: 210px;
+  font-size: 22px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase;
+  padding-left: 14px;
+}
+.join-code::placeholder { color: #c5cad0; letter-spacing: .24em; }
+.join-go { height: 46px; min-width: 84px; font-weight: 600; font-size: 14.5px; }
+.join-hint { margin-top: 7px; color: var(--muted); font-size: 12.5px; }
+.join-side { min-width: 0; }
+.join-side .chips { margin-top: 6px; }
+.join-status { grid-column: 1 / -1; margin: 0 !important; }
+.join-status[data-kind="err"] { color: var(--danger); }
+.join-status[data-kind="ok"] { color: var(--ok); }
+.join-status[data-kind="wait"] { color: var(--muted); }
+@media (min-width: 760px) {
+  .join-form { grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: 26px; padding: 18px 20px 20px; }
+  .join-side { text-align: right; }
+  .join-side .chips { justify-content: flex-end; }
+}
+
+/* ---------- Profil ---------- */
+.prof-row { display: flex; gap: 12px; align-items: flex-end; }
+.prof-av {
+  flex: none; width: 46px; height: 46px; display: grid; place-items: center;
+  border: 1px solid var(--line-2); border-radius: 50%; background: var(--accent-soft);
+  font-size: 24px; line-height: 1; padding: 0;
+}
+.prof-av:hover { border-color: var(--accent); }
+.prof-field { min-width: 0; max-width: 300px; }
+.prof-field .inp { height: 46px; }
+.prof-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 6px;
+  margin-top: 14px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2);
+}
+.prof-grid button {
+  aspect-ratio: 1; display: grid; place-items: center; padding: 0;
+  border: 1px solid transparent; border-radius: 6px; background: #fff; font-size: 20px; line-height: 1;
+}
+.prof-grid button:hover { border-color: var(--line-2); }
+.prof-grid button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- Unterer Bereich: So geht's + Zahlen/Einstellungen ---------- */
+.lower { display: grid; gap: 16px; margin-top: 16px; }
+.lower-col { min-width: 0; }
+.how { list-style: none; margin: 0; padding: 0; counter-reset: h; display: grid; gap: 13px; }
+.how li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 2px 11px; counter-increment: h; }
+.how li::before {
+  content: counter(h); grid-row: span 2;
+  width: 24px; height: 24px; display: grid; place-items: center;
+  border: 1px solid var(--line-2); border-radius: 50%; background: var(--surface-2);
+  font-size: 11.5px; font-weight: 600; color: var(--ink-2);
+}
+.how b { font-weight: 500; font-size: 13.5px; }
+.how span { grid-column: 2; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+
+.stats-strip.plain { border: 1px solid var(--line); border-radius: var(--r-sm); }
+.stats-strip.plain .stat-cell { padding: 10px 13px; }
+.stats-strip.plain .stat-cell b { font-size: 19px; }
+
+/* Zeile mit Pfeil (Einstellungen) */
+.link-row {
+  display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+  padding: 11px 0; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--ink);
+}
+.link-row:first-child { padding-top: 0; }
+.link-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.link-row:not(.static):hover .link-row-tx b { color: var(--accent); }
+.link-row-ic { flex: none; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--ink-2); }
+.link-row-ic svg { width: 17px; height: 17px; }
+.link-row-tx { min-width: 0; }
+.link-row-tx b { display: block; font-weight: 500; font-size: 13.5px; }
+.link-row-tx small { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.link-row-go { margin-left: auto; color: var(--faint); font-size: 15px; }
+
+/* ---------- Hain ---------- */
+.hain {
+  margin-top: 22px; padding: 16px 20px;
+  display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 4px 16px; align-items: start;
+}
+.hain-icon { width: 52px; height: 52px; border-radius: 11px; border: 1px solid var(--line); object-fit: cover; grid-row: span 2; }
+.hain-tx h2 { font-size: 16.5px; margin: 3px 0 4px; }
+.hain-tx p { color: var(--muted); font-size: 12.5px; line-height: 1.55; max-width: 52em; }
+.hain-actions { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+@media (min-width: 760px) {
+  .hain { grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; padding: 18px 22px; }
+  .hain-actions { grid-column: 3; grid-row: 1 / span 2; margin-top: 0; flex-direction: column; align-items: stretch; }
+}
+
+/* ---------- FAQ ---------- */
+.faq { margin-top: 28px; }
+.faq-i { border-bottom: 1px solid var(--line); }
+.faq-i:first-of-type { border-top: 1px solid var(--line); }
+.faq-i summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px;
+  padding: 13px 2px; font-size: 14px; font-weight: 500;
+}
+.faq-i summary::-webkit-details-marker { display: none; }
+.faq-i summary::after {
+  content: ''; margin-left: auto; flex: none; width: 7px; height: 7px;
+  border-right: 1.6px solid var(--muted); border-bottom: 1.6px solid var(--muted);
+  transform: rotate(45deg) translate(-2px, -2px); transition: transform .18s;
+}
+.faq-i[open] summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+.faq-i p { margin: 0 2px 15px; color: var(--ink-2); font-size: 13.5px; line-height: 1.6; max-width: 62em; }
+
+/* ---------- Einstellungen im Fenster ---------- */
+.dialog-wide .set-cols { display: grid; gap: 20px; }
+.set-col { min-width: 0; }
+.set-sub {
+  display: flex; align-items: center; gap: 10px; margin: 0 0 4px;
+  font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--faint);
+}
+.set-sub::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.set-col > .set-sub:not(:first-child) { margin-top: 20px; }
+.set-col .opt { padding: 11px 0; }
+.set-col-main { border-top: 1px solid var(--line); padding-top: 16px; }
+@media (min-width: 860px) {
+  .dialog-wide .set-cols { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 26px; }
+  .set-col-main { border-top: 0; padding-top: 0; border-left: 1px solid var(--line); padding-left: 26px; }
+}
+
+/* Was tarnung.js in das Fenster schreibt */
+.tarn-set { display: grid; gap: 14px; }
+.tarn-set .opt { padding: 10px 0; }
+.tarn-set .set-sub { margin-bottom: 8px; }
+.tarn-set .set-sub + .opt { padding-top: 0; }
+.tarn-set .chips { margin-top: 7px; }
+.tarn-set .picks { margin-top: 8px; }
+.tarn-set .row { margin-top: 8px; }
+.tarn-set h3, .tarn-set h4 { font-size: 13.5px; }
+.tarn-set p { color: var(--muted); font-size: 12px; line-height: 1.55; }
+.tarn-set ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.tarn-set li { display: flex; gap: 9px; align-items: baseline; font-size: 12px; color: var(--ink-2); }
+
+/* ---------- Mobil feinjustieren ---------- */
+@media (max-width: 620px) {
+  .join-form { padding: 14px 15px 16px; }
+  .join-code { height: 44px; font-size: 20px; max-width: none; flex: 1; }
+  .join-go { height: 44px; min-width: 70px; }
+  .hain { margin-top: 18px; padding: 14px 15px; }
+  .prof-row { flex-wrap: wrap; }
+  .prof-field { max-width: none; flex: 1 1 140px; }
+  .lower { gap: 14px; }
+}
+
+
+/* Was tarnung.js in das Fenster schreibt: Kbd in Textzeilen, gedimmte Optionen */
+.tarn-set .opt-tx kbd { margin-right: 4px; }
+.tarn-set .note { margin: 0; }
+.tarn-set .prof-av { width: 42px; height: 42px; font-size: 22px; }
+.tarn-set .prof-field .inp { height: 42px; }
+.tarn-set .prof-grid { grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); }
+.tarn-set .prof-grid button { font-size: 18px; }
+.tarn-set .stat-cell { padding: 9px 12px; }
+.tarn-set .stat-cell b { font-size: 17px; }
+.tarn-set .stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tarn-set .stats-strip .stat-cell:nth-child(2n) { border-right: 0; }
+@media (min-width: 520px) {
+  .tarn-set .stats-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .tarn-set .stats-strip .stat-cell { border-right: 1px solid var(--line); }
+  .tarn-set .stats-strip .stat-cell:last-child { border-right: 0; }
+}

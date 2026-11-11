@@ -1,0 +1,21 @@
+/* =========================================================================
+   Zockbox – Schriften (nur @font-face). made by Oskar
+
+   Wird von shared/ui.css eingebunden (Startseite, Statistik, Fehlerseite).
+   Die Spiele laden ihre Schriften weiter selbst; für die Spielkarten der
+   Startseite liegt der Look der Spiele hier unter neutralen Namen:
+     ZB Bangers → Mach's Meme      ZB Patrick / ZB Marker → Kritzel-Duell
+     ZB Gochi / ZB Kalam → Krakelpost         ZB Libre → Wikirennen
+   ========================================================================= */
+
+@font-face { font-family: 'Inter'; src: url('fonts/Inter-Variable.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+
+@font-face { font-family: 'ZB Bangers'; src: url('fonts/Bangers-latin.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'ZB Patrick'; src: url('fonts/PatrickHand-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'ZB Marker'; src: url('fonts/PermanentMarker-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'ZB Gochi'; src: url('fonts/GochiHand.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'ZB Kalam'; src: url('fonts/Kalam-Bold.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'ZB Anton'; src: url('fonts/Anton-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'ZB Libre'; src: url('fonts/libertinus-serif-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'ZB Libre'; src: url('fonts/libertinus-serif-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'ZB Libre'; src: url('fonts/libertinus-serif-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }

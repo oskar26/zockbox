@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title data-en="Stats · Zockbox">Statistik · Zockbox</title>
   <meta name="description" content="Deine Zockbox-Statistik: wie oft du gewonnen hast, wie du im Schnitt abschneidest – lokal auf diesem Gerät.">
-  <meta name="theme-color" content="#f7f7f5">
+  <meta name="theme-color" content="#ffffff">
   <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,145 +15,113 @@
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preload" href="shared/fonts/Inter-Variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="shared/zockbox.css">
+  <link rel="stylesheet" href="shared/ui.css">
+  <link rel="stylesheet" href="shared/games.css">
+  <link rel="stylesheet" href="shared/statistik.css">
   <script type="module">
     import { initI18n } from './shared/i18n.js';
     initI18n();
   </script>
-  <style>
-    /* --- Statistikseite: nur was diese Seite braucht --- */
-    .st-hero { padding: 46px 0 26px; }
-    .st-kicker {
-      display: inline-flex; align-items: center; gap: 7px; height: 24px; padding: 0 9px;
-      border: 1px solid #cbdcd4; border-radius: 4px; background: var(--accent-soft); color: var(--accent);
-      font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-    }
-    .st-h1 { font-size: clamp(30px, 5.4vw, 46px); line-height: 1.1; font-weight: 600; letter-spacing: -.045em; margin: 16px 0 10px; }
-    .st-h1 em { font-style: italic; font-weight: 400; font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif; color: var(--accent); }
-    .st-lead { margin: 0; color: var(--ink-2); font-size: 15px; max-width: 40em; }
-
-    /* Kennzahlen */
-    .st-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 26px 0 0; }
-    .st-kpi { background: #fff; border: 1px solid var(--line-2); border-radius: 10px; padding: 16px 18px; }
-    .st-kpi b { display: block; font-size: 30px; font-weight: 600; letter-spacing: -.045em; line-height: 1.05; }
-    .st-kpi b small { font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
-    .st-kpi span { display: block; margin-top: 5px; font-size: 11px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; }
-    .st-kpi.hi { background: var(--accent-soft); border-color: #cbdcd4; }
-    .st-kpi.hi b { color: var(--accent); }
-
-    /* Abschnitte */
-    .st-sec { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin: 42px 0 16px; padding-bottom: 11px; border-bottom: 1px solid var(--line); }
-    .st-sec h2 { font-size: 19px; letter-spacing: -.03em; }
-    .st-sec span { font-size: 11.5px; color: var(--muted); }
-
-    /* Spieltabelle */
-    .st-games { display: grid; gap: 10px; }
-    .st-grow {
-      display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 14px; align-items: center;
-      background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
-    }
-    .st-grow .st-ic { width: 40px; height: 40px; display: grid; place-items: center; background: var(--warm); border: 1px solid var(--line); border-radius: 9px; font-size: 19px; }
-    .st-grow b { font-size: 14.5px; font-weight: 600; letter-spacing: -.02em; display: block; }
-    .st-grow .st-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .st-bar { position: relative; height: 6px; margin-top: 9px; background: var(--warm); border-radius: 99px; overflow: hidden; }
-    .st-bar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 99px; }
-    .st-gnum { text-align: right; }
-    .st-gnum b { font-size: 19px; letter-spacing: -.03em; }
-    .st-gnum span { font-size: 10.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
-    .st-empty { padding: 30px 22px; text-align: center; border: 1px dashed var(--line-2); border-radius: 10px; color: var(--muted); font-size: 13.5px; }
-    .st-empty b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
-
-    /* Wer gewinnt */
-    .st-people { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
-    .st-prow { display: grid; grid-template-columns: 22px minmax(0, 1fr) 60px 74px; gap: 12px; align-items: center; padding: 11px 15px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
-    .st-prow:last-child { border-bottom: 0; }
-    .st-prow .st-p1 { font-size: 11px; color: var(--muted); letter-spacing: .04em; }
-    .st-prow b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .st-prow .st-c { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
-    .st-prow .st-c b { font-weight: 600; color: var(--ink); }
-    .st-prow.me { background: var(--accent-soft); }
-    .st-prow.me .st-c b { color: var(--accent); }
-
-    /* Verlauf */
-    .st-days { display: flex; align-items: flex-end; gap: 6px; height: 92px; padding: 12px 14px 0; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
-    .st-day { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; height: 100%; }
-    .st-day i { width: 100%; max-width: 26px; background: var(--line-2); border-radius: 3px 3px 0 0; min-height: 3px; }
-    .st-day i.win { background: var(--accent); }
-    .st-day span { font-size: 9.5px; color: var(--muted); letter-spacing: .04em; padding-top: 4px; }
-    .st-hist { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
-    .st-hrow { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--line); font-size: 13px; }
-    .st-hrow:last-child { border-bottom: 0; }
-    .st-hrow em { font-style: normal; color: var(--muted); font-size: 11.5px; }
-    .st-medal { font-size: 14px; }
-    .st-note { margin: 12px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.6; }
-
-    .st-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-    .st-foot { margin-top: 52px; }
-
-    @media (min-width: 700px) {
-      .st-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    }
-    @media (max-width: 520px) {
-      .st-grow { grid-template-columns: 34px minmax(0, 1fr); }
-      .st-grow .st-ic { width: 34px; height: 34px; font-size: 17px; }
-      .st-gnum { grid-column: 2; text-align: left; margin-top: 8px; display: flex; align-items: baseline; gap: 8px; }
-      .st-prow { grid-template-columns: 18px minmax(0, 1fr) 46px 58px; font-size: 12.5px; }
-    }
-  </style>
 </head>
-<body class="zx">
-  <header class="zx-top">
-    <div class="zx-wrap zx-top-in">
-      <a class="zx-brand" href="./" aria-label="Zockbox Startseite">
-        <span class="zx-logo" aria-hidden="true">Z</span>
-        <span class="zx-brand-txt">Zockbox</span>
-        <span class="zx-brand-sub">Statistik</span>
+<body>
+  <header class="top">
+    <div class="wrap top-in">
+      <a class="brand" href="./" aria-label="Zockbox Startseite">
+        <span class="brand-mark" aria-hidden="true">Z</span>
+        <span>Zockbox</span>
+        <span class="brand-sub" id="brandSub">Statistik</span>
       </a>
-      <div class="zx-top-right">
-        <a class="zx-top-link" href="./">Startseite</a>
-        <a class="zx-top-link" href="./#spiele">Spiele</a>
-      </div>
+      <nav class="top-nav" aria-label="Hauptmenü">
+        <a class="top-a" href="./">Spiele</a>
+        <a class="top-a" href="statistik.html" aria-current="page">Statistik</a>
+      </nav>
+      <div class="top-right"></div>
     </div>
   </header>
 
-  <main class="zx-wrap">
-    <section class="st-hero">
-      <span class="st-kicker">Dein Konto für nichts · nur auf diesem Gerät</span>
-      <h1 class="st-h1">Wie du <em>abschneidest.</em></h1>
-      <p class="st-lead">Siege, Plätze, Punkte und die Mitspieler, gegen die du gewinnst – alles zählt dein Browser mit. Keine Anmeldung, kein Server, keine Übertragung.</p>
-
-      <div class="st-kpis" id="stKpis"></div>
-    </section>
-
-    <div class="st-sec"><h2>Pro Spiel</h2><span id="stGamesNote">Siegquote, Plätze, Punkte</span></div>
-    <div class="st-games" id="stGames"></div>
-
-    <div class="st-sec"><h2>Wer wie oft gewinnt</h2><span>Mitspieler auf diesem Gerät</span></div>
-    <div class="st-people" id="stPeople"></div>
-
-    <div class="st-sec"><h2>Letzte zwei Wochen</h2><span>Partien und Siege</span></div>
-    <div class="st-days" id="stDays" aria-label="Siege der letzten 14 Tage"></div>
-
-    <div class="st-sec"><h2>Verlauf</h2><span>Die letzten Partien</span></div>
-    <div class="st-hist" id="stHist"></div>
-
-    <p class="st-note">Gezählt wird, sobald eine Partie zu Ende ist – auf dem Gerät, auf dem du gespielt hast. Wer den Browser-Speicher löscht, setzt die Statistik zurück. Die Liste „Wer wie oft gewinnt“ enthält nur Namen, die in Lobbys auf diesem Gerät vorkamen.</p>
-
-    <div class="st-actions">
-      <button type="button" class="zx-btn-ghost" id="stExport">Statistik exportieren</button>
-      <button type="button" class="zx-btn-ghost" id="stReset">Zurücksetzen</button>
+  <main class="wrap page">
+    <div class="page-head">
+      <h1 class="h1" id="stHead">Deine Statistik</h1>
+      <p class="lead" id="stLead">Siege, Plätze und Punkte – gezählt in diesem Browser. Keine Anmeldung, kein Server, nichts wird übertragen.</p>
     </div>
+
+    <div class="card">
+      <div class="stats-strip" id="stKpis"></div>
+    </div>
+
+    <div class="sec"><h2>Pro Spiel</h2><span class="sec-note" id="stGamesNote"></span></div>
+    <div class="card">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th scope="col">Spiel</th>
+            <th scope="col" class="num">Partien</th>
+            <th scope="col" class="num">Siege</th>
+            <th scope="col" class="num">Quote</th>
+            <th scope="col" class="num hide-sm">Ø Platz</th>
+            <th scope="col" class="num hide-sm">Ø Punkte</th>
+          </tr>
+        </thead>
+        <tbody id="stGames"></tbody>
+      </table>
+      <div id="stGamesEmpty" class="empty hidden">
+        <svg class="empty-ic" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="7" width="24" height="19" rx="3"/><path d="M4 13h24M11 7v-3M21 7v-3"/></svg>
+        <b>Noch keine Partie zu Ende gespielt.</b>
+        Starte eine Lobby – nach der ersten Runde steht hier, wie es gelaufen ist.
+      </div>
+    </div>
+
+    <div class="sec"><h2>Letzte zwei Wochen</h2><span class="sec-note">Partien und Siege pro Tag</span></div>
+    <div class="card">
+      <div class="days" id="stDays" aria-label="Partien der letzten 14 Tage"></div>
+    </div>
+
+    <div class="lower2">
+      <div>
+        <div class="sec"><h2>Wer gewinnt</h2><span class="sec-note">Mitspieler auf diesem Gerät</span></div>
+        <div class="card">
+          <table class="tbl">
+            <thead>
+              <tr><th scope="col">Name</th><th scope="col" class="num">Partien</th><th scope="col" class="num">Siege</th><th scope="col" class="num">Quote</th></tr>
+            </thead>
+            <tbody id="stPeople"></tbody>
+          </table>
+          <div id="stPeopleEmpty" class="empty hidden">
+            <b>Noch niemand eingetragen.</b>
+            Spiel eine Runde – dann tauchen hier alle Namen auf, mit denen du gespielt hast.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sec"><h2>Verlauf</h2><span class="sec-note">Die letzten Partien</span></div>
+        <div class="card">
+          <ul class="hist" id="stHist"></ul>
+          <div id="stHistEmpty" class="empty hidden">
+            <b>Der Verlauf ist noch leer.</b>
+            Nach der ersten beendeten Partie steht hier, was passiert ist.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:22px">
+      <button type="button" class="btn" id="stExport">Statistik exportieren</button>
+      <button type="button" class="btn btn-danger" id="stReset">Zurücksetzen</button>
+    </div>
+    <p class="note" style="margin-top:14px;max-width:60em">
+      Gezählt wird, sobald eine Partie zu Ende ist – auf dem Gerät, auf dem du gespielt hast. Wer den Browser-Speicher löscht, setzt die Statistik zurück. Die Liste „Wer gewinnt“ enthält nur Namen, die in Lobbys auf diesem Gerät vorkamen.
+    </p>
   </main>
 
-  <footer class="zx-foot st-foot">
-    <div class="zx-wrap zx-foot-in">
-      <div>
-        <div class="zx-sig">made by <b>Oskar</b></div>
-        <p class="zx-foot-note">Zum Spaß mit Freunden. Bitte halte dich an die Regeln deiner Schule.</p>
-      </div>
-      <div class="zx-foot-links">
-        <a href="./">Startseite</a>
-        <a href="https://github.com/oskar26/zockbox" target="_blank" rel="noopener noreferrer">Quellcode</a>
+  <footer class="foot">
+    <div class="wrap">
+      <div class="foot-in">
+        <span>von <b>Oskar</b> · zum Spaß mit Freunden</span>
+        <div class="foot-links">
+          <a href="./">Startseite</a>
+          <a href="https://github.com/oskar26/zockbox" target="_blank" rel="noopener noreferrer">Quellcode</a>
+        </div>
       </div>
     </div>
   </footer>

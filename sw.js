@@ -10,7 +10,7 @@
 //   · Dateien (CSS/JS/SVG/WOFF): aus dem Cache, parallel im Hintergrund erneuern.
 //   · Anderes (PeerJS, Wikipedia, Assets in Spielen): unverändert durchreichen.
 
-const VERSION = 'zockbox-v4';
+const VERSION = 'zockbox-v5';
 const CACHE = VERSION;
 
 const CORE = [
@@ -19,8 +19,14 @@ const CORE = [
   './statistik.html',
   './404.html',
   './manifest.webmanifest',
-  './shared/zockbox.css',
+  './shared/ui.css',
+  './shared/fonts.css',
+  './shared/games.css',
+  './shared/home.css',
+  './shared/statistik.css',
+  './shared/spiel-fonts.css',
   './shared/hub.js',
+  './shared/game-art.js',
   './shared/stats.js',
   './shared/stats-page.js',
   './shared/profile.js',
@@ -30,14 +36,13 @@ const CORE = [
   './shared/tarnung.js',
   './shared/tarnung-theme.css',
   './shared/fonts/Inter-Variable.woff2',
-  './shared/fonts/Unbounded-Variable.woff2',
+  './shared/fonts/Bangers-latin.woff2',
   './assets/favicon.svg',
   './assets/favicon-32.png',
   './assets/icon-192.png',
   './assets/icon-512.png',
   './assets/apple-touch-icon.png',
   './assets/promo/hain-icon.webp',
-  './assets/promo/shot-chat.webp',
 ];
 
 self.addEventListener('install', (e) => {
