@@ -2350,6 +2350,8 @@ function mountAdvancedSettings(root) {
 
   const render = () => {
     const touch = isTouch();
+    // Offene Aufklapper merken – das Fenster wird bei jeder Änderung neu gezeichnet.
+    const openFolds = new Set([...root.querySelectorAll('details.set-fold[open]')].map((d) => d.querySelector('summary')?.textContent.trim()));
     const page = pageById(S.page) || PAGES[0];
     const look = lookById(S.look);
     const pages = visiblePages(S.look);
@@ -2399,8 +2401,10 @@ function mountAdvancedSettings(root) {
         <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="fab" aria-checked="${S.fab}" aria-label="Panik-Knopf"><i></i></button></div>
       </div>
 
-      <div class="set-sub">Automatisch tarnen</div>
-      <div class="opt">
+      <details class="set-fold">
+        <summary>Automatisch tarnen</summary>
+        <div class="set-fold-b">
+          <div class="opt">
         <div class="opt-tx"><b>Bei Tab-Wechsel oder Fokusverlust</b><span>Blendet die Tarnseite ein, wenn du den Tab verlässt. Das Spiel läuft weiter.</span></div>
         <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="auto" aria-checked="${S.auto}" aria-label="Auto-Tarnung"><i></i></button></div>
       </div>
@@ -2421,8 +2425,13 @@ function mountAdvancedSettings(root) {
         </div>
       </div>
 
-      <div class="set-sub">Inhalt der Tarnseiten</div>
-      <div class="opt">
+        </div>
+      </details>
+
+      <details class="set-fold">
+        <summary>Inhalt der Tarnseiten</summary>
+        <div class="set-fold-b">
+          <div class="opt">
         <div class="opt-tx"><b>Name im Dashboard</b></div>
         <div class="opt-side"><input class="inp inp-sm" data-txt="term" value="${esc(S.term)}" maxlength="60" aria-label="Name im Dashboard" style="width:170px"></div>
       </div>
@@ -2435,8 +2444,13 @@ function mountAdvancedSettings(root) {
         <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="media" aria-checked="${S.media}" aria-label="Medien stummschalten"><i></i></button></div>
       </div>
 
-      <div class="set-sub">Tasten</div>
-      <ul>
+        </div>
+      </details>
+
+      <details class="set-fold">
+        <summary>Tasten und Werkzeuge</summary>
+        <div class="set-fold-b">
+          <ul>
         <li><kbd>${esc(keyLabel2(S.key))}</kbd><span>${S.single ? 'ein-/ausblenden' : 'zweimal: ein-/ausblenden'}</span></li>
         <li><kbd>Alt + 1…${pages.length}</kbd><span>Seite direkt öffnen</span></li>
         <li><kbd>Alt + ←/→</kbd><span>Blättern</span></li>
@@ -2458,9 +2472,18 @@ function mountAdvancedSettings(root) {
         <button type="button" class="btn btn-sm btn-danger" data-act="reset">Zurücksetzen</button>
       </div>
       <textarea class="inp" id="zbTarnJson" rows="4" placeholder="JSON für Import hier einfügen …" aria-label="Einstellungen als JSON" style="font:11.5px/1.5 ui-monospace,monospace"></textarea>
+        </div>
+      </details>
+
       <p class="note">Zurück zum Spiel: dieselbe Taste ${S.single ? 'einmal' : 'zweimal'} drücken, oben links 2× tippen – auf dem Handy auch der kleine Knopf unten links. Das Spiel läuft im Hintergrund weiter.</p>
 
       <div class="note">Die Looks sind eigene Nachbauten: keine echten Logos, Markennamen oder Schriftzüge. Aktuell: <b>${esc(look.label)}</b> · Seite: <b>${esc(page.label)}</b>.</div>`;
+
+    if (openFolds.size) {
+      root.querySelectorAll('details.set-fold').forEach((d) => {
+        if (openFolds.has(d.querySelector('summary')?.textContent.trim())) d.open = true;
+      });
+    }
   };
 
   // Delegierte Events: überleben das Neuzeichnen der Oberfläche.
