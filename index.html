@@ -48,62 +48,27 @@
     ]
   }
   </script>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Brauche ich ein Konto, um Zockbox zu spielen?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Nein. Name und Avatar genügen, es gibt keine Anmeldung und keinen Download. Die Verbindung läuft direkt zwischen den Geräten (WebRTC)." }
-      },
-      {
-        "@type": "Question",
-        "name": "Wie viele Leute können mitspielen?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Es gibt kein festes Limit. Richtwert sind 2 bis 8 Personen, je nach Spiel und Gerät des Hosts – große Runden funktionieren zum Beispiel bei Krakelpost gut." }
-      },
-      {
-        "@type": "Question",
-        "name": "Läuft Zockbox auf dem Handy?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Ja, im Browser auf Android, iPhone, Tablet, Laptop und PC. In Safari und Chrome lässt sich die Seite zum Home-Bildschirm hinzufügen und startet dann wie eine App." }
-      },
-      {
-        "@type": "Question",
-        "name": "Was kostet Zockbox?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Nichts. Alle vier Spiele sind kostenlos und werbefrei; es gibt keine Konten und keine Bezahlschranke." }
-      }
-    ]
-  }
-  </script>
   <link rel="stylesheet" href="shared/ui.css">
   <link rel="stylesheet" href="shared/games.css">
   <link rel="stylesheet" href="shared/home.css">
   <script type="module">
-    // Sprache zuerst: Deutschland (und Österreich) Deutsch, alle anderen Englisch.
     import { initI18n } from './shared/i18n.js';
     initI18n();
   </script>
-  <script>
-    // Bei aktivem Tarnmodus bleibt die Startseite frei von Werbung – auch schon
-    // bevor die Module geladen sind (kein kurzes Aufblitzen).
-    try { if (localStorage.getItem('zb_tarn_on') === '1') document.documentElement.classList.add('zb-ads-hidden'); } catch (e) {}
-  </script>
 </head>
 <body class="hm">
-  <header class="top">
-    <div class="wrap top-in">
-      <a class="brand" href="./" aria-label="Zockbox Startseite">
-        <span class="brand-mark" aria-hidden="true">Z</span>
-        <span>Zockbox</span>
-        <span class="brand-sub">Browser-Spiele ohne Anmeldung</span>
+  <header class="bar">
+    <div class="bar-in">
+      <a class="logo" href="./" aria-label="Zockbox Startseite">
+        <span class="logo-mark" aria-hidden="true">Z</span>
+        <span class="logo-tx">Zockbox</span>
       </a>
-      <nav class="top-nav" aria-label="Hauptmenü">
-        <a class="top-a" href="#spiele" aria-current="page">Spiele</a>
-        <a class="top-a" href="statistik.html" id="zbNavStats">Statistik</a>
+      <nav class="bar-nav" aria-label="Hauptmenü">
+        <a href="#spiele">Spiele</a>
+        <a href="statistik.html">Statistik</a>
       </nav>
-      <div class="top-right">
-        <button type="button" class="me" id="zbMe" aria-label="Dein Profil">
+      <div class="bar-right">
+        <button type="button" class="me" id="zbMe" aria-label="Profil und Einstellungen">
           <span class="me-av" id="zbMeAv" aria-hidden="true">🐸</span>
           <span class="me-tx" id="zbMeName">Profil</span>
         </button>
@@ -111,263 +76,138 @@
     </div>
   </header>
 
-  <main class="wrap page">
-    <div id="installHint" class="note hidden no-print" role="note" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px">
-      <span aria-hidden="true">📲</span>
-      <p style="flex:1">Tipp: In Safari auf <b>Teilen</b> und dann <b>„Zum Home-Bildschirm“</b> – dann startet die Zockbox wie eine App.</p>
-      <button id="installClose" type="button" class="x" style="margin:-6px -6px 0 0" aria-label="Hinweis schließen">×</button>
-    </div>
-
-    <div class="page-head">
-      <h1 class="h1">Hallo<span id="zbHello">!</span> 👋</h1>
-      <p class="lead">Lobby aufmachen, Code teilen, losspielen. Kein Konto, kein Download – die Verbindung läuft direkt zwischen euren Geräten.</p>
-    </div>
-
-    <!-- Mit Code beitreten -->
-    <section class="card join" id="beitreten" aria-labelledby="joinTitle">
-      <form id="joinForm" class="join-form" autocomplete="off" novalidate>
-        <div class="join-main">
-          <label class="lbl" for="joinCode" id="joinTitle">Mit Code beitreten</label>
-          <div class="join-row">
-            <input id="joinCode" class="inp join-code" type="text" inputmode="text" maxlength="4"
-                   autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go"
-                   placeholder="ABCD" aria-label="Lobby-Code (4 Buchstaben)">
-            <button id="joinGo" class="btn btn-primary join-go" type="submit">Los</button>
-          </div>
-          <p class="join-hint" id="joinHint">Den Code bekommst du von der Person, die die Lobby erstellt hat.</p>
-        </div>
-        <div class="join-side">
-          <span class="lbl" id="joinGameLbl">Spiel</span>
-          <div class="chips" id="joinGame" role="group" aria-labelledby="joinGameLbl">
-            <button type="button" class="chip" data-game="auto" title="Spiel automatisch erkennen">Auto</button>
-            <button type="button" class="chip" data-game="machs-meme">Mach's Meme</button>
-            <button type="button" class="chip" data-game="wikirennen">Wikirennen</button>
-            <button type="button" class="chip" data-game="kritzel-duell">Kritzel-Duell</button>
-            <button type="button" class="chip" data-game="krakelpost">Krakelpost</button>
-          </div>
-        </div>
-        <p id="joinStatus" class="join-status hidden" aria-live="polite"></p>
-      </form>
+  <main class="page">
+    <section class="hero">
+      <h1>Spiele mit Freunden.</h1>
+      <p>Kein Konto, kein Download. Lobby aufmachen, Code teilen, losspielen.</p>
     </section>
 
-    <!-- Spiele -->
-    <div class="sec" id="spiele">
-      <h2>Spiele</h2>
-      <span class="sec-note" id="zbCapacityNote"></span>
+    <form id="joinForm" class="join" autocomplete="off" novalidate>
+      <div class="join-code">
+        <label class="sr" for="joinCode" id="joinTitle">Mit Code beitreten</label>
+        <input id="joinCode" type="text" inputmode="text" maxlength="4"
+               autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go"
+               placeholder="Code" aria-label="Lobby-Code (4 Buchstaben)">
+      </div>
+      <div class="join-game">
+        <label class="sr" for="joinGame">Spiel</label>
+        <select id="joinGame" aria-label="Spiel">
+          <option value="auto">Spiel erkennen</option>
+          <option value="machs-meme">Mach's Meme</option>
+          <option value="wikirennen">Wikirennen</option>
+          <option value="kritzel-duell">Kritzel-Duell</option>
+          <option value="krakelpost">Krakelpost</option>
+        </select>
+      </div>
+      <button id="joinGo" class="go" type="submit">Beitreten</button>
+      <p id="joinStatus" class="join-status hidden" aria-live="polite"></p>
+    </form>
+
+    <div class="sec-head">
+      <h2 id="spiele">Spiele</h2>
+      <span id="zbCapacityNote"></span>
     </div>
+
     <div class="games">
-      <a class="gcard" href="games/machs-meme/" data-game="machs-meme">
-        <span class="gcard-art" data-art="machs-meme"></span>
-        <span class="gcard-body">
-          <b class="gcard-name">Mach's Meme</b>
-          <span class="gcard-desc">Alle bekommen dieselbe Vorlage – die witzigste Caption gewinnt.</span>
-          <span class="gcard-foot">
-            <span class="gcard-meta" data-cap-game="machs-meme">2+</span>
-            <span class="gcard-stat" data-stat="machs-meme"></span>
-            <span class="gcard-go">Spielen →</span>
-          </span>
+      <a class="game" href="games/machs-meme/" data-game="machs-meme">
+        <span class="game-art" data-art="machs-meme"></span>
+        <span class="game-tx">
+          <b>Mach's Meme</b>
+          <small>Alle bekommen dieselbe Vorlage – die witzigste Caption gewinnt.</small>
+          <em data-stat="machs-meme"></em>
         </span>
       </a>
 
-      <a class="gcard" href="games/wikirennen/" data-game="wikirennen">
-        <span class="gcard-art" data-art="wikirennen"></span>
-        <span class="gcard-body">
-          <b class="gcard-name">Wikirennen</b>
-          <span class="gcard-desc">Von „Pizza“ zu „Mond“ – nur über Links. Wer ist zuerst am Ziel?</span>
-          <span class="gcard-foot">
-            <span class="gcard-meta" data-cap-game="wikirennen">2+</span>
-            <span class="gcard-stat" data-stat="wikirennen"></span>
-            <span class="gcard-go">Spielen →</span>
-          </span>
+      <a class="game" href="games/wikirennen/" data-game="wikirennen">
+        <span class="game-art" data-art="wikirennen"></span>
+        <span class="game-tx">
+          <b>Wikirennen</b>
+          <small>Von „Pizza“ zu „Mond“ – nur über Links. Wer ist zuerst am Ziel?</small>
+          <em data-stat="wikirennen"></em>
         </span>
       </a>
 
-      <a class="gcard" href="games/kritzel-duell/" data-game="kritzel-duell">
-        <span class="gcard-art" data-art="kritzel-duell"></span>
-        <span class="gcard-body">
-          <b class="gcard-name">Kritzel-Duell</b>
-          <span class="gcard-desc">Einer zeichnet, alle raten. Wer's zuerst erkennt, holt die Punkte.</span>
-          <span class="gcard-foot">
-            <span class="gcard-meta" data-cap-game="kritzel-duell">2+</span>
-            <span class="gcard-stat" data-stat="kritzel-duell"></span>
-            <span class="gcard-go">Spielen →</span>
-          </span>
+      <a class="game" href="games/kritzel-duell/" data-game="kritzel-duell">
+        <span class="game-art" data-art="kritzel-duell"></span>
+        <span class="game-tx">
+          <b>Kritzel-Duell</b>
+          <small>Einer zeichnet, alle raten. Wer's zuerst erkennt, holt die Punkte.</small>
+          <em data-stat="kritzel-duell"></em>
         </span>
       </a>
 
-      <a class="gcard" href="games/krakelpost/" data-game="krakelpost">
-        <span class="gcard-art" data-art="krakelpost"></span>
-        <span class="gcard-body">
-          <b class="gcard-name">Krakelpost</b>
-          <span class="gcard-desc">Stille Post mit Zeichnen: Satz wird Bild, Bild wird Satz.</span>
-          <span class="gcard-foot">
-            <span class="gcard-meta" data-cap-game="krakelpost">2+</span>
-            <span class="gcard-stat" data-stat="krakelpost"></span>
-            <span class="gcard-go">Spielen →</span>
-          </span>
+      <a class="game" href="games/krakelpost/" data-game="krakelpost">
+        <span class="game-art" data-art="krakelpost"></span>
+        <span class="game-tx">
+          <b>Krakelpost</b>
+          <small>Stille Post mit Zeichnen: Satz wird Bild, Bild wird Satz.</small>
+          <em data-stat="krakelpost"></em>
         </span>
       </a>
 
-      <div class="gcard gcard-soon" aria-disabled="true">
-        <span class="gcard-art" data-art="wer-luegt"></span>
-        <span class="gcard-body">
-          <b class="gcard-name">Wer lügt?</b>
-          <span class="gcard-desc">Alle kennen das Wort – nur einer nicht. Findet den Bluffer.</span>
-          <span class="gcard-foot">
-            <span class="gcard-meta">In Arbeit</span>
-            <span class="gcard-soon-tag">Bald</span>
-          </span>
+      <div class="game soon" aria-disabled="true">
+        <span class="game-art" data-art="wer-luegt"></span>
+        <span class="game-tx">
+          <b>Wer lügt?</b>
+          <small>Alle kennen das Wort – nur einer nicht. Findet den Bluffer.</small>
+          <em class="soon-tag">Bald</em>
         </span>
       </div>
     </div>
 
-    <!-- Dein Profil -->
-    <section class="card" id="profil" aria-labelledby="profTitle">
-      <div class="card-h">
-        <h2 id="profTitle">Dein Profil</h2>
-        <span class="card-note">Name und Avatar für alle Spiele</span>
-      </div>
-      <div class="card-b">
-        <div class="prof-row">
-          <button id="phAvatar" class="prof-av" type="button" aria-label="Avatar auswählen" aria-expanded="false">🐸</button>
-          <div class="prof-field grow">
-            <label class="lbl" for="phName">Dein Name</label>
-            <input id="phName" class="inp" type="text" maxlength="16" placeholder="Dein Name" autocomplete="nickname">
-          </div>
-          <button id="phDice" class="btn btn-icon" type="button" title="Zufälliger Name und Avatar" aria-label="Zufälliger Name und Avatar" style="align-self:flex-end">🎲</button>
-        </div>
-        <div id="phAvatarGrid" class="prof-grid hidden" role="group" aria-label="Avatare"></div>
-        <p class="note">Gilt für alle Spiele und wird nur in diesem Browser gespeichert.</p>
-      </div>
-    </section>
-
-    <!-- So geht's + Statistik + Einstellungen -->
-    <div class="lower">
-      <section class="card" aria-labelledby="howTitle">
-        <div class="card-h"><h2 id="howTitle">So geht's</h2></div>
-        <div class="card-b">
-          <ol class="how">
-            <li><b>Profil</b><span>Name und Avatar wählen – kein Konto nötig.</span></li>
-            <li><b>Spiel wählen</b><span>Eine Person erstellt die Lobby und bekommt einen Code.</span></li>
-            <li><b>Code teilen</b><span>Die anderen tippen die vier Buchstaben oben ein.</span></li>
-            <li><b>Zocken</b><span>Die Daten laufen direkt zwischen euren Geräten (WebRTC).</span></li>
-          </ol>
-        </div>
-      </section>
-
-      <div class="lower-col">
-        <section class="card" aria-labelledby="numTitle">
-          <div class="card-h">
-            <h2 id="numTitle">Deine Zahlen</h2>
-            <a class="card-note" href="statistik.html" style="color:var(--accent)">Statistik →</a>
-          </div>
-          <div class="stats-strip" id="zbMiniStats"></div>
-        </section>
-
-        <section class="card" aria-labelledby="setTitle" style="margin-top:16px">
-          <div class="card-h"><h2 id="setTitle">Einstellungen</h2></div>
-          <div class="card-b">
-            <button type="button" class="link-row" id="zbOpenSettings">
-              <span class="link-row-ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M4.2 7.5l1.9 1.1M17.9 15.4l1.9 1.1M4.2 16.5l1.9-1.1M17.9 8.6l1.9-1.1"/></svg>
-              </span>
-              <span class="link-row-tx"><b>Tarnmodus &amp; Auslöser</b><small id="zbSetSummary">Titel, Symbol und Tarnseite für den Fall der Fälle</small></span>
-              <span class="link-row-go" aria-hidden="true">→</span>
-            </button>
-            <div class="link-row static">
-              <span class="link-row-ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg>
-              </span>
-              <span class="link-row-tx"><b>Alles bleibt auf diesem Gerät</b><small>Statistik, Profil und Tarn-Einstellungen liegen nur im Browser.</small></span>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <!-- Hain: eigenes Projekt, ruhig, ohne Pop-up -->
-    <section class="card hain zx-promo-band" aria-labelledby="hainTitle">
-      <img class="hain-icon" src="assets/promo/hain-icon.webp" alt="Hain App-Icon" width="52" height="52" loading="lazy">
+    <section class="hain" aria-labelledby="hainTitle">
+      <img class="hain-icon" src="assets/promo/hain-icon.webp" alt="" width="40" height="40" loading="lazy">
       <div class="hain-tx">
-        <span class="eyebrow">Hain · Private KI für Android</span>
-        <h2 id="hainTitle">Deine Fragen bleiben auf deinem Handy.</h2>
-        <p>Ein kleiner KI-Assistent, der komplett auf dem Gerät läuft – ohne Konto, ohne Cloud, ohne Werbung. Kostenlos und Open Source.</p>
+        <b id="hainTitle">Hain</b>
+        <span>Private KI für dein Handy – ohne Konto, ohne Cloud, ohne Werbung.</span>
       </div>
-      <div class="hain-actions">
-        <a class="btn btn-sm" href="https://oskar26.github.io/hain/" target="_blank" rel="noopener noreferrer">Webseite ansehen</a>
-        <a class="btn btn-sm btn-ghost" href="https://github.com/oskar26/hain/releases/latest" target="_blank" rel="noopener noreferrer">APK laden</a>
-      </div>
+      <a class="hain-go" href="https://oskar26.github.io/hain/" target="_blank" rel="noopener noreferrer">Ansehen →</a>
     </section>
 
-    <section class="faq" id="fragen" aria-labelledby="faqTitle">
-      <div class="sec"><h2 id="faqTitle">Häufige Fragen</h2><span class="sec-note">Kurz beantwortet</span></div>
-      <details class="faq-i">
-        <summary>Brauche ich ein Konto, um Zockbox zu spielen?</summary>
-        <p>Nein. Name und Avatar genügen, es gibt keine Anmeldung und keinen Download. Die Verbindung läuft direkt zwischen den Geräten (WebRTC).</p>
-      </details>
-      <details class="faq-i">
-        <summary>Wie viele Leute können mitspielen?</summary>
-        <p>Es gibt kein festes Limit. Richtwert sind 2 bis 8 Personen, je nach Spiel und Gerät des Hosts – große Runden funktionieren zum Beispiel bei Krakelpost gut.</p>
-      </details>
-      <details class="faq-i">
-        <summary>Läuft Zockbox auf dem Handy?</summary>
-        <p>Ja, im Browser auf Android, iPhone, Tablet, Laptop und PC. In Safari und Chrome lässt sich die Seite zum Home-Bildschirm hinzufügen und startet dann wie eine App.</p>
-      </details>
-      <details class="faq-i">
-        <summary>Was kostet Zockbox?</summary>
-        <p>Nichts. Alle vier Spiele sind kostenlos und werbefrei; es gibt keine Konten und keine Bezahlschranke.</p>
-      </details>
-    </section>
+    <p class="foot-note">
+      Ohne Anmeldung · Alles bleibt auf deinem Gerät · <a href="statistik.html">Statistik</a>
+    </p>
   </main>
 
   <footer class="foot">
-    <div class="wrap">
-      <div class="foot-in">
-        <span>von <b>Oskar</b> · zum Spaß mit Freunden</span>
-        <div class="foot-links">
-          <a href="statistik.html">Statistik</a>
-          <a href="#einstellungen" id="zbOpenSettings2">Einstellungen</a>
-          <a href="https://oskar26.github.io/hain/" target="_blank" rel="noopener noreferrer">Hain</a>
-        </div>
-      </div>
-      <p class="foot-small" style="margin-top:10px">Zockbox · Verbindung über PeerJS · Memes über imgflip &amp; memegen.link · Texte aus Wikipedia (CC BY-SA 4.0). Bitte halte dich an die Regeln deiner Schule.</p>
+    <div class="foot-in">
+      <span>von <b>Oskar</b> · zum Spaß mit Freunden</span>
+      <span class="foot-kbd">Tarnmodus: <a href="#einstellungen" id="zbOpenSettings2">Einstellungen</a></span>
     </div>
   </footer>
 
-  <!-- Einstellungen: ein Fenster, zwei Spalten auf großen Bildschirmen -->
+  <!-- Einstellungen: ein breites Fenster, zwei Spalten -->
   <div class="modal hidden" id="zbSettingsModal" role="dialog" aria-modal="true" aria-labelledby="zbSetTitle">
-    <div class="dialog dialog-wide">
+    <div class="dialog settings">
       <div class="dialog-h">
         <div>
           <h2 id="zbSetTitle">Einstellungen</h2>
-          <p>Tarnmodus, Auslöser und Hinweise – alles bleibt auf diesem Gerät.</p>
+          <p>Profil, Zahlen und Tarnmodus.</p>
         </div>
         <button type="button" class="x" id="zbCloseSettings" aria-label="Einstellungen schließen">×</button>
       </div>
-      <div class="dialog-b set-cols">
-        <div class="set-col">
-          <div class="set-sub">Dein Profil</div>
+      <div class="settings-body">
+        <section class="settings-col">
+          <h3 class="col-h">Profil</h3>
           <div class="prof-row">
-            <button id="phAvatar2" class="prof-av" type="button" aria-label="Avatar auswählen" aria-expanded="false">🐸</button>
+            <button id="phAvatar" class="prof-av" type="button" aria-label="Avatar auswählen" aria-expanded="false">🐸</button>
             <div class="prof-field grow">
-              <label class="lbl" for="phName2">Dein Name</label>
-              <input id="phName2" class="inp" type="text" maxlength="16" placeholder="Dein Name" autocomplete="nickname">
+              <label class="lbl" for="phName">Dein Name</label>
+              <input id="phName" class="inp" type="text" maxlength="16" placeholder="Dein Name" autocomplete="nickname">
             </div>
-            <button id="phDice2" class="btn btn-icon" type="button" title="Zufälliger Name und Avatar" aria-label="Zufälliger Name und Avatar" style="align-self:flex-end">🎲</button>
+            <button id="phDice" class="btn btn-icon" type="button" title="Zufälliger Name und Avatar" aria-label="Zufälliger Name und Avatar">🎲</button>
           </div>
-          <div id="phAvatarGrid2" class="prof-grid hidden" role="group" aria-label="Avatare"></div>
-          <p class="note">Gilt für alle Spiele. Wird nur in diesem Browser gespeichert.</p>
+          <div id="phAvatarGrid" class="prof-grid hidden" role="group" aria-label="Avatare"></div>
+          <p class="note">Gilt für alle Spiele und wird nur in diesem Browser gespeichert.</p>
 
-          <div class="set-sub">Hinweise</div>
-          <p class="note">Die Zockbox zeigt einen dezenten Hinweis auf <a href="https://oskar26.github.io/hain/" target="_blank" rel="noopener noreferrer">Hain</a> – ohne Pop-ups, ohne Werbenetzwerke. Im Tarnmodus verschwindet er.</p>
+          <h3 class="col-h">Deine Zahlen</h3>
+          <div class="mini" id="zbMiniStats"></div>
+          <p class="note"><a href="statistik.html">Ausführliche Statistik →</a></p>
+        </section>
 
-          <div class="set-sub">Deine Zahlen</div>
-          <div class="stats-strip plain" id="zbMiniStats2"></div>
-          <p class="note">Ausführlich unter <a href="statistik.html">Statistik</a>.</p>
-        </div>
-        <div class="set-col set-col-main">
+        <section class="settings-col settings-col-tarn">
           <div id="zbTarnSettings" class="tarn-set"></div>
-        </div>
+        </section>
       </div>
     </div>
   </div>

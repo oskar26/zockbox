@@ -1,6 +1,6 @@
 // Zockbox – Statistikseite. made by Oskar
 // Liest nur shared/stats.js (localStorage) und zeichnet die Seite. Kein Netzwerk.
-import { summary, last14, GAME_META, exportStats, resetStats } from './stats.js';
+import { summary, GAME_META, exportStats, resetStats } from './stats.js';
 import { getProfile } from './profile.js';
 import { t, locale, retranslate } from './i18n.js';
 import { gameLogo, GAME_NAMES } from './game-art.js';
@@ -12,16 +12,75 @@ const nameOf = (id) => GAME_NAMES[id] || (GAME_META[id] && GAME_META[id].name) |
 const iconOf = (id) => `<span class="gm-ic" aria-hidden="true">${gameLogo(id)}</span>`;
 const show = (el, on) => { if (el) el.classList.toggle('hidden', !on); };
 
+// ---------------------------------------------------------------------------
+// Kurzurteil: wie schneide ich ab?
+// ---------------------------------------------------------------------------
+function verdict(s) {
+  const el = $('stVerdict');
+  if (!el) return;
+  const tot = s.tot;
+  if (!tot.played) {
+    el.classList.add('empty-verdict');
+    el.textContent = t('Noch keine Partie zu Ende gespielt. Sobald die erste Runde vorbei ist, steht hier, wie du abschneidest.');
+    return;
+  }
+  el.classList.remove('empty-verdict');
+
+  const decided = tot.won + tot.lost;
+  const rate = decided ? tot.won / decided : 0;
+
+  // Durchschnittlicher Platz über alle Spiele (nach Partien gewichtet)
+  let placeSum = 0, placeN = 0;
+  for (const g of s.games) { placeSum += (g.avgPlace || 0) * g.played; placeN += g.played; }
+  const avgPlace = placeN ? placeSum / placeN : 0;
+  const players = s.history.length ? s.history.reduce((a, h) => a + (h.players || 0), 0) / s.history.length : 0;
+
+  // Bestes Spiel nach Quote (mindestens zwei Partien)
+  const best = s.games.filter((g) => g.played >= 2 && g.won + g.lost > 0)
+    .sort((a, b) => b.winRate - a.winRate)[0];
+
+  const parts = [
+    tot.played === 1
+      ? t('Du hast <b>1</b> Partie gespielt')
+      : t('Du hast <b>{n}</b> Partien gespielt').replace('{n}', tot.played),
+  ];
+  if (decided) {
+    parts.push(t('und <b>{w}</b> davon gewonnen – Quote <b>{q}</b>.')
+      .replace('{w}', tot.won).replace('{q}', pct(rate)));
+    if (avgPlace) {
+      parts.push(players >= 2
+        ? t('Im Schnitt Platz <b>{p}</b> von {n}.').replace('{p}', avgPlace.toFixed(1)).replace('{n}', Math.round(players))
+        : t('Im Schnitt Platz <b>{p}</b>.').replace('{p}', avgPlace.toFixed(1)));
+    }
+    if (best) {
+      parts.push(t('Am besten läuft <b>{g}</b> ({q}).')
+        .replace('{g}', esc(nameOf(best.id))).replace('{q}', pct(best.winRate)));
+    }
+  } else {
+    parts.push(t('entschieden ist davon noch nichts.'));
+  }
+  el.innerHTML = parts.join(' ');
+}
+
+// ---------------------------------------------------------------------------
+// Zahlen
+// ---------------------------------------------------------------------------
 function kpis(s) {
   const tot = s.tot;
   const decided = tot.won + tot.lost;
   const cells = [
-    { v: tot.played, l: t('Partien') },
-    { v: tot.won, l: t('Siege') },
+    { v: tot.played, l: tot.played === 1 ? t('Partie') : t('Partien') },
+    { v: tot.won, l: tot.won === 1 ? t('Sieg') : t('Siege') },
     { v: decided ? pct(tot.won / decided) : '–', l: t('Siegquote') },
-    { v: tot.streak || '0', l: tot.streak === 1 ? t('Sieg in Folge') : t('Siege in Folge') },
+    { v: tot.streak || 0, l: tot.streak === 1 ? t('Sieg in Folge') : t('Siege in Folge') },
   ];
   $('stKpis').innerHTML = cells.map((c) => `<div class="stat-cell"><b>${esc(c.v)}</b><span>${esc(c.l)}</span></div>`).join('');
+}
+
+function formDots(id, history) {
+  const last = history.filter((h) => h.g === id).slice(0, 5).reverse();
+  if (last.length < 2) return '';
+  return `<span class="st-form" aria-hidden="true">${last.map((h) => `<i class="${h.win ? 'w' : 'l'}"></i>`).join('')}</span>`;
 }
 
 function games(s) {
@@ -39,19 +98,15 @@ function games(s) {
     const decided = g.won + g.lost;
     const rate = decided ? g.won / decided : 0;
     const place = g.places && g.places.length ? g.avgPlace.toFixed(1) : '–';
-    const pts = g.played ? String(Math.round(g.avgPts || 0)) : '–';
     return `<tr>
-      <td><span class="st-g">${iconOf(g.id)}<span>${esc(nameOf(g.id))}<small>${g.played === 1 ? t('1 Partie') : `${g.played} ${t('Partien')}`}${g.bestStreak > 1 ? ` · ${t('Serie')} ${g.bestStreak}` : ''}</small></span></span></td>
+      <td><span class="st-g">${iconOf(g.id)}<span><b>${esc(nameOf(g.id))}</b><small>${g.bestStreak > 1 ? `${t('Serie')} ${g.bestStreak}` : (g.played === 1 ? t('eine Partie') : `${g.played} ${t('Partien')}`)}</small>${formDots(g.id, s.history)}</span></span></td>
       <td class="num">${g.played}</td>
       <td class="num">${g.won}</td>
-      <td class="num"><span class="st-rate"><span class="bar" aria-hidden="true"><i style="width:${Math.round(rate * 100)}%"></i></span><b>${decided ? pct(rate) : '–'}</b></span></td>
+      <td class="num"><span class="st-rate"><span class="meter" aria-hidden="true"><i style="width:${Math.round(rate * 100)}%"></i></span><b>${decided ? pct(rate) : '–'}</b></span></td>
       <td class="num hide-sm">${place}</td>
-      <td class="num hide-sm">${pts}</td>
     </tr>`;
   }).join('');
-  if (note) note.textContent = locale() === 'en'
-    ? `${s.games.length} ${s.games.length === 1 ? 'game' : 'games'} played`
-    : `${s.games.length} ${s.games.length === 1 ? 'Spiel' : 'Spiele'} gespielt`;
+  if (note) note.textContent = s.games.length === 1 ? t('1 Spiel') : `${s.games.length} ${t('Spiele')}`;
 }
 
 function people(s) {
@@ -68,22 +123,11 @@ function people(s) {
     const mine = p.name.toLowerCase() === me;
     return `<tr class="${mine ? 'me-row' : ''}">
       <td class="rank">${i + 1}</td>
-      <td><span class="st-g"><span>${esc(p.name)}${mine ? ' ' + t('(du)') : ''}<small>${p.won} ${p.won === 1 ? t('Sieg') : t('Siege')} · ${p.played} ${t('Partien')}</small></span></span></td>
+      <td><span class="st-g"><span><b>${esc(p.name)}${mine ? ` <span class="st-me">${t('(du)')}</span>` : ''}</b><small>${p.played === 1 ? t('1 Partie') : `${p.played} ${t('Partien')}`}</small></span></span></td>
       <td class="num">${p.played}</td>
       <td class="num">${p.won}</td>
       <td class="num"><b>${pct(p.rate)}</b></td>
     </tr>`;
-  }).join('');
-}
-
-function days() {
-  const list = last14();
-  const max = Math.max(1, ...list.map((d) => d.played));
-  $('stDays').innerHTML = list.map((d) => {
-    const h = d.played ? Math.max(6, Math.round((d.played / max) * 100)) : 3;
-    const label = new Date(d.ts).toLocaleDateString(locale(), { weekday: 'short' }).slice(0, 2);
-    return `<div class="d${d.played ? '' : ' zero'}" title="${d.played} ${t('Partien')}, ${d.won} ${t('Siege')}">
-      <b>${d.played || ''}</b><i style="height:${h}%"></i><span>${esc(label)}</span></div>`;
   }).join('');
 }
 
@@ -97,8 +141,9 @@ function history(s) {
   }
   show(empty, false);
   list.innerHTML = s.history.slice(0, 12).map((h) => {
-    const when = new Date(h.ts).toLocaleDateString(locale(), { day: '2-digit', month: '2-digit' }) + ' · ' +
-      new Date(h.ts).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+    const d = new Date(h.ts);
+    const when = d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit' }) + ' · ' +
+      d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
     const place = h.win ? `<span class="h-win">${t('Sieg')}</span>` : `<span class="h-place">${h.place}. ${t('Platz')}</span>`;
     return `<li>
       ${iconOf(h.g)}
@@ -110,7 +155,7 @@ function history(s) {
 
 function draw() {
   const s = summary();
-  kpis(s); games(s); people(s); days(s); history(s);
+  verdict(s); kpis(s); games(s); people(s); history(s);
   retranslate();
 }
 

@@ -10,7 +10,7 @@
 //   · Dateien (CSS/JS/SVG/WOFF): aus dem Cache, parallel im Hintergrund erneuern.
 //   · Anderes (PeerJS, Wikipedia, Assets in Spielen): unverändert durchreichen.
 
-const VERSION = 'zockbox-v5';
+const VERSION = 'zockbox-v6';
 const CACHE = VERSION;
 
 const CORE = [
