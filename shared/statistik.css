@@ -1,38 +1,73 @@
 /* =========================================================================
-   Zockbox – Statistikseite (ergänzt shared/ui.css und shared/games.css)
+   Zockbox – Statistikseite. made by Oskar
+   Schlicht: eine Spalte, Haarlinien, keine Kästen.
    ========================================================================= */
 
-.st-g { display: inline-flex; align-items: center; gap: 9px; font-weight: 500; white-space: nowrap; }
-.st-g .gm-ic { width: 22px; height: 22px; flex: none; display: block; }
-.st-g small { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; }
+.stats { max-width: 760px; }
 
-.tbl td.st-bar-cell { width: 34%; min-width: 110px; }
-.st-rate { display: flex; align-items: center; gap: 9px; justify-content: flex-end; }
-.st-rate .bar { width: 56px; flex: none; }
-.st-rate b { font-weight: 500; font-variant-numeric: tabular-nums; }
-
-.tbl .rank { width: 34px; color: var(--faint); font-variant-numeric: tabular-nums; }
-
-/* Zwei Spalten ab Tablet */
-.lower2 { display: grid; gap: 0 26px; grid-template-columns: 1fr; }
-@media (min-width: 820px) { .lower2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
-/* Tagesbalken */
-.days { display: flex; align-items: flex-end; gap: 5px; height: 120px; padding: 16px 20px 10px; }
-.days .d {
-  flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 5px;
-  min-width: 0;
+/* Kurzurteil über deine Form */
+.verdict {
+  margin-top: 26px; padding: 16px 0 18px;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  font-size: 16px; line-height: 1.55; color: var(--ink-2);
 }
-.days .d i { width: 100%; max-width: 28px; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 3px; opacity: .85; }
-.days .d.zero i { background: var(--line); opacity: 1; }
-.days .d span { font-size: 10.5px; color: var(--faint); letter-spacing: .02em; white-space: nowrap; }
-.days .d b { font-size: 10.5px; color: var(--ink-2); font-weight: 500; height: 13px; }
+.verdict b { color: var(--ink); font-weight: 600; }
+.verdict.empty-verdict { color: var(--muted); font-size: 14.5px; }
+
+/* Zahlen: vier Spalten, nur Haarlinien */
+.kpis {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--line);
+}
+.kpis .stat-cell { padding: 18px 0 16px; }
+.kpis .stat-cell:nth-child(2n) { padding-left: 16px; border-left: 1px solid var(--line); }
+.kpis .stat-cell b { font-size: 30px; }
+@media (min-width: 560px) {
+  .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .kpis .stat-cell { padding: 20px 0 18px; }
+  .kpis .stat-cell + .stat-cell { padding-left: 18px; border-left: 1px solid var(--line); }
+}
+
+/* Abschnitte */
+.block { margin-top: 38px; }
+.block-h {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--faint); margin: 0 0 6px;
+}
+.block-h span { font-size: 11.5px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--faint); }
+
+/* Tabellen ohne Rahmen */
+.sttbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.sttbl th {
+  text-align: left; padding: 8px 0 7px; border-bottom: 1px solid var(--line);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint);
+  white-space: nowrap;
+}
+.sttbl td { padding: 12px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.sttbl tr:last-child td { border-bottom: 0; }
+.sttbl .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sttbl .rank { width: 26px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.sttbl .me-row td { background: var(--surface-2); }
+.sttbl .me-row td:first-child { padding-left: 8px; }
+.sttbl .me-row td:last-child { padding-right: 8px; }
+
+.st-g { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.st-g .gm-ic { width: 26px; height: 26px; }
+.st-g span { min-width: 0; }
+.st-g b { display: block; font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-g small { display: block; color: var(--faint); font-size: 11.5px; }
+.st-rate { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.st-rate .meter { width: 54px; flex: none; }
 
 /* Verlauf */
 .hist { list-style: none; margin: 0; padding: 0; }
-.hist li { display: flex; align-items: center; gap: 11px; padding: 10px 20px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.hist li {
+  display: flex; align-items: center; gap: 11px;
+  padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 13.5px;
+}
 .hist li:last-child { border-bottom: 0; }
-.hist .gm-ic { width: 20px; height: 20px; flex: none; }
+.hist .gm-ic { width: 22px; height: 22px; }
 .hist .h-tx { min-width: 0; }
 .hist .h-tx b { display: block; font-weight: 500; }
 .hist .h-tx small { color: var(--muted); font-size: 11.5px; }
@@ -40,16 +75,13 @@
 .hist .h-win { color: var(--ok); }
 .hist .h-place { color: var(--muted); }
 
-.tbl td.rank + td { min-width: 0; }
-.st-g + .num { white-space: nowrap; }
-.tbl { table-layout: auto; }
-@media (max-width: 780px) {
-  /* Fünf Spalten sind auf dem Handy zu viel: Partien/Quote reichen */
-  .st-g small { display: none; }
-}
-@media (max-width: 640px) {
+/* Fußzeile der Seite */
+.st-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 34px; }
+.st-note { margin-top: 14px; color: var(--faint); font-size: 12px; line-height: 1.6; max-width: 52em; }
+
+@media (max-width: 560px) {
   .hide-sm { display: none; }
-  .days { padding: 14px 12px 8px; gap: 3px; }
-  .days .d b { display: none; }
-  .hist li { padding-left: 15px; padding-right: 15px; }
+  .st-rate .meter { display: none; }
+  .stats { padding-left: max(18px, env(safe-area-inset-left)); }
+  .verdict { font-size: 15px; }
 }

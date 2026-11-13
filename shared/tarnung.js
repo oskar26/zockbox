@@ -49,18 +49,12 @@ const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const svgUrl = (inner) => 'data:image/svg+xml,' + encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">${inner}</svg>`);
 
-// Eigene Moodle-artige Bildmarke (bewusst KEIN fremdes Logo): aufgeschlagenes Buch
-// mit Lichtstrahlen – schlicht, blau, selbst gezeichnet.
+// Bildmarke im Moodle-Stil (Moodle ist Open Source): oranges Quadrat mit weißem M.
+// Bewusst schlicht und ohne Schriftzug – es ist ein Nachbau, kein Original-Logo.
+const M_SITE = 'Moodle';
 const MARK_MOODLE = `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
-  <defs><linearGradient id="zbtMk" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#1c7ac4"/><stop offset="1" stop-color="#0b4f86"/></linearGradient></defs>
-  <path d="M60 30c-9-7-20-10-31-8-3 .5-4 2-4 5v56c0 3 1.6 4.6 4.6 4 9.6-1.8 21-1 30.4 5.4z" fill="url(#zbtMk)"/>
-  <path d="M60 30c9-7 20-10 31-8 3 .5 4 2 4 5v56c0 3-1.6 4.6-4.6 4-9.6-1.8-21-1-30.4 5.4z" fill="#3f9ce0"/>
-  <path d="M60 30v62.4" stroke="#0a3f6d" stroke-width="3" stroke-linecap="round"/>
-  <path d="M24 40c8-.6 15 .6 22 3M24 52c8-.6 15 .6 22 3M24 64c8-.6 15 .6 22 3" stroke="#fff" stroke-opacity=".72" stroke-width="2.6" stroke-linecap="round"/>
-  <path d="M96 40c-8-.6-15 .6-22 3M96 52c-8-.6-15 .6-22 3M96 64c-8-.6-15 .6-22 3" stroke="#fff" stroke-opacity=".6" stroke-width="2.6" stroke-linecap="round"/>
-  <circle cx="60" cy="22" r="7" fill="#f7c544"/>
-  <path d="M60 9v6M60 29v6M47 22h6M67 22h6M51 13l4 4M69 31l-4-4M69 13l-4 4M51 31l4-4" stroke="#f7c544" stroke-width="2.4" stroke-linecap="round"/>
+  <rect width="120" height="120" rx="22" fill="#f98012"/>
+  <path d="M30 84V38l30 30 30-30v46" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
 const ICONS = {
@@ -73,21 +67,21 @@ const ICONS = {
 
 // Bildmarke als Favicon (data-URL, damit nichts nachgeladen werden muss)
 const MOODLE_ICON = svgUrl(
-  '<rect width="32" height="32" rx="6" fill="#fff"/>' +
-  '<g transform="translate(2.2 2.2) scale(.23)">' +
-  '<path d="M60 30c-9-7-20-10-31-8-3 .5-4 2-4 5v56c0 3 1.6 4.6 4.6 4 9.6-1.8 21-1 30.4 5.4z" fill="#0f6cb6"/>' +
-  '<path d="M60 30c9-7 20-10 31-8 3 .5 4 2 4 5v56c0 3-1.6 4.6-4.6 4-9.6-1.8-21-1-30.4 5.4z" fill="#3f9ce0"/>' +
-  '<path d="M60 30v62.4" stroke="#0a3f6d" stroke-width="4"/><circle cx="60" cy="20" r="9" fill="#f7c544"/></g>');
+  '<rect width="32" height="32" rx="7" fill="#f98012"/>' +
+  '<path d="M8 23V10l8 8 8-8v13" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>');
 // Zockbox-„Z“ im Look der echten Seite
 const ZOCKBOX_ICON = svgUrl('<rect width="32" height="32" rx="7" fill="#191b1e"/><path d="M9 10h14l-9 12h9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>');
 
+// Ein Look = ein Tab-Titel, ein Favicon und die passenden Seiten. Man wählt
+// genau eine Sache aus; Titel, Symbol und Seite ziehen immer zusammen um.
+// Standard ist „Moodle“ (Moodle ist Open Source – der Aufbau ist nachgebaut).
 export const LOOKS = [
   {
     id: 'moodle',
-    label: 'Lernplattform',
-    title: 'Anmeldeseite | Lernplattform',
+    label: 'Moodle',
+    title: 'Anmeldeseite | Moodle',
     icon: MOODLE_ICON,
-    note: 'Anmeldung, Dashboard, meine Kurse, Kursseite',
+    note: 'Anmeldung, Dashboard, meine Kurse',
   },
   {
     id: 'zockbox',
@@ -112,10 +106,12 @@ export const TAB_TEMPLATES = [];
 // Tarnseiten (Panik-Modus)
 // look = zu welchem Look die Seite gehört; title = Tab-Titel, solange die Seite offen ist.
 export const PAGES = [
-  { id: 'moodle-start', look: 'moodle', label: 'Anmeldung', tab: 'Anmeldeseite | Lernplattform', title: 'Anmeldeseite | Lernplattform', icon: MOODLE_ICON },
-  { id: 'moodle-dash', look: 'moodle', label: 'Dashboard', tab: 'Dashboard | Lernplattform', title: 'Dashboard | Lernplattform', icon: MOODLE_ICON },
-  { id: 'moodle-kurse', look: 'moodle', label: 'Meine Kurse', tab: 'Meine Kurse | Lernplattform', title: 'Meine Kurse | Lernplattform', icon: MOODLE_ICON },
-  { id: 'moodle-kurs', look: 'moodle', label: 'Kursseite', tab: 'Biologie · Kurs | Lernplattform', title: 'Biologie · Kurs | Lernplattform', icon: MOODLE_ICON },
+  { id: 'moodle-start', look: 'moodle', label: 'Anmeldung', tab: 'Anmeldeseite | Moodle', title: 'Anmeldeseite | Moodle', icon: MOODLE_ICON },
+  { id: 'moodle-dash', look: 'moodle', label: 'Dashboard', tab: 'Dashboard | Moodle', title: 'Dashboard | Moodle', icon: MOODLE_ICON },
+  { id: 'moodle-kurse', look: 'moodle', label: 'Meine Kurse', tab: 'Meine Kurse | Moodle', title: 'Meine Kurse | Moodle', icon: MOODLE_ICON },
+  { id: 'moodle-kurs', look: 'moodle', label: 'Kursseite', tab: 'Biologie · Kurs | Moodle', title: 'Biologie · Kurs | Moodle', icon: MOODLE_ICON },
+  { id: 'moodle-buchung', look: 'moodle', label: 'Buchungssystem', tab: 'Buchungssystem | Moodle', title: 'Buchungssystem | Moodle', icon: MOODLE_ICON },
+  { id: 'moodle-tafel', look: 'moodle', label: 'Digitale Tafel', tab: 'Digitale Tafel | Moodle', title: 'Digitale Tafel | Moodle', icon: MOODLE_ICON },
   { id: 'zock-start', look: 'zockbox', label: 'Startseite', tab: 'Zockbox – Gratis Browser-Spiele mit Freunden', title: 'Zockbox – Gratis Browser-Spiele mit Freunden', icon: ZOCKBOX_ICON },
   { id: 'dokument', look: 'zockbox', label: 'Dokument', tab: 'Biologie-Notizen – Dokument', title: 'Biologie-Notizen – Dokument', icon: ICONS.dokument },
   { id: 'notizen', look: 'zockbox', label: 'Notizen', tab: 'Notizen', title: 'Notizen', icon: ICONS.notizen },
@@ -151,7 +147,7 @@ function migrate() {
     if (tab === 'aus') look = 'zockbox';
     else if (knownTab.includes(tab)) look = (tab === 'suche' || tab === 'wiki') ? 'lexikon' : 'zockbox';
     else if (page === 'lexikon' || page === 'suche') look = 'lexikon';
-    // Standard: Lernplattform
+    // Standard: Moodle
     else look = 'moodle';
   }
   out.look = look;
@@ -186,6 +182,7 @@ function readState() {
     term: (get(KEYS.term, 'photosynthese') || 'photosynthese').slice(0, 60),
     docName: (get(KEYS.docName, 'Biologie-Notizen') || 'Biologie-Notizen').slice(0, 40),
     media: get(KEYS.media, '1') !== '0',
+    site: (get(KEYS.site, M_SITE) || M_SITE).trim().slice(0, 30) || M_SITE,
   };
 }
 let S = readState();
@@ -206,6 +203,7 @@ let origTheme = null;
 
 function setDisguise(title, icon, lookId) {
   // Titel
+  if (title && S && S.site && S.site !== M_SITE) title = title.replace(/\| Moodle$/, '| ' + S.site);
   disguiseTitle = title || null;
   if (title) {
     if (document.title !== title) { applyingTitle = true; document.title = title; applyingTitle = false; }
@@ -779,9 +777,10 @@ function pageDokument() {
 
 
 // ===========================================================================
-// Look „Lernplattform“ – Anmeldung, Dashboard, meine Kurse, Kursseite
-// Eigene Texte, eigene Symbolik, eigene Kursnamen. Keine echten Schulen,
-// keine echten Marken, keine fremden Logos.
+// Look „Moodle“ – Anmeldung, Dashboard, Meine Kurse, Kursseite
+// Aufbau nach dem Vorbild von Moodle (Open Source): gleiche Anordnung, gleiche
+// Bausteine. Eigene Texte, eigene Kursnamen, keine echten Personen und keine
+// echten Schul-Logos.
 // ===========================================================================
 const mName = () => { try { return (localStorage.getItem('ph_name') || '').trim(); } catch (e) { return ''; } };
 const mHello = () => mName() || 'Gast';
@@ -792,7 +791,8 @@ const M_NAV = [
 ];
 
 const mIcon = {
-  search: '<svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3h.8l5 5 1.5-1.5-5-5zM10 14a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>',
+  burger: '<svg viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>',
   bell: '<svg viewBox="0 0 24 24"><path d="M12 22a2.4 2.4 0 0 0 2.4-2.4H9.6A2.4 2.4 0 0 0 12 22zm7.2-6V10a7.2 7.2 0 0 0-5.4-7v-.8a1.8 1.8 0 1 0-3.6 0V3a7.2 7.2 0 0 0-5.4 7v6L3 18.4v1.2h18v-1.2z"/></svg>',
   chat: '<svg viewBox="0 0 24 24"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>',
   mail: '<svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5z"/></svg>',
@@ -804,54 +804,60 @@ const mIcon = {
   quiz: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#c2552d"/><path d="M9.4 9a2.6 2.6 0 1 1 3.7 2.4c-.7.4-1.1.9-1.1 1.8" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="17" r="1.3" fill="#fff"/></svg>',
   video: '<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#5c6bc0"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg>',
   empty: '<svg viewBox="0 0 64 64" fill="none" stroke="#9aa2a9" stroke-width="2.2"><rect x="10" y="16" width="44" height="34" rx="4"/><path d="M10 24h44" stroke-width="3"/><path d="M19 33h12M19 40h20"/></svg>',
-  lang: '<svg viewBox="0 0 20 20" fill="#3c4043" width="14" height="14"><path d="M20 18h-1.4l-1.2-3h-4.9l-1.2 3H9.9l4.4-11h1.3zm-3.2-4.5-1.9-4.9-1.9 4.9zM9 6H6V4H4v2H0v2h6.4C5.9 9.5 5 10.9 3.9 12 3.1 11.2 2.5 10.4 2 9.5H.2c.6 1.3 1.4 2.5 2.4 3.6L0 15.6 1.4 17 4 14.4l1.6 1.6.6-1.6-1-1C6.6 12 7.7 10 8.4 8H9z"/></svg>',
+  lang: '<svg viewBox="0 0 20 20" fill="#1d2125" width="16" height="16"><path d="M20 18h-1.4l-1.2-3h-4.9l-1.2 3H9.9l4.4-11h1.3zm-3.2-4.5-1.9-4.9-1.9 4.9zM9 6H6V4H4v2H0v2h6.4C5.9 9.5 5 10.9 3.9 12 3.1 11.2 2.5 10.4 2 9.5H.2c.6 1.3 1.4 2.5 2.4 3.6L0 15.6 1.4 17 4 14.4l1.6 1.6.6-1.6-1-1C6.6 12 7.7 10 8.4 8H9z"/></svg>',
+  avatar: '<svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="20" fill="#dbe7f2"/><circle cx="20" cy="15.5" r="6.2" fill="#8aa6bd"/><path d="M8.5 36c1.4-7 6-10.4 11.5-10.4S30.1 29 31.5 36z" fill="#8aa6bd"/></svg>',
 };
 
 // Kurskarten – Namen und Fächer wie auf einer Stundenplan-Kachel, alles erfunden.
 const M_COURSES = [
-  { id: 'eng', code: '10a E 27 POM', name: 'Englisch', teacher: 'Hr. POMMERENING', cover: 'flag', glyph: 'EN', room: 'A 204' },
-  { id: 'ek', code: '10a EK Mau 27', name: 'Erdkunde', teacher: 'Fr. MAUL', cover: 'circles', glyph: 'EK', room: 'B 112' },
-  { id: 'bio', code: '10a Bi Man 26/27', name: 'Biologie', teacher: 'Hr. Dr. MANTENIOTIS', cover: 'squares', glyph: 'BI', room: 'C 3' },
-  { id: 'mathe', code: 'Mathe 10a ROS', name: 'Mathematik', teacher: 'Hr. ROSENECK', cover: 'math', glyph: '∑', room: 'A 105' },
-  { id: 'geo', code: '10 GE 27 Wey', name: 'Geschichte', teacher: 'Fr. WEYERS', cover: 'diag', glyph: 'GE', room: 'B 208' },
-  { id: 'deutsch', code: '10 BLP 27 Stu', name: 'Deutsch', teacher: 'Fr. MAUL', cover: 'tri', glyph: 'DE', room: 'A 011' },
-  { id: 'info', code: '10a IF Kro 27', name: 'Informatik', teacher: 'Hr. KROMBACH', cover: 'code', glyph: '<>', room: 'PC 2' },
-  { id: 'kunst', code: '10a KU Fel 27', name: 'Kunst', teacher: 'Fr. FELDT', cover: 'blob', glyph: 'KU', room: 'D 1' },
+  { id: 'eng', code: '10a E 27 POM', name: 'Englisch', teacher: 'Hr. POMMERENING', cover: 'flag', room: 'A 204' },
+  { id: 'ek', code: '10a EK Mau 27', name: 'Erdkunde', teacher: 'Fr. MAUL', cover: 'circles', room: 'B 112' },
+  { id: 'bio', code: '10a Bi Man 26/27', name: 'Biologie', teacher: 'Hr. Dr. MANTENIOTIS', cover: 'squares', room: 'C 3' },
+  { id: 'mathe', code: 'Mathe 10a ROS', name: 'Mathematik', teacher: 'Hr. ROSENECK', cover: 'math', room: 'A 105' },
+  { id: 'geo', code: '10 GE 27 Wey', name: 'Geschichte', teacher: 'Fr. WEYERS', cover: 'diag', room: 'B 208' },
+  { id: 'deutsch', code: '10 BLP 27 Stu', name: 'Deutsch', teacher: 'Fr. MAUL', cover: 'tri', room: 'A 011' },
+  { id: 'info', code: '10a IF Kro 27', name: 'Informatik', teacher: 'Hr. KROMBACH', cover: 'code', room: 'PC 2' },
+  { id: 'kunst', code: '10a KU Fel 27', name: 'Kunst', teacher: 'Fr. FELDT', cover: 'blob', room: 'D 1' },
 ];
 
+// Kursbilder: ruhige, fotografisch anmutende Flächen – wie die Kachelbilder
+// einer Lernplattform, nur selbst gebaut.
 const M_COVERS = {
-  flag: 'background:linear-gradient(178deg,#b22234 0 8%,#fff 8% 15%,#b22234 15% 23%,#fff 23% 30%,#b22234 30% 38%,#fff 38% 45%,#b22234 45% 53%,#fff 53% 60%,#b22234 60% 68%,#fff 68% 75%,#b22234 75% 83%,#fff 83% 90%,#b22234 90%)',
-  circles: 'background:radial-gradient(circle at 18% 26%,rgba(255,255,255,.34) 0 12%,transparent 12.6%),radial-gradient(circle at 58% 66%,rgba(255,255,255,.28) 0 17%,transparent 17.6%),radial-gradient(circle at 86% 22%,rgba(255,255,255,.24) 0 9%,transparent 9.6%),linear-gradient(135deg,#8d8ce8,#a5a4f2)',
-  squares: 'background:repeating-linear-gradient(0deg,rgba(255,255,255,.28) 0 2px,transparent 2px 22px),repeating-linear-gradient(90deg,rgba(255,255,255,.28) 0 2px,transparent 2px 22px),linear-gradient(135deg,#ee5d94,#f4739f)',
-  math: 'background:radial-gradient(circle at 78% 22%,rgba(255,236,150,.5) 0 14%,transparent 15%),linear-gradient(150deg,#2f2a24,#4d4437 60%,#6b5c45)',
-  diag: 'background:repeating-linear-gradient(45deg,rgba(255,255,255,.34) 0 14px,transparent 14px 28px),repeating-linear-gradient(-45deg,rgba(255,255,255,.2) 0 14px,transparent 14px 28px),linear-gradient(135deg,#b9bec4,#d6dade)',
-  tri: 'background:conic-gradient(from 210deg at 30% 70%,rgba(255,255,255,.3) 0 60deg,transparent 60deg 180deg,rgba(255,255,255,.22) 180deg 250deg,transparent 250deg),linear-gradient(150deg,#1f6fd0,#3f95e6)',
-  code: 'background:repeating-linear-gradient(90deg,rgba(255,255,255,.16) 0 1px,transparent 1px 16px),repeating-linear-gradient(0deg,rgba(255,255,255,.16) 0 1px,transparent 1px 16px),linear-gradient(140deg,#2b313a,#424c59)',
-  blob: 'background:radial-gradient(circle at 26% 74%,rgba(255,223,120,.55) 0 20%,transparent 21%),radial-gradient(circle at 74% 30%,rgba(255,160,200,.5) 0 18%,transparent 19%),linear-gradient(135deg,#f0f1f3,#dfe3e6)',
+  flag: 'background:linear-gradient(90deg,#3c3b6e 0 33%,transparent 33%) 0 0/100% 62% no-repeat,repeating-linear-gradient(180deg,#b22234 0 7.6%,#fff 7.6% 15.2%)',
+  circles: 'background:radial-gradient(circle at 20% 24%,rgba(255,255,255,.22) 0 22%,transparent 22.5%),radial-gradient(circle at 62% 68%,rgba(255,255,255,.2) 0 26%,transparent 26.5%),radial-gradient(circle at 88% 20%,rgba(255,255,255,.16) 0 16%,transparent 16.5%),linear-gradient(135deg,#8d8ce8,#a9a8f4)',
+  squares: 'background:repeating-linear-gradient(0deg,rgba(255,255,255,.3) 0 2px,transparent 2px 26px),repeating-linear-gradient(90deg,rgba(255,255,255,.3) 0 2px,transparent 2px 26px),linear-gradient(135deg,#ee5d94,#f884ac)',
+  math: 'background:radial-gradient(circle at 74% 26%,rgba(255,226,120,.42) 0 18%,transparent 19%),linear-gradient(150deg,#241f1a,#4a4032 58%,#6f5d41)',
+  diag: 'background:repeating-linear-gradient(45deg,rgba(255,255,255,.5) 0 16px,transparent 16px 32px),repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 16px,transparent 16px 32px),linear-gradient(135deg,#b9bec4,#d9dde1)',
+  tri: 'background:linear-gradient(150deg,#1f6fd0,#3f95e6 55%,#63aae8)',
+  code: 'background:repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0 1px,transparent 1px 18px),repeating-linear-gradient(0deg,rgba(255,255,255,.12) 0 1px,transparent 1px 18px),linear-gradient(140deg,#2b313a,#46505d)',
+  blob: 'background:radial-gradient(circle at 26% 74%,rgba(255,214,110,.5) 0 22%,transparent 23%),radial-gradient(circle at 74% 30%,rgba(255,150,195,.45) 0 20%,transparent 21%),linear-gradient(135deg,#f2f3f5,#dfe3e6)',
 };
 
-function mCover(kind, glyph, cls = 'zbt-m-cover') {
-  return `<div class="${cls}" style="${M_COVERS[kind] || M_COVERS.circles}"><span>${esc2(glyph || '')}</span></div>`;
+function mCover(kind, cls = 'zbt-m-cover') {
+  return `<div class="${cls}" style="${M_COVERS[kind] || M_COVERS.circles}"></div>`;
 }
 
-// Gemeinsamer Rahmen: Kopfleiste + Inhalt
-function mShell(active, inner, brand = 'Lernplattform') {
+// Gemeinsamer Rahmen: Kopfleiste + Inhalt (wie in Moodle 4)
+function mShell(active, inner) {
   const nav = M_NAV.map(([id, label]) =>
     `<a href="#" class="${active === id ? 'on' : ''}" data-zbt2="ml-go" data-page="${id}">${label}</a>`).join('');
   return `<div class="zbt-x zbt-m">
-  <div class="zbt-m-bar">
-    <span class="zbt-m-brand">${MARK_MOODLE}<span>${esc2(brand)}</span></span>
-    <nav class="zbt-m-nav">${nav}</nav>
+  <header class="zbt-m-bar">
+    <button type="button" class="zbt-m-burger" data-zbt2="ml-nav" aria-label="Menü">${mIcon.burger}</button>
+    <span class="zbt-m-brand"><span>${esc2(S.site || M_SITE)}</span></span>
+    <nav class="zbt-m-nav" aria-label="Hauptnavigation">${nav}</nav>
     <div class="zbt-m-bar-r">
-      <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Suche ist in dieser Demo leer." aria-label="Suche">${mIcon.search}</button>
+      <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Suche ist hier ohne Funktion." aria-label="Suche">${mIcon.search}</button>
       <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Keine neuen Mitteilungen." aria-label="Mitteilungen">${mIcon.bell}</button>
       <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Keine neuen Nachrichten." aria-label="Nachrichten">${mIcon.chat}</button>
       <button type="button" class="zbt-m-ico" data-zbt2="ml-note" data-t="Postfach ist leer." aria-label="Postfach">${mIcon.mail}</button>
-      <span class="zbt-m-ava" title="${esc2(mHello())}">${esc2((mHello()[0] || 'G').toUpperCase())}</span>
-      <span class="zbt-m-edit" title="Bearbeiten">Bearbeiten<i></i></span>
+      <span class="zbt-m-ava" title="${esc2(mHello())}">${mIcon.avatar}</span>
+      <span class="zbt-m-edit">Bearbeiten<i></i></span>
     </div>
-  </div>
+  </header>
+  <div class="zbt-m-body">
   ${inner}
+  </div>
 </div>`;
 }
 
@@ -863,7 +869,7 @@ function mSidePanel() {
   return `<aside class="zbt-m-side">
     <h2>Eigene Notizen</h2>
     <p style="margin:0 0 8px;font-size:12.5px;color:var(--m-muted)">Nur auf diesem Gerät gespeichert.</p>
-    <textarea data-zbt2="ml-course-note" data-key="${key}" placeholder="Notizen zum Kurs …" style="width:100%;min-height:120px;resize:vertical;border:1px solid var(--m-border);border-radius:5px;padding:8px;font:13px/1.5 system-ui,sans-serif;color:var(--m-text)">${esc2(val)}</textarea>
+    <textarea data-zbt2="ml-course-note" data-key="${key}" placeholder="Notizen zum Kurs …" style="width:100%;min-height:120px;resize:vertical;border:1px solid var(--m-border);border-radius:6px;padding:8px;font:13px/1.5 system-ui,sans-serif;color:var(--m-text)">${esc2(val)}</textarea>
     <h2 style="margin-top:16px">Kursmaterial</h2>
     <a href="#" data-zbt2="ml-note" data-t="Nur in der Schulversion verfügbar.">Arbeitsblätter</a>
     <a href="#" data-zbt2="ml-note" data-t="Nur in der Schulversion verfügbar.">Lernkarten</a>
@@ -873,8 +879,9 @@ function mSidePanel() {
 
 // --- 1 · Anmeldung ---------------------------------------------------------
 function pageMoodleStart() {
-  const err = searchState.loginErr ? `<p class="zbt-m-sub" style="color:#a1261b;font-size:13.5px;margin:0 0 12px">Ungültige Anmeldung. Bitte prüfe Anmeldename und Kennwort.</p>` : '';
-  return `<div class="zbt-x zbt-m">
+  const err = searchState.loginErr
+    ? `<div class="zbt-m-error" role="alert">Ungültige Anmeldung. Bitte prüfe Anmeldename und Kennwort.</div>` : '';
+  return `<div class="zbt-x zbt-m zbt-m-loginpage">
   <div class="zbt-m-login">
     <div class="zbt-m-logincard">
       <div class="zbt-m-logo">${MARK_MOODLE}</div>
@@ -884,9 +891,10 @@ function pageMoodleStart() {
         <div class="zbt-m-field"><input type="password" name="pass" placeholder="Kennwort" aria-label="Kennwort" autocomplete="current-password"></div>
         <button type="submit" class="zbt-m-btn">Anmelden</button>
       </form>
-      <p style="margin:6px 0 0"><a href="#" data-zbt2="ml-forgot" style="font-size:14px">Kennwort vergessen?</a></p>
+      <p class="zbt-m-forgot"><a href="#" data-zbt2="ml-forgot">Kennwort vergessen?</a></p>
       <div class="zbt-m-login-foot">
         <span class="zbt-m-lang">${mIcon.lang} Deutsch (de) <span style="font-size:10px">▾</span></span>
+        <span class="zbt-m-foot-sep" aria-hidden="true"></span>
         <button type="button" class="zbt-m-cookie" data-zbt2="ml-note" data-t="Es werden nur technisch notwendige Cookies gesetzt.">Cookie-Hinweis</button>
       </div>
     </div>
@@ -896,33 +904,20 @@ function pageMoodleStart() {
 }
 
 // --- 2 · Dashboard ---------------------------------------------------------
-// Wochenraster mit echten Terminen: eine Aufgabe, ein Test, ein Feiertag.
-// Die Termine liegen relativ zu heute, damit immer etwas zu sehen ist.
+
 function mCalendarPanel() {
   const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth();
-  const today = now.getDate();
+  const y = now.getFullYear(), m = now.getMonth(), today = now.getDate();
   const first = new Date(y, m, 1);
-  const shift = (first.getDay() + 6) % 7;
+  const startOffset = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(y, m + 1, 0).getDate();
   const prevDays = new Date(y, m, 0).getDate();
-  const at = (offset) => {
-    const d = new Date(y, m, today + offset);
-    return d.getMonth() === m ? d.getDate() : null;
-  };
-  const ev = {};
-  const add = (offset, label) => { const d = at(offset); if (d) (ev[d] = ev[d] || []).push(label); };
-  add(-8, 'Hausaufgaben abgeben');
-  add(-1, 'Arbeitsblatt 4');
-  add(6, 'Kurztests');
-  add(12, 'Ankündigung');
-  const weeks = 5;
+  const ev = { 4: ['Klassenarbeit'], 11: ['Unterricht'], 17: ['Elternsprechtag'], 24: ['Projektwoche'] };
   const cells = [];
-  for (let i = 0; i < weeks * 7; i++) {
-    const idx = i - shift + 1;
-    let dd = idx, out = false;
-    if (idx < 1) { dd = prevDays + idx; out = true; }
-    else if (idx > daysInMonth) { dd = idx - daysInMonth; out = true; }
+  for (let i = 0; i < 42; i++) {
+    const idx = i - startOffset + 1;
+    const out = idx < 1 || idx > daysInMonth;
+    const dd = idx < 1 ? prevDays + idx : idx > daysInMonth ? idx - daysInMonth : idx;
     const isToday = !out && dd === today;
     const list = !out ? (ev[dd] || []) : [];
     cells.push(`<div class="zbt-m-cell${out ? ' out' : ''}${isToday ? ' today' : ''}">
@@ -951,7 +946,7 @@ function pageMoodleDash() {
     <h1 class="zbt-m-h1">Dashboard</h1>
     <p class="zbt-m-hello">Hallo, ${esc2(mHello())}! 👋</p>
     <div class="zbt-m-panel">
-      <h2>Zeitlinie</h2>
+      <h2>Zeitleiste</h2>
       <div class="zbt-m-filters">
         <select aria-label="Zeitraum"><option>Nächste 7 Tage</option><option>Nächste 30 Tage</option><option>Alle</option></select>
         <select aria-label="Sortierung"><option>Sortiert nach Datum</option><option>Sortiert nach Kurs</option></select>
@@ -964,7 +959,7 @@ function pageMoodleDash() {
       <h2>Kursübersicht</h2>
       <div class="zbt-m-course-list">
         ${M_COURSES.slice(0, 4).map((c) => `<button type="button" class="zbt-m-course-row" data-zbt2="ml-course" data-course="${c.id}">
-          ${mCover(c.cover, c.glyph, 'zbt-m-mini')}<span class="zbt-m-course-name">${esc2(c.name)}</span><small>${esc2(c.teacher)}</small></button>`).join('')}
+          ${mCover(c.cover, 'zbt-m-mini')}<span class="zbt-m-course-name">${esc2(c.name)}</span><small>${esc2(c.teacher)}</small></button>`).join('')}
       </div>
     </div>
     <div class="zbt-m-panel">
@@ -988,14 +983,14 @@ function pageMoodleKurse() {
     <p class="zbt-m-sub">Kursübersicht</p>
     <div class="zbt-m-sep"></div>
     <div class="zbt-m-filters">
-      <select><option>Alle</option><option>In Bearbeitung</option><option>Abgeschlossen</option></select>
+      <select aria-label="Status"><option>Alle</option><option>In Bearbeitung</option><option>Abgeschlossen</option></select>
       <input type="search" placeholder="Suchen" aria-label="Kurse suchen" data-zbt2="ml-filter" value="${esc2(mCourseFilter)}">
-      <select><option>Sortiert nach letztem Zugriff</option><option>Sortiert nach Kursnamen</option></select>
-      <select><option>Kachel</option><option>Liste</option></select>
+      <select aria-label="Sortierung"><option>Sortiert nach letztem Zugriff</option><option>Sortiert nach Kursnamen</option></select>
+      <select aria-label="Ansicht"><option>Kachel</option><option>Liste</option></select>
     </div>
     <div class="zbt-m-courses">
       ${list.map((c) => `<button type="button" class="zbt-m-course" data-zbt2="ml-course" data-course="${c.id}">
-        ${mCover(c.cover, c.glyph)}
+        ${mCover(c.cover)}
         <div class="zbt-m-course-body"><b>${esc2(c.code)}</b><span>${esc2(c.teacher)}</span></div>
         <div class="zbt-m-course-foot"><span class="zbt-m-kebab" aria-hidden="true">⋮</span></div>
       </button>`).join('') || `<div class="zbt-m-empty" style="grid-column:1/-1">${mIcon.empty}Keine Kurse gefunden</div>`}
@@ -1014,7 +1009,7 @@ function pageMoodleKurs(courseId) {
   const inner = `<div class="zbt-m-main zbt-m-wide">
     <div class="zbt-m-crumb"><a href="#" data-zbt2="ml-go" data-page="kurse">Meine Kurse</a> · ${esc2(c.name)}</div>
     <div class="zbt-m-course-head">
-      ${mCover(c.cover, c.glyph)}
+      ${mCover(c.cover)}
       <div><h1 class="zbt-m-h1" style="font-size:24px;margin:0 0 2px">${esc2(c.name)} · ${esc2(c.code)}</h1>
       <div style="color:var(--m-muted);font-size:14px">${esc2(c.teacher)} · Raum ${esc2(c.room)}</div></div>
     </div>
@@ -1030,6 +1025,57 @@ function pageMoodleKurs(courseId) {
     ${mSidePanel()}
   </div>`;
   return mShell('kurse', inner);
+}
+
+// --- 5 · Buchungssystem (Räume und Geräte) ---------------------------------
+function pageMoodleBuchung() {
+  const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
+  const slots = ['1./2. Std.', '3./4. Std.', '5./6. Std.', '7./8. Std.'];
+  const taken = { '0-1': 'Bio 10a', '1-0': 'IF 9b', '2-2': 'Mathe Q1', '3-1': 'EK 10a', '4-0': 'KU 8c', '1-3': 'AG Robotik' };
+  const now = new Date();
+  const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const dd = (i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return `${d.getDate()}.${d.getMonth() + 1}.`; };
+  const inner = `<div class="zbt-m-main zbt-m-wide">
+    <h1 class="zbt-m-h1">Buchungssystem</h1>
+    <p class="zbt-m-sub">Räume und Geräte reservieren</p>
+    <div class="zbt-m-sep"></div>
+    <div class="zbt-m-filters">
+      <select aria-label="Ressource"><option>Computerraum PC 2</option><option>iPad-Koffer 1</option><option>iPad-Koffer 2</option><option>Aula</option></select>
+      <select aria-label="Woche"><option>Diese Woche</option><option>Nächste Woche</option></select>
+    </div>
+    <div class="zbt-m-panel" style="padding:0;overflow-x:auto">
+      <table class="zbt-m-table">
+        <thead><tr><th></th>${days.map((d, i) => `<th>${d} <small>${dd(i)}</small></th>`).join('')}</tr></thead>
+        <tbody>${slots.map((s, r) => `<tr><th>${s}</th>${days.map((_, c) => {
+          const t = taken[`${c}-${r}`];
+          return t ? `<td><span class="zbt-m-slot busy">${esc2(t)}</span></td>`
+            : `<td><button type="button" class="zbt-m-slot" data-zbt2="ml-note" data-t="Buchungen nur für Lehrkräfte.">frei</button></td>`;
+        }).join('')}</tr>`).join('')}</tbody>
+      </table>
+    </div>
+    <p style="color:var(--m-muted);font-size:13px">Buchungen bis 18 Uhr am Vortag. Bei Problemen: Medien-Team, Raum A 011.</p>
+  </div>`;
+  return mShell('buchung', inner);
+}
+
+// --- 6 · Digitale Tafel (Aushänge) -----------------------------------------
+function pageMoodleTafel() {
+  const posts = [
+    ['Vertretungsplan', 'Die 5./6. Stunde Englisch 10a findet in Raum B 112 statt.', 'heute'],
+    ['Projektwoche', 'Die Anmeldung zu den Projekten ist bis Freitag im Kurs „Projektwoche“ freigeschaltet.', 'gestern'],
+    ['Bibliothek', 'Neue Öffnungszeiten: Mo–Do 7:45–15:30 Uhr, Fr bis 13:00 Uhr.', 'vor 3 Tagen'],
+    ['Elternsprechtag', 'Termine können ab sofort über das Sekretariat vereinbart werden.', 'vor 5 Tagen'],
+    ['Schulsanitätsdienst', 'Neue Mitglieder für den Sanitätsdienst gesucht – Treffen Mittwoch, 7. Stunde.', 'letzte Woche'],
+  ];
+  const inner = `<div class="zbt-m-main zbt-m-wide">
+    <h1 class="zbt-m-h1">Digitale Tafel</h1>
+    <p class="zbt-m-sub">Aushänge und Mitteilungen</p>
+    <div class="zbt-m-sep"></div>
+    <div class="zbt-m-board">
+      ${posts.map(([h, t, w]) => `<article class="zbt-m-panel"><h2>${esc2(h)}</h2><p style="margin:0 0 10px">${esc2(t)}</p><small style="color:var(--m-muted)">Schulleitung · ${esc2(w)}</small></article>`).join('')}
+    </div>
+  </div>`;
+  return mShell('tafel', inner);
 }
 
 // ===========================================================================
@@ -1070,6 +1116,7 @@ const RENDER = {
   suche: pageSuche, lexikon: pageLexikon, dokument: pageDokument,
   'moodle-start': pageMoodleStart, 'moodle-dash': pageMoodleDash,
   'moodle-kurse': pageMoodleKurse, 'moodle-kurs': () => pageMoodleKurs(),
+  'moodle-buchung': pageMoodleBuchung, 'moodle-tafel': pageMoodleTafel,
   'zock-start': pageZockStart,
 };
 
@@ -1084,7 +1131,8 @@ let lastBackTap = 0;
 function applyLook(pageId) {
   if (!ov) return;
   const p = pageById(pageId) || PAGES[0];
-  ov.className = 'zbt-ov look-' + p.look;
+  const theme = { moodle: 'm-moodle', zockbox: 'z-theme', lexikon: 'l-theme' }[p.look] || '';
+  ov.className = 'zbt-ov look-' + p.look + (theme ? ' ' + theme : '');
   ov.dataset.look = p.look;
 }
 
@@ -1230,6 +1278,13 @@ function onKey(e) {
     }
   }
 
+  // Offene Tarnseite: Esc schließt sie sofort (einmal drücken genügt).
+  if ((panic || pagePreview) && e.key === 'Escape' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    e.preventDefault(); e.stopPropagation();
+    hide();
+    return;
+  }
+
   if (!S.on && !pagePreview) return;
   if (!matchesSpec(e, S.key)) { lastKey = 0; return; }
   const now = Date.now();
@@ -1288,10 +1343,8 @@ export function setLook(id) {
   const l = lookById(id);
   const prevLook = S.look;
   set(KEYS.look, l.id);
-  // Seite im neuen Look: gleiche Art, wenn es sie gibt, sonst die erste des Looks
-  const cur = pageById(S.page);
-  const same = cur && visiblePages(l.id).find((p) => p.id === cur.id);
-  const next = same ? same.id : firstPageOf(l.id);
+  // Ein Look, eine Seite: Titel, Symbol und Startseite gehören zusammen.
+  const next = firstPageOf(l.id);
   set(KEYS.page, next);
   S = readState();
   applyTab(); updateFab();
@@ -1407,7 +1460,7 @@ const EXTRA_KEYS = {
   delay: 'zb_tarn_delay', single: 'zb_tarn_single', auto: 'zb_tarn_auto',
   autoMs: 'zb_tarn_auto_ms', schedule: 'zb_tarn_schedule',
   from: 'zb_tarn_from', to: 'zb_tarn_to', term: 'zb_tarn_term',
-  docName: 'zb_tarn_doc_name', media: 'zb_tarn_media',
+  docName: 'zb_tarn_doc_name', media: 'zb_tarn_media', site: 'zb_tarn_site',
   count: 'zb_tarn_count', last: 'zb_tarn_last',
 };
 
@@ -1995,14 +2048,20 @@ function onOverlayExtraClick(e) {
     const go = (id, title) => setOverlayContent(id, (RENDER[id] || pageSuche)(), title || (pageById(id) || {}).title);
     if (a === 'ml-go') {
       e.preventDefault();
-      const map = { start: ['moodle-start', 'Anmeldeseite | Lernplattform'], dash: ['moodle-dash', 'Dashboard | Lernplattform'],
-        kurse: ['moodle-kurse', 'Meine Kurse | Lernplattform'], buchung: ['moodle-kurse', 'Buchungssystem | Lernplattform'],
-        tafel: ['moodle-kurs', 'Digitale Tafel | Lernplattform'] };
+      const map = { start: ['moodle-start', 'Anmeldeseite | Moodle'], dash: ['moodle-dash', 'Dashboard | Moodle'],
+        kurse: ['moodle-kurse', 'Meine Kurse | Moodle'], buchung: ['moodle-buchung', 'Buchungssystem | Moodle'],
+        tafel: ['moodle-tafel', 'Digitale Tafel | Moodle'] };
       const [id, title] = map[v.page] || map.kurse;
       go(id, title);
       return;
     }
-    if (a === 'ml-course') { mCourseId = v.course || 'bio'; go('moodle-kurs', 'Kurs | Lernplattform'); return; }
+    if (a === 'ml-nav') {
+      e.preventDefault();
+      const bar = ov.querySelector('.zbt-m-bar');
+      if (bar) bar.classList.toggle('nav-open');
+      return;
+    }
+    if (a === 'ml-course') { mCourseId = v.course || 'bio'; go('moodle-kurs', 'Kurs | Moodle'); return; }
     if (a === 'ml-note') {
       if (window.phToast) window.phToast(v.t || 'In dieser Ansicht nicht verfügbar.');
       return;
@@ -2136,8 +2195,18 @@ function onOverlayExtraInput(e) {
     asave(AKEYS.cal, notes);
   } else if (a === 'ml-filter') {
     mCourseFilter = t.value;
+    const caret = t.selectionStart;
     clearTimeout(docTimer);
-    docTimer = setTimeout(() => { if (ov && ov.dataset.page === 'moodle-kurse') setOverlayContent('moodle-kurse', pageMoodleKurse(), 'Meine Kurse | Lernplattform'); }, 260);
+    docTimer = setTimeout(() => {
+      if (!ov || ov.dataset.page !== 'moodle-kurse') return;
+      setOverlayContent('moodle-kurse', pageMoodleKurse(), 'Meine Kurse | Moodle');
+      // Fokus und Schreibmarke zurück in das Suchfeld (sonst tippt man ins Leere)
+      const again = ov.querySelector('[data-zbt2="ml-filter"]');
+      if (again) {
+        again.focus({ preventScroll: true });
+        try { again.setSelectionRange(caret, caret); } catch (err) {}
+      }
+    }, 260);
   }
 }
 
@@ -2202,10 +2271,10 @@ function onOverlayExtraSubmit(e) {
     const pass = f.querySelector('input[name="pass"]');
     if (user && user.value.trim() && pass && pass.value) {
       searchState.loginErr = false;
-      setOverlayContent('moodle-dash', pageMoodleDash(), 'Dashboard | Lernplattform');
+      setOverlayContent('moodle-dash', pageMoodleDash(), 'Dashboard | Moodle');
     } else {
       searchState.loginErr = true;
-      setOverlayContent('moodle-start', pageMoodleStart(), 'Anmeldeseite | Lernplattform');
+      setOverlayContent('moodle-start', pageMoodleStart(), 'Anmeldeseite | Moodle');
     }
     return;
   }
@@ -2333,29 +2402,24 @@ function resetConfig() {
 // ---------------------------------------------------------------------------
 function mountAdvancedSettings(root) {
   // Die Einstellungen stehen im Pop-up der Startseite (#zbTarnSettings).
-  // Aufbau bewusst schlicht: eine Spalte, feine Trennlinien, dieselben Bausteine
-  // wie der Rest der Seite (shared/ui.css + shared/home.css).
+  // Bewusst knapp: an/aus, ein Look, ein Auslöser – der Rest steckt in „Mehr“.
   if (!root) return;
 
   const lookCard = (l) => {
     const on = S.look === l.id;
-    return `<button type="button" class="pick${on ? ' on' : ''}" role="radio" aria-checked="${on}" data-look="${l.id}" title="${esc(l.note)}">
+    return `<button type="button" class="pick${on ? ' on' : ''}" role="radio" aria-checked="${on}" data-look="${l.id}" title="${esc(l.title)}">
       <span class="pick-ic"><img src="${l.icon}" alt="" width="22" height="22"></span>
       <span class="pick-tx"><b>${esc(l.label)}</b><small>${esc(l.note)}</small></span>
       <span class="pick-tick" aria-hidden="true">✓</span>
     </button>`;
   };
-  const pageChip = (p) => `<button type="button" class="chip" role="radio" data-page="${p.id}" aria-checked="${S.page === p.id}" aria-pressed="${S.page === p.id}">
-    ${p.icon ? `<img src="${p.icon}" alt="" width="15" height="15">` : ''}${esc(p.label)}</button>`;
 
   const render = () => {
     const touch = isTouch();
     // Offene Aufklapper merken – das Fenster wird bei jeder Änderung neu gezeichnet.
     const openFolds = new Set([...root.querySelectorAll('details.set-fold[open]')].map((d) => d.querySelector('summary')?.textContent.trim()));
-    const page = pageById(S.page) || PAGES[0];
     const look = lookById(S.look);
     const pages = visiblePages(S.look);
-    const others = PAGES.filter((p) => !p.hidden && p.look !== S.look).length;
     const stats = {
       count: Number(get(KEYS.count, '0') || 0),
       last: Number(get(KEYS.last, '0') || 0),
@@ -2364,20 +2428,17 @@ function mountAdvancedSettings(root) {
     const armed = S.on && S.auto && withinSchedule();
     root.innerHTML = `
       <div class="opt">
-        <div class="opt-tx"><b>Tarnmodus</b><span>Titel und Symbol im Tab, dazu eine ganze Tarnseite im Vollbild – für die Startseite und alle Spiele.</span></div>
+        <div class="opt-tx"><b>Tarnmodus</b><span>Titel und Symbol im Tab, dazu eine ganze Seite im Vollbild. Gilt für Startseite und Spiele.</span></div>
         <div class="opt-side"><button type="button" class="sw" role="switch" id="zbTarnOn" aria-checked="${S.on}" aria-label="Tarnmodus"><i></i></button></div>
       </div>
 
       <div class="set-sub">Look</div>
-      <p class="note">Ein Look = ein Tab-Titel, ein Favicon und passende Seiten. Standard: <b>Lernplattform</b>.</p>
+      <p class="note">Ein Look = ein Tab-Titel, ein Symbol und die passenden Seiten. Standard: <b>Moodle</b>.</p>
       <div class="picks" role="radiogroup" aria-label="Look">${LOOKS.map(lookCard).join('')}</div>
-
-      <div class="set-sub">Seite in diesem Look <span style="text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(${pages.length}${others ? `, ${others} in anderen Looks` : ''})</span></div>
-      <div class="chips" role="radiogroup" aria-label="Tarnseite">
-        ${pages.map(pageChip).join('')}
-        <button type="button" class="chip" id="zbTarnPreview">Vorschau</button>
+      <div class="row">
+        <button type="button" class="btn btn-sm" id="zbTarnPreview">Vorschau</button>
+        <span style="color:var(--muted);font-size:12px">Titel: ${esc(look.title)}</span>
       </div>
-      <p class="note">Im geöffneten Fenster: <b>Alt + 1 … ${pages.length}</b> wechselt die Seite, <b>Alt + Pfeil</b> blättert.</p>
 
       <div class="set-sub">Auslöser</div>
       <div class="opt">
@@ -2385,99 +2446,97 @@ function mountAdvancedSettings(root) {
         <div class="opt-side"><button type="button" class="btn btn-sm" id="zbTarnKeyBtn">Ändern</button></div>
       </div>
       <div class="opt">
-        <div class="opt-tx"><b>Einmal drücken genügt</b><span>Sofortige Tarnung ohne Doppeldruck.</span></div>
+        <div class="opt-tx"><b>Einmal drücken genügt</b><span>Sofort tarnen, ohne Doppeldruck.</span></div>
         <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="single" aria-checked="${S.single}" aria-label="Einmal drücken genügt"><i></i></button></div>
       </div>
       <div class="opt">
         <div class="opt-tx"><b>Zeit für Doppeldruck</b></div>
         <div class="opt-side">
-          <select class="inp inp-sm" data-num="delay" aria-label="Zeit für Doppeldruck" style="width:130px">
-            ${[[250, '250 ms'], [400, '400 ms'], [550, '550 ms (Standard)'], [750, '750 ms'], [1000, '1 Sekunde'], [1500, '1,5 Sekunden']].map(([n, l]) => `<option value="${n}"${S.delay === n ? ' selected' : ''}>${l}</option>`).join('')}
+          <select class="inp inp-sm" data-num="delay" aria-label="Zeit für Doppeldruck" style="width:132px">
+            ${[[250, '250 ms'], [400, '400 ms'], [550, '550 ms'], [750, '750 ms'], [1000, '1 Sekunde'], [1500, '1,5 Sekunden']].map(([n, l]) => `<option value="${n}"${S.delay === n ? ' selected' : ''}>${l}</option>`).join('')}
           </select>
         </div>
       </div>
       <div class="opt">
-        <div class="opt-tx"><b>Panik-Knopf unten links</b><span>${touch ? 'Sichtbar – führt direkt zurück ins Spiel.' : 'Erscheint auf Handy und Tablet.'}</span></div>
-        <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="fab" aria-checked="${S.fab}" aria-label="Panik-Knopf"><i></i></button></div>
+        <div class="opt-tx"><b>Knopf unten links</b><span>${touch ? 'Sichtbar – ein Tipp bringt dich zurück ins Spiel.' : 'Erscheint auf Handy und Tablet.'}</span></div>
+        <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="fab" aria-checked="${S.fab}" aria-label="Knopf unten links"><i></i></button></div>
       </div>
 
       <details class="set-fold">
         <summary>Automatisch tarnen</summary>
         <div class="set-fold-b">
           <div class="opt">
-        <div class="opt-tx"><b>Bei Tab-Wechsel oder Fokusverlust</b><span>Blendet die Tarnseite ein, wenn du den Tab verlässt. Das Spiel läuft weiter.</span></div>
-        <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="auto" aria-checked="${S.auto}" aria-label="Auto-Tarnung"><i></i></button></div>
-      </div>
-      <div class="opt">
-        <div class="opt-tx"><b>Verzögerung</b></div>
-        <div class="opt-side">
-          <select class="inp inp-sm" data-num="autoMs" aria-label="Verzögerung der Auto-Tarnung" style="width:110px">
-            ${[[0, 'sofort'], [300, '300 ms'], [800, '800 ms'], [1500, '1,5 s'], [3000, '3 s']].map(([n, l]) => `<option value="${n}"${S.autoMs === n ? ' selected' : ''}>${l}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div class="opt">
-        <div class="opt-tx"><b>Nur in einem Zeitfenster</b><span>${armed ? 'Gerade aktiv.' : S.schedule && S.on ? 'Außerhalb des Zeitfensters – gerade pausiert.' : 'Auto-Tarnung ist aus.'}</span></div>
-        <div class="opt-side">
-          <button type="button" class="sw" role="switch" data-sw="schedule" aria-checked="${S.schedule}" aria-label="Zeitfenster"><i></i></button>
-          <select class="inp inp-sm" data-num="from" aria-label="Von Uhrzeit" style="width:82px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.from === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
-          <select class="inp inp-sm" data-num="to" aria-label="Bis Uhrzeit" style="width:82px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.to === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
-        </div>
-      </div>
-
-        </div>
-      </details>
-
-      <details class="set-fold">
-        <summary>Inhalt der Tarnseiten</summary>
-        <div class="set-fold-b">
+            <div class="opt-tx"><b>Bei Tab-Wechsel oder Fokusverlust</b><span>Blendet die Tarnseite ein, wenn du den Tab verlässt. Das Spiel läuft weiter.</span></div>
+            <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="auto" aria-checked="${S.auto}" aria-label="Auto-Tarnung"><i></i></button></div>
+          </div>
           <div class="opt">
-        <div class="opt-tx"><b>Name im Dashboard</b></div>
-        <div class="opt-side"><input class="inp inp-sm" data-txt="term" value="${esc(S.term)}" maxlength="60" aria-label="Name im Dashboard" style="width:170px"></div>
-      </div>
-      <div class="opt">
-        <div class="opt-tx"><b>Name des Dokuments</b></div>
-        <div class="opt-side"><input class="inp inp-sm" data-txt="docName" value="${esc(S.docName)}" maxlength="40" aria-label="Name des Dokuments" style="width:170px"></div>
-      </div>
-      <div class="opt">
-        <div class="opt-tx"><b>Medien stummschalten</b><span>Ton von Audio und Video während der Tarnung.</span></div>
-        <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="media" aria-checked="${S.media}" aria-label="Medien stummschalten"><i></i></button></div>
-      </div>
-
+            <div class="opt-tx"><b>Verzögerung</b></div>
+            <div class="opt-side">
+              <select class="inp inp-sm" data-num="autoMs" aria-label="Verzögerung der Auto-Tarnung" style="width:110px">
+                ${[[0, 'sofort'], [300, '300 ms'], [800, '800 ms'], [1500, '1,5 s'], [3000, '3 s']].map(([n, l]) => `<option value="${n}"${S.autoMs === n ? ' selected' : ''}>${l}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="opt">
+            <div class="opt-tx"><b>Nur in einem Zeitfenster</b><span>${armed ? 'Gerade aktiv.' : S.schedule && S.on ? 'Außerhalb des Zeitfensters – gerade pausiert.' : 'Auto-Tarnung ist aus.'}</span></div>
+            <div class="opt-side">
+              <button type="button" class="sw" role="switch" data-sw="schedule" aria-checked="${S.schedule}" aria-label="Zeitfenster"><i></i></button>
+              <select class="inp inp-sm" data-num="from" aria-label="Von Uhrzeit" style="width:82px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.from === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
+              <select class="inp inp-sm" data-num="to" aria-label="Bis Uhrzeit" style="width:82px">${Array.from({ length: 24 }, (_, h) => `<option value="${h}"${S.to === h ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
+            </div>
+          </div>
         </div>
       </details>
 
       <details class="set-fold">
-        <summary>Tasten und Werkzeuge</summary>
+        <summary>Seiten und Inhalt</summary>
+        <div class="set-fold-b">
+          <p class="note">Im Look <b>${esc(look.label)}</b> gibt es ${pages.length} ${pages.length === 1 ? 'Seite' : 'Seiten'}: ${esc(pages.map((x) => x.label).join(', '))}.</p>
+          <div class="opt">
+            <div class="opt-tx"><b>Name der Plattform</b><span>Steht oben links und im Tab, z. B. „Schul-Moodle“.</span></div>
+            <div class="opt-side"><input class="inp inp-sm" data-txt="site" value="${esc(S.site)}" maxlength="30" aria-label="Name der Plattform" style="width:170px"></div>
+          </div>
+          <div class="opt">
+            <div class="opt-tx"><b>Suchbegriff (Lexikon)</b></div>
+            <div class="opt-side"><input class="inp inp-sm" data-txt="term" value="${esc(S.term)}" maxlength="60" aria-label="Suchbegriff" style="width:170px"></div>
+          </div>
+          <div class="opt">
+            <div class="opt-tx"><b>Name des Dokuments</b></div>
+            <div class="opt-side"><input class="inp inp-sm" data-txt="docName" value="${esc(S.docName)}" maxlength="40" aria-label="Name des Dokuments" style="width:170px"></div>
+          </div>
+          <div class="opt">
+            <div class="opt-tx"><b>Medien stummschalten</b><span>Ton von Audio und Video während der Tarnung.</span></div>
+            <div class="opt-side"><button type="button" class="sw" role="switch" data-sw="media" aria-checked="${S.media}" aria-label="Medien stummschalten"><i></i></button></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="set-fold">
+        <summary>Mehr</summary>
         <div class="set-fold-b">
           <ul>
-        <li><kbd>${esc(keyLabel2(S.key))}</kbd><span>${S.single ? 'ein-/ausblenden' : 'zweimal: ein-/ausblenden'}</span></li>
-        <li><kbd>Alt + 1…${pages.length}</kbd><span>Seite direkt öffnen</span></li>
-        <li><kbd>Alt + ←/→</kbd><span>Blättern</span></li>
-        <li><kbd>2× Ecke</kbd><span>Oben links tippen = zurück</span></li>
-      </ul>
-
-      <div class="set-sub">Statistik und Werkzeuge</div>
-      <div class="stats-strip plain" style="border:1px solid var(--line);border-radius:var(--r-sm)">
-        <div class="stat-cell"><b>${stats.count}</b><span>Auslösungen</span></div>
-        <div class="stat-cell"><b style="font-size:14px;letter-spacing:0">${esc(lastTxt)}</b><span>Zuletzt</span></div>
-        <div class="stat-cell"><b>${pages.length}</b><span>Seiten</span></div>
-        <div class="stat-cell"><b>${S.on ? 'an' : 'aus'}</b><span>Status</span></div>
-      </div>
-      <div class="row">
-        <button type="button" class="btn btn-sm" data-act="preview">Testlauf</button>
-        <button type="button" class="btn btn-sm" data-act="export">Exportieren</button>
-        <button type="button" class="btn btn-sm" data-act="import">Importieren</button>
-        <button type="button" class="btn btn-sm" data-act="copy">Kopieren</button>
-        <button type="button" class="btn btn-sm btn-danger" data-act="reset">Zurücksetzen</button>
-      </div>
-      <textarea class="inp" id="zbTarnJson" rows="4" placeholder="JSON für Import hier einfügen …" aria-label="Einstellungen als JSON" style="font:11.5px/1.5 ui-monospace,monospace"></textarea>
+            <li><kbd>${esc(keyLabel2(S.key))}</kbd><span>${S.single ? 'ein-/ausblenden' : 'zweimal: ein-/ausblenden'}</span></li>
+            <li><kbd>Esc</kbd><span>schließt die offene Tarnseite sofort</span></li>
+            <li><kbd>Alt + 1…${pages.length}</kbd><span>Seite direkt öffnen</span></li>
+            <li><kbd>Alt + ←/→</kbd><span>Blättern</span></li>
+          </ul>
+          <div class="stats-strip plain" style="border:1px solid var(--line);border-radius:var(--r-sm);margin-top:10px">
+            <div class="stat-cell"><b>${stats.count}</b><span>Auslösungen</span></div>
+            <div class="stat-cell"><b style="font-size:13px;letter-spacing:0">${esc(lastTxt)}</b><span>Zuletzt</span></div>
+            <div class="stat-cell"><b>${pages.length}</b><span>Seiten</span></div>
+            <div class="stat-cell"><b>${S.on ? 'an' : 'aus'}</b><span>Status</span></div>
+          </div>
+          <div class="row">
+            <button type="button" class="btn btn-sm" data-act="export">Exportieren</button>
+            <button type="button" class="btn btn-sm" data-act="import">Importieren</button>
+            <button type="button" class="btn btn-sm" data-act="copy">Kopieren</button>
+            <button type="button" class="btn btn-sm btn-danger" data-act="reset">Zurücksetzen</button>
+          </div>
+          <textarea class="inp" id="zbTarnJson" rows="3" placeholder="JSON für Import hier einfügen …" aria-label="Einstellungen als JSON" style="font:11.5px/1.5 ui-monospace,monospace;margin-top:8px"></textarea>
         </div>
       </details>
 
-      <p class="note">Zurück zum Spiel: dieselbe Taste ${S.single ? 'einmal' : 'zweimal'} drücken, oben links 2× tippen – auf dem Handy auch der kleine Knopf unten links. Das Spiel läuft im Hintergrund weiter.</p>
-
-      <div class="note">Die Looks sind eigene Nachbauten: keine echten Logos, Markennamen oder Schriftzüge. Aktuell: <b>${esc(look.label)}</b> · Seite: <b>${esc(page.label)}</b>.</div>`;
+      <p class="note">Zurück ins Spiel: dieselbe Taste ${S.single ? 'einmal' : 'zweimal'} drücken – oder auf dem Handy der Knopf unten links.</p>`;
 
     if (openFolds.size) {
       root.querySelectorAll('details.set-fold').forEach((d) => {

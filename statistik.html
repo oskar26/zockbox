@@ -24,34 +24,30 @@
   </script>
 </head>
 <body>
-  <header class="top">
-    <div class="wrap top-in">
-      <a class="brand" href="./" aria-label="Zockbox Startseite">
-        <span class="brand-mark" aria-hidden="true">Z</span>
-        <span>Zockbox</span>
-        <span class="brand-sub" id="brandSub">Statistik</span>
+  <header class="bar">
+    <div class="bar-in">
+      <a class="logo" href="./" aria-label="Zockbox Startseite">
+        <span class="logo-mark" aria-hidden="true">Z</span>
+        <span class="logo-tx">Zockbox</span>
       </a>
-      <nav class="top-nav" aria-label="Hauptmenü">
-        <a class="top-a" href="./">Spiele</a>
-        <a class="top-a" href="statistik.html" aria-current="page">Statistik</a>
+      <nav class="bar-nav" aria-label="Hauptmenü">
+        <a href="./">Spiele</a>
+        <a href="statistik.html" aria-current="page">Statistik</a>
       </nav>
-      <div class="top-right"></div>
     </div>
   </header>
 
-  <main class="wrap page">
-    <div class="page-head">
-      <h1 class="h1" id="stHead">Deine Statistik</h1>
-      <p class="lead" id="stLead">Siege, Plätze und Punkte – gezählt in diesem Browser. Keine Anmeldung, kein Server, nichts wird übertragen.</p>
-    </div>
+  <main class="page stats">
+    <h1 class="h1">Statistik</h1>
+    <p class="lead">Siege, Quoten und Platzierungen – gezählt auf diesem Gerät, nichts wird übertragen.</p>
 
-    <div class="card">
-      <div class="stats-strip" id="stKpis"></div>
-    </div>
+    <p class="verdict" id="stVerdict"></p>
 
-    <div class="sec"><h2>Pro Spiel</h2><span class="sec-note" id="stGamesNote"></span></div>
-    <div class="card">
-      <table class="tbl">
+    <div class="kpis" id="stKpis"></div>
+
+    <section class="block">
+      <h2 class="block-h">Pro Spiel <span id="stGamesNote"></span></h2>
+      <table class="sttbl">
         <thead>
           <tr>
             <th scope="col">Spiel</th>
@@ -59,70 +55,60 @@
             <th scope="col" class="num">Siege</th>
             <th scope="col" class="num">Quote</th>
             <th scope="col" class="num hide-sm">Ø Platz</th>
-            <th scope="col" class="num hide-sm">Ø Punkte</th>
           </tr>
         </thead>
         <tbody id="stGames"></tbody>
       </table>
       <div id="stGamesEmpty" class="empty hidden">
-        <svg class="empty-ic" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="7" width="24" height="19" rx="3"/><path d="M4 13h24M11 7v-3M21 7v-3"/></svg>
         <b>Noch keine Partie zu Ende gespielt.</b>
         Starte eine Lobby – nach der ersten Runde steht hier, wie es gelaufen ist.
       </div>
-    </div>
+    </section>
 
-    <div class="sec"><h2>Letzte zwei Wochen</h2><span class="sec-note">Partien und Siege pro Tag</span></div>
-    <div class="card">
-      <div class="days" id="stDays" aria-label="Partien der letzten 14 Tage"></div>
-    </div>
-
-    <div class="lower2">
-      <div>
-        <div class="sec"><h2>Wer gewinnt</h2><span class="sec-note">Mitspieler auf diesem Gerät</span></div>
-        <div class="card">
-          <table class="tbl">
-            <thead>
-              <tr><th scope="col">Name</th><th scope="col" class="num">Partien</th><th scope="col" class="num">Siege</th><th scope="col" class="num">Quote</th></tr>
-            </thead>
-            <tbody id="stPeople"></tbody>
-          </table>
-          <div id="stPeopleEmpty" class="empty hidden">
-            <b>Noch niemand eingetragen.</b>
-            Spiel eine Runde – dann tauchen hier alle Namen auf, mit denen du gespielt hast.
-          </div>
-        </div>
+    <section class="block">
+      <h2 class="block-h">Wer gewinnt <span>Mitspieler auf diesem Gerät</span></h2>
+      <table class="sttbl">
+        <thead>
+          <tr>
+            <th scope="col" class="rank">#</th>
+            <th scope="col">Name</th>
+            <th scope="col" class="num">Partien</th>
+            <th scope="col" class="num">Siege</th>
+            <th scope="col" class="num">Quote</th>
+          </tr>
+        </thead>
+        <tbody id="stPeople"></tbody>
+      </table>
+      <div id="stPeopleEmpty" class="empty hidden">
+        <b>Noch niemand eingetragen.</b>
+        Spiel eine Runde – dann tauchen hier alle Namen auf, mit denen du gespielt hast.
       </div>
+    </section>
 
-      <div>
-        <div class="sec"><h2>Verlauf</h2><span class="sec-note">Die letzten Partien</span></div>
-        <div class="card">
-          <ul class="hist" id="stHist"></ul>
-          <div id="stHistEmpty" class="empty hidden">
-            <b>Der Verlauf ist noch leer.</b>
-            Nach der ersten beendeten Partie steht hier, was passiert ist.
-          </div>
-        </div>
+    <section class="block">
+      <h2 class="block-h">Verlauf <span>Die letzten Partien</span></h2>
+      <ul class="hist" id="stHist"></ul>
+      <div id="stHistEmpty" class="empty hidden">
+        <b>Der Verlauf ist noch leer.</b>
+        Nach der ersten beendeten Partie steht hier, was passiert ist.
       </div>
-    </div>
+    </section>
 
-    <div class="row" style="margin-top:22px">
-      <button type="button" class="btn" id="stExport">Statistik exportieren</button>
-      <button type="button" class="btn btn-danger" id="stReset">Zurücksetzen</button>
+    <div class="st-actions">
+      <button type="button" class="btn btn-sm" id="stExport">Statistik exportieren</button>
+      <button type="button" class="btn btn-sm btn-danger" id="stReset">Zurücksetzen</button>
     </div>
-    <p class="note" style="margin-top:14px;max-width:60em">
-      Gezählt wird, sobald eine Partie zu Ende ist – auf dem Gerät, auf dem du gespielt hast. Wer den Browser-Speicher löscht, setzt die Statistik zurück. Die Liste „Wer gewinnt“ enthält nur Namen, die in Lobbys auf diesem Gerät vorkamen.
+    <p class="st-note">
+      Gezählt wird, sobald eine Partie zu Ende ist – auf dem Gerät, auf dem du gespielt hast.
+      Wer den Browser-Speicher löscht, setzt die Statistik zurück. Die Liste „Wer gewinnt“ enthält
+      nur Namen, die in Lobbys auf diesem Gerät vorkamen.
     </p>
   </main>
 
   <footer class="foot">
-    <div class="wrap">
-      <div class="foot-in">
-        <span>von <b>Oskar</b> · zum Spaß mit Freunden</span>
-        <div class="foot-links">
-          <a href="./">Startseite</a>
-          <a href="https://github.com/oskar26/zockbox" target="_blank" rel="noopener noreferrer">Quellcode</a>
-        </div>
-      </div>
+    <div class="foot-in">
+      <span>von <b>Oskar</b> · zum Spaß mit Freunden</span>
+      <span class="foot-links"><a href="./">Startseite</a></span>
     </div>
   </footer>
 
